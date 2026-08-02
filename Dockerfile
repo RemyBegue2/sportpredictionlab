@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     THE_ODDS_API_CACHE=/tmp/odds_api_cache \
-    APP_DATABASE_PATH=/tmp/sports_prediction_v3_3.db \
+    APP_DATABASE_PATH=/tmp/sports_prediction_v3_4.db \
     PYTHONPATH=/app
 
 RUN groupadd --system app && useradd --system --gid app --home-dir /app app
@@ -17,7 +17,7 @@ COPY --chown=app:app . .
 RUN python -c "import site; from pathlib import Path; Path(site.getsitepackages()[0], 'sports_prediction_lab.pth').write_text('/app\n', encoding='utf-8')" \
     && python -c "import sports_predictor; from sports_predictor.cloud_config import CloudSettings; print('runtime import ok')"
 USER app
-RUN python -m scripts.train_snapshot
+RUN python -m scripts.ensure_artifacts
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sports-prediction-v3-3"
-version = "0.3.3"
-description = "Cloud sports prediction research app with immutable shadow predictions, automatic settlement and live validation"
+name = "sports-prediction-v3-4"
+version = "0.3.4"
+description = "Cloud sports prediction research app with explainable shadow diagnostics and reproducible fresh-data model rebuilds"
 requires-python = ">=3.10"
 dependencies = [
   "numpy>=1.26,<3",

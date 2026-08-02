@@ -1,76 +1,28 @@
-# Déployer la V3.3 sur Railway
+# Déployer la V3.4 sur Railway
 
-## 1. Mettre à jour le service web
+## Mise à jour du service web
 
-Remplace le dépôt par le contenu de l’archive, puis :
+1. Copier le contenu de l'archive à la racine du dépôt.
+2. Commit et push.
+3. Vérifier `/api/health` : la version doit être `3.4.0`.
+4. Mettre `MODEL_VERSION=3.4.0` dans les variables du service.
 
-```bash
-git add -A
-git commit -m "Upgrade to V3.3 shadow mode"
-git push
-```
+Le pre-deploy lance `python -m scripts.db_migrate` et crée les nouvelles tables.
 
-Le service existant utilise `railway.toml`. Le pre-deploy créera les nouvelles tables sans supprimer les anciennes données.
+## Mise à jour de shadow-cron
 
-Variables recommandées :
+Le service existant conserve `/railway.cron.toml`. Mettre également `MODEL_VERSION=3.4.0` puis déployer le dernier commit.
 
-```text
-APP_ENV=production
-APP_AUTH_REQUIRED=true
-APP_COOKIE_SECURE=true
-APP_PASSWORD=...
-APP_SESSION_SECRET=...
-DATABASE_URL=${{Postgres.DATABASE_URL}}
-THE_ODDS_API_KEY=...
-MODEL_VERSION=3.3.0
-ODDS_SYNC_SPORTS=soccer_epl
-ODDS_STALE_MINUTES=15
-SHADOW_MODE_ENABLED=true
-SHADOW_QUOTA_FLOOR=100
-MODEL_MAX_AGE_DAYS=365
-```
+Le prochain cycle doit afficher des compteurs dans **Shadow → Pourquoi zéro ?**.
 
-## 2. Créer le service cron
+## Reconstruction du modèle
 
-1. Nouveau service depuis le même dépôt.
-2. Nom : `shadow-cron`.
-3. Settings → Config file path : `/railway.cron.toml`.
-4. Référence la même base PostgreSQL.
-5. Ajoute la clé The Odds API et les variables shadow.
-6. Ne génère pas de domaine public.
+Ne pas entraîner le modèle dans le cron Railway. Déclencher le workflow GitHub Actions fourni. Celui-ci commit les artefacts générés ; Railway redéploie ensuite l'image contenant le modèle promu.
 
-Commande exécutée :
+## Vérifications
 
-```text
-python -m scripts.run_shadow_cycle
-```
-
-Planning : toutes les quinze minutes.
-
-## 3. Contrôler le premier cycle
-
-Dans les logs du service cron, attends un JSON contenant :
-
-```json
-{
-  "status": "ok",
-  "events_seen": 0,
-  "predictions_created": 0,
-  "predictions_reused": 0,
-  "predictions_settled": 0,
-  "quota_remaining": 0
-}
-```
-
-Les zéros sont possibles hors saison ou sans événement. Le champ important est l’absence d’erreur de configuration.
-
-## 4. Tester dans l’application
-
-- `/api/health` : version 3.3.0 ;
-- `/api/ready` : base et artefacts disponibles ;
-- `/api/shadow/summary` : dernier cycle visible ;
-- section Shadow : modèle football marqué `degraded` tant qu’il n’est pas réentraîné.
-
-## 5. Sauvegardes
-
-Active une sauvegarde PostgreSQL et teste une restauration avant de compter sur le journal comme historique durable.
+- `/api/health` répond `3.4.0` ;
+- `/api/ready` répond `ready` ;
+- le dernier cycle indique durée et quota ;
+- les diagnostics expliquent les exclusions ;
+- le modèle reste `degraded` tant qu'aucun candidat n'est promu.

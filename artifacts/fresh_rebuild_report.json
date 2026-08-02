@@ -1,0 +1,15 @@
+{
+  "version": "3.4.0",
+  "status": "not_run_in_release_environment",
+  "promoted": false,
+  "dataset": null,
+  "evaluation": null,
+  "promotion": {
+    "eligible": false,
+    "checks": {},
+    "reasons": [
+      "Run the GitHub Actions fresh football rebuild to download and evaluate the multi-season dataset."
+    ]
+  },
+  "candidate_artifact": null
+}

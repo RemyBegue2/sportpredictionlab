@@ -68,7 +68,7 @@ class OddsApiConfig:
     timeout_seconds: float = 20.0
     max_retries: int = 3
     cache_dir: Path = Path("data/odds_api/cache")
-    user_agent: str = "sports-prediction-lab/0.3.3"
+    user_agent: str = "sports-prediction-lab/0.3.4"
 
     @classmethod
     def from_env(cls, *, root: Path | None = None) -> "OddsApiConfig":

@@ -191,6 +191,18 @@ class ShadowCycleRecord(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
 
 
+class ShadowCycleDiagnosticRecord(Base):
+    __tablename__ = "shadow_cycle_diagnostics"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cycle_id: Mapped[int] = mapped_column(ForeignKey("shadow_cycles.id", ondelete="CASCADE"), unique=True, index=True)
+    diagnostics: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    quota_before: Mapped[int | None] = mapped_column(Integer)
+    quota_after: Mapped[int | None] = mapped_column(Integer)
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
+    lock_acquired: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 _ENGINE = None
 _SESSION_FACTORY: sessionmaker[Session] | None = None
 _SETTINGS: CloudSettings | None = None
@@ -817,17 +829,29 @@ def due_shadow_events(*, now: Any | None = None, minimum_age_minutes: int = 105,
     return list(dedup.values())
 
 
-def record_shadow_cycle(*, status: str, sports: list[str], events_seen: int, predictions_created: int, predictions_reused: int, predictions_settled: int, quota_remaining: int | None, errors: list[Mapping[str, Any]] | None = None, started_at: Any | None = None) -> int:
+def record_shadow_cycle(
+    *, status: str, sports: list[str], events_seen: int, predictions_created: int,
+    predictions_reused: int, predictions_settled: int, quota_remaining: int | None,
+    errors: list[Mapping[str, Any]] | None = None, started_at: Any | None = None,
+    diagnostics: Mapping[str, Any] | None = None, quota_before: int | None = None,
+    duration_ms: int | None = None, lock_acquired: bool = True,
+) -> int:
+    finished = datetime.now(timezone.utc)
     with session_scope() as session:
         record = ShadowCycleRecord(
             status=str(status), sports=[str(x) for x in sports], events_seen=int(events_seen),
             predictions_created=int(predictions_created), predictions_reused=int(predictions_reused),
             predictions_settled=int(predictions_settled), quota_remaining=quota_remaining,
-            errors=_json_safe(list(errors or [])), started_at=_utc(started_at) if started_at else datetime.now(timezone.utc),
-            finished_at=datetime.now(timezone.utc),
+            errors=_json_safe(list(errors or [])), started_at=_utc(started_at) if started_at else finished,
+            finished_at=finished,
         )
         session.add(record)
         session.flush()
+        session.add(ShadowCycleDiagnosticRecord(
+            cycle_id=int(record.id), diagnostics=_json_safe(dict(diagnostics or {})),
+            quota_before=quota_before, quota_after=quota_remaining, duration_ms=duration_ms,
+            lock_acquired=bool(lock_acquired),
+        ))
         return int(record.id)
 
 
@@ -836,10 +860,37 @@ def latest_shadow_cycle() -> dict[str, Any] | None:
         row = session.scalar(select(ShadowCycleRecord).order_by(ShadowCycleRecord.started_at.desc()).limit(1))
         if row is None:
             return None
+        diagnostic = session.scalar(
+            select(ShadowCycleDiagnosticRecord).where(ShadowCycleDiagnosticRecord.cycle_id == row.id).limit(1)
+        )
         return {
             "id": row.id, "status": row.status, "sports": row.sports, "events_seen": row.events_seen,
             "predictions_created": row.predictions_created, "predictions_reused": row.predictions_reused,
             "predictions_settled": row.predictions_settled, "quota_remaining": row.quota_remaining,
             "errors": row.errors or [], "started_at": row.started_at.isoformat(),
             "finished_at": row.finished_at.isoformat() if row.finished_at else None,
+            "diagnostics": dict(diagnostic.diagnostics or {}) if diagnostic else {},
+            "quota_before": diagnostic.quota_before if diagnostic else None,
+            "quota_after": diagnostic.quota_after if diagnostic else row.quota_remaining,
+            "duration_ms": diagnostic.duration_ms if diagnostic else None,
+            "lock_acquired": diagnostic.lock_acquired if diagnostic else None,
         }
+
+
+@contextmanager
+def shadow_cycle_lock(lock_key: str = "sports_prediction_shadow_cycle_v34") -> Iterator[bool]:
+    """Prevent overlapping cloud cycles. PostgreSQL uses an advisory lock; SQLite is single-process only."""
+    if _ENGINE is None:
+        raise RuntimeError("Database is not configured")
+    if _ENGINE.dialect.name != "postgresql":
+        yield True
+        return
+    connection = _ENGINE.connect().execution_options(isolation_level="AUTOCOMMIT")
+    acquired = False
+    try:
+        acquired = bool(connection.execute(text("SELECT pg_try_advisory_lock(hashtext(:key))"), {"key": lock_key}).scalar())
+        yield acquired
+    finally:
+        if acquired:
+            connection.execute(text("SELECT pg_advisory_unlock(hashtext(:key))"), {"key": lock_key})
+        connection.close()

@@ -1,0 +1,43 @@
+name: Rebuild fresh football model
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "35 4 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fresh-football-rebuild
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Download, train and conditionally promote
+        run: python -m scripts.rebuild_fresh_football --download --promote
+      - name: Test
+        run: pytest -q
+      - name: Commit generated candidate and reports
+        run: |
+          git config user.name "sports-prediction-bot"
+          git config user.email "sports-prediction-bot@users.noreply.github.com"
+          git add -A artifacts/ data/real/
+          if git diff --cached --quiet; then
+            echo "No generated changes"
+          else
+            git commit -m "chore: refresh Premier League model candidate"
+            git push
+          fi

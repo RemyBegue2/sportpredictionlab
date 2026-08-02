@@ -1,0 +1,21 @@
+{
+  "version": "3.4.0",
+  "status": "technical_go_statistical_no_go",
+  "verified": {
+    "shadow_cycle_diagnostics": true,
+    "quota_and_duration_tracking": true,
+    "cycle_lock_sqlite_compatibility": true,
+    "fresh_data_normalization": true,
+    "promotion_policy": true,
+    "github_actions_workflow_present": true,
+    "real_multiseason_training_executed_here": false,
+    "real_railway_postgresql_lock_tested_here": false,
+    "automatic_bet_placement": false
+  },
+  "required_next_step": "Run the GitHub Actions fresh football rebuild, review the report, then observe the promoted candidate in shadow mode.",
+  "tests_passed": 75,
+  "coverage_percent": 84.02,
+  "python_compile": true,
+  "javascript_syntax": true,
+  "configuration_parse": true
+}

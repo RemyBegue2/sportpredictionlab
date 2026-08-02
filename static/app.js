@@ -95,12 +95,42 @@ function renderShadow(data, history){
   $('#shadowReturn').textContent=Number.isFinite(unitReturn)?`${unitReturn>=0?'+':''}${unitReturn.toFixed(2)} u`:'—';
   const cycle=data.latest_cycle;
   $('#shadowLastCycle').textContent=cycle?`${cycle.status} · ${new Date(cycle.finished_at||cycle.started_at).toLocaleString('fr-FR')}`:'Aucun cycle enregistré';
+  const duration=Number.isFinite(cycle?.duration_ms)?`${(cycle.duration_ms/1000).toFixed(1)} s`:'—';
+  const quotaBefore=cycle?.quota_before ?? '—';
+  const quotaAfter=cycle?.quota_after ?? cycle?.quota_remaining ?? '—';
+  $('#shadowCycleMeta').textContent=cycle?`Durée ${duration} · quota ${quotaBefore} → ${quotaAfter} · verrou ${cycle.lock_acquired===false?'non acquis':'acquis'}`:'Durée et quota indisponibles.';
+
+  const diagnostics=cycle?.diagnostics||{};
+  const labels={
+    provider_events:'Événements fournisseur',events_considered:'Événements examinés',events_truncated:'Événements tronqués',
+    in_play:'Déjà commencés',outside_shadow_horizon:'Hors jalons shadow',identity_uncovered:'Identités non couvertes',
+    winamax_missing:'Winamax absent',market_incomplete:'Marchés incomplets',model_stale_veto:'Bloqués modèle obsolète',
+    no_robust_edge:'Sans edge robuste',research_candidates:'Candidats recherche',shadow_created:'Prédictions créées',
+    shadow_reused:'Prédictions déjà figées',results_synced:'Résultats synchronisés',result_errors:'Erreurs résultats',provider_errors:'Erreurs fournisseur'
+  };
+  const ordered=Object.keys(labels).filter(key=>Number.isFinite(diagnostics[key]));
+  $('#shadowFunnel').innerHTML=ordered.map(key=>`<div class="funnel-item"><b>${diagnostics[key]}</b><small>${esc(labels[key])}</small></div>`).join('')||'<p>Aucun compteur disponible pour ce cycle.</p>';
+  const blockers=[
+    ['provider_errors','erreur du fournisseur de cotes'],['in_play','rencontres déjà commencées'],
+    ['outside_shadow_horizon','rencontres hors des quatre jalons shadow'],['identity_uncovered','équipes non couvertes par le modèle'],
+    ['winamax_missing','cotes Winamax absentes'],['market_incomplete','marchés Winamax incomplets'],
+    ['model_stale_veto','modèle football trop ancien'],['no_robust_edge','aucun avantage robuste après prudence']
+  ];
+  if((cycle?.predictions_created??0)>0){
+    $('#shadowZeroReason').textContent=`${cycle.predictions_created} nouvelle(s) prédiction(s) figée(s).`;
+  }else{
+    const dominant=blockers.map(([key,label])=>({key,label,value:Number(diagnostics[key]||0)})).sort((a,b)=>b.value-a.value)[0];
+    $('#shadowZeroReason').textContent=dominant&&dominant.value>0?`${dominant.value} cas : ${dominant.label}.`:'Aucun événement compatible avec un jalon shadow lors de ce passage.';
+  }
+
   const footballModel=(data.models||[]).find(model=>model.model_id==='football-1n2-shadow');
   const modelWarning=$('#shadowModelWarning');
   if(footballModel){
     const freshness=footballModel.metrics?.freshness||{};
     const age=Number.isFinite(freshness.age_days)?`${freshness.age_days} jours`:'âge inconnu';
-    modelWarning.innerHTML=`<b>Modèle football : ${esc(footballModel.status)}</b> · données arrêtées au ${footballModel.trained_until?new Date(footballModel.trained_until).toLocaleDateString('fr-FR'):'—'} · ${esc(age)}. ${footballModel.status==='degraded'?'Toute sélection opérationnelle est bloquée ; observation uniquement.':'Shadow mode actif.'}`;
+    const rebuild=data.fresh_rebuild||{};
+    const rebuildState=rebuild.promoted?'Candidat V3.4 promu.':'Reconstruction V3.4 non promue : lancer ou consulter le workflow GitHub.';
+    modelWarning.innerHTML=`<b>Modèle football : ${esc(footballModel.status)}</b> · données arrêtées au ${footballModel.trained_until?new Date(footballModel.trained_until).toLocaleDateString('fr-FR'):'—'} · ${esc(age)}. ${footballModel.status==='degraded'?'Toute sélection opérationnelle est bloquée ; observation uniquement.':'Shadow mode actif.'} ${esc(rebuildState)}`;
   }
   const rows=history.predictions||[];
   $('#shadowHistory').innerHTML=rows.map(row=>{

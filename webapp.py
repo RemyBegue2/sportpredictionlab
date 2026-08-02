@@ -56,6 +56,7 @@ from sports_predictor.data_sources.the_odds_api import (
 from sports_predictor.identity import football_model_name, normalize_identity
 from sports_predictor.odds_data import bookmaker_h2h_markets, consensus_h2h, normalize_odds_payload
 from sports_predictor.market_benchmark import benchmark_summary
+from sports_predictor.shadow_mode import shadow_horizon
 
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / "static"
@@ -110,10 +111,10 @@ def initialize_runtime() -> None:
         football_cutoff = pd.to_datetime(loaded["football"]["date"], utc=True).max()
         football_freshness = _model_freshness(data_cutoff=football_cutoff, as_of=datetime.now(ZoneInfo("UTC")))
         register_model(
-            model_id="football-1n2-shadow", sport="football", version=SETTINGS.model_version,
+            model_id="football-1n2-shadow", sport="football", version=loaded["football_model_version"],
             status="degraded" if football_freshness["stale"] else "shadow",
             trained_until=football_cutoff,
-            dataset_hash=manifest_files.get("football_model.joblib"),
+            dataset_hash=((loaded.get("fresh_rebuild") or {}).get("dataset") or {}).get("sha256") or manifest_files.get("football_model.joblib"),
             metrics={**(loaded["metrics"].get("football") or {}), "freshness": football_freshness},
         )
         register_model(
@@ -132,9 +133,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V3.3 Shadow Mode",
-    version="3.3.0",
-    description="Authenticated shadow-mode edition with immutable pre-match predictions, PostgreSQL settlement and live model validation.",
+    title="Sports Prediction Lab V3.4 Fresh Data Rebuild",
+    version="3.4.0",
+    description="Authenticated edition with explainable shadow diagnostics, reproducible fresh-data rebuilds and PostgreSQL validation.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -256,7 +257,9 @@ class HistoricalEstimateRequest(BaseModel):
 
 @lru_cache(maxsize=1)
 def resources() -> dict[str, Any]:
-    football = pd.read_csv(ROOT / "data/real_snapshot/football_epl_2023_24_snapshot.csv")
+    active_football = ROOT / "data/real/football_active.csv"
+    football_source = active_football if active_football.exists() else ROOT / "data/real_snapshot/football_epl_2023_24_snapshot.csv"
+    football = pd.read_csv(football_source)
     tennis = pd.read_csv(ROOT / "data/real_snapshot/tennis_atp_2025_snapshot.csv")
     football_model = FootballPredictor()
     tennis_model = TennisPredictor()
@@ -274,6 +277,13 @@ def resources() -> dict[str, Any]:
     provenance = json.loads((ROOT / "data/real_snapshot/PROVENANCE.json").read_text(encoding="utf-8"))
     backtest_path = ROOT / "artifacts/backtest_snapshot.json"
     backtest = json.loads(backtest_path.read_text(encoding="utf-8")) if backtest_path.exists() else {}
+    fresh_rebuild_path = artifact_dir / "fresh_rebuild_report.json"
+    fresh_rebuild = json.loads(fresh_rebuild_path.read_text(encoding="utf-8")) if fresh_rebuild_path.exists() else None
+    football_model_version = (
+        f"{fresh_rebuild.get('version', '3.4.0')}-fresh"
+        if fresh_rebuild and fresh_rebuild.get("promoted")
+        else "3.3.0-snapshot"
+    )
     return {
         "football": football,
         "tennis": tennis,
@@ -283,6 +293,9 @@ def resources() -> dict[str, Any]:
         "backtest": backtest,
         "provenance": provenance,
         "artifact_manifest": artifact_manifest,
+        "football_data_source": str(football_source.relative_to(ROOT)),
+        "fresh_rebuild": fresh_rebuild,
+        "football_model_version": football_model_version,
     }
 
 
@@ -320,7 +333,7 @@ def _record_prediction_payload(payload: dict[str, Any], *, provider_event_id: st
     try:
         return record_prediction(
             sport=str(payload["sport"]),
-            model_version=SETTINGS.model_version,
+            model_version=str(payload.get("model_version") or SETTINGS.model_version),
             fixture=payload["fixture"],
             probabilities=payload["probabilities"],
             market_analysis=analysis,
@@ -341,7 +354,7 @@ def _record_shadow_payload(
     try:
         return record_shadow_prediction(
             provider_event_id=provider_event_id, sport_key=sport_key, sport=str(payload["sport"]),
-            model_id=model_id, model_version=SETTINGS.model_version, fixture=payload["fixture"],
+            model_id=model_id, model_version=str(payload.get("model_version") or SETTINGS.model_version), fixture=payload["fixture"],
             probabilities=payload["probabilities"], market_analysis=payload.get("market_analysis"),
             decision=decision, source=source, prediction_created_at=datetime.now(ZoneInfo("UTC")),
             commence_time=commence_time, odds_observed_at=odds_observed_at, data_cutoff=data_cutoff,
@@ -379,6 +392,22 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
 
     provider_event_count = len(grouped)
     grouped_items = list(grouped.items())[:SETTINGS.shadow_max_events]
+    now = pd.Timestamp.now(tz="UTC")
+    funnel: dict[str, int] = {
+        "provider_events": provider_event_count,
+        "events_considered": len(grouped_items),
+        "events_truncated": max(0, provider_event_count - len(grouped_items)),
+        "in_play": 0,
+        "outside_shadow_horizon": 0,
+        "identity_uncovered": 0,
+        "winamax_missing": 0,
+        "market_incomplete": 0,
+        "model_stale_veto": 0,
+        "no_robust_edge": 0,
+        "research_candidates": 0,
+        "shadow_created": 0,
+        "shadow_reused": 0,
+    }
     events: list[dict[str, Any]] = []
     for event_id, event_markets in grouped_items:
         first = event_markets[0]
@@ -389,7 +418,8 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
         winamax = next((m for m in event_markets if m["bookmaker_key"] == "winamax_fr"), None)
         consensus = consensus_h2h(event_markets, exclude=("winamax_fr",))
         commence_ts = pd.to_datetime(first["commence_time"], utc=True, errors="coerce")
-        in_play = bool(not pd.isna(commence_ts) and commence_ts <= pd.Timestamp.now(tz="UTC"))
+        in_play = bool(not pd.isna(commence_ts) and commence_ts <= now)
+        horizon = None if pd.isna(commence_ts) else shadow_horizon(prediction_created_at=now, commence_time=commence_ts)
         base = {
             "event_id": event_id,
             "sport_key": sport_key,
@@ -400,15 +430,23 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
             "model_away_team": away,
             "winamax_available": winamax is not None,
             "in_play": in_play,
+            "shadow_horizon": horizon,
             "consensus": consensus,
             "decision": "abstention",
             "reasons": [],
         }
         if in_play:
+            funnel["in_play"] += 1
             base["reasons"].append("match commencé : modèle pré-match désactivé")
             events.append(base)
             continue
+        if horizon is None:
+            funnel["outside_shadow_horizon"] += 1
+            base["reasons"].append("hors des jalons shadow T−24 h, T−6 h, T−1 h et pré-clôture")
+            events.append(base)
+            continue
         if home not in model_teams or away not in model_teams:
+            funnel["identity_uncovered"] += 1
             base["reasons"].append("identité non couverte par le modèle embarqué")
             events.append(base)
             continue
@@ -417,6 +455,7 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
         model_probs = [prediction["probabilities"]["home"], prediction["probabilities"]["draw"], prediction["probabilities"]["away"]]
         base["model"] = prediction
         if winamax is None:
+            funnel["winamax_missing"] += 1
             base["reasons"].append("cotes Winamax absentes du snapshot fournisseur")
             base["shadow_record"] = _record_shadow_payload(
                 prediction, provider_event_id=event_id, sport_key=sport_key, commence_time=first["commence_time"],
@@ -427,6 +466,7 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
             continue
         labels = [api_home, "Draw", api_away]
         if any(label not in winamax["odds"] for label in labels):
+            funnel["market_incomplete"] += 1
             base["reasons"].append("marché Winamax incomplet")
             base["shadow_record"] = _record_shadow_payload(
                 prediction, provider_event_id=event_id, sport_key=sport_key, commence_time=first["commence_time"],
@@ -445,6 +485,7 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
             calibrated=True,
         ).to_dict()
         if prediction.get("model_freshness", {}).get("stale"):
+            funnel["model_stale_veto"] += 1
             analysis = _apply_market_veto(analysis, reason="modèle trop ancien pour une sélection opérationnelle")
             base["reasons"].append("modèle trop ancien : shadow mode uniquement")
         base["winamax"] = {
@@ -456,7 +497,10 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
         base["market_analysis"] = analysis
         prediction["market_analysis"] = analysis
         base["decision"] = "candidat recherche" if analysis["shortlist"] else "abstention"
-        if not analysis["shortlist"]:
+        if analysis["shortlist"]:
+            funnel["research_candidates"] += 1
+        else:
+            funnel["no_robust_edge"] += 1
             reasons = sorted({reason for selection in analysis["selections"] for reason in selection["reasons"]})
             base["reasons"].extend(reasons or ["aucun edge robuste"])
         base["shadow_record"] = _record_shadow_payload(
@@ -464,6 +508,11 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
             odds_observed_at=_iso(winamax["last_update"]), decision=base["decision"], source="the_odds_api_current",
             model_id="football-1n2-shadow", data_cutoff=pd.to_datetime(history["date"], utc=True).max(),
         )
+        shadow_record = base.get("shadow_record") or {}
+        if shadow_record.get("created"):
+            funnel["shadow_created"] += 1
+        elif shadow_record.get("created") is False and not shadow_record.get("disabled") and not shadow_record.get("skipped"):
+            funnel["shadow_reused"] += 1
         if not response.from_cache:
             base["prediction_id"] = _record_prediction_payload(prediction, provider_event_id=event_id)
         events.append(base)
@@ -482,12 +531,9 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
         "storage": storage,
         "summary": {
             "events": len(events),
-            "provider_events": provider_event_count,
-            "events_truncated": provider_event_count > len(events),
+            **funnel,
             "winamax_available": sum(bool(x["winamax_available"]) for x in events),
-            "research_candidates": sum(x["decision"] == "candidat recherche" for x in events),
-            "shadow_created": sum(bool((x.get("shadow_record") or {}).get("created")) for x in events),
-            "shadow_reused": sum((x.get("shadow_record") or {}).get("created") is False and not (x.get("shadow_record") or {}).get("disabled") and not (x.get("shadow_record") or {}).get("skipped") for x in events),
+            "events_truncated_flag": provider_event_count > len(events),
         },
         "events": events,
         "warning": "Verify every price directly with Winamax before any decision. No bet is placed automatically.",
@@ -688,6 +734,7 @@ def _football_prediction(req: FootballRequest) -> dict[str, Any]:
         )
     payload: dict[str, Any] = {
         "sport": "football",
+        "model_version": r["football_model_version"],
         "fixture": {"home_team": req.home_team, "away_team": req.away_team, "date": date, "league": req.league},
         "probabilities": {"home": pred["home_win"], "draw": pred["draw"], "away": pred["away_win"]},
         "expected_goals": {"home": pred["expected_home_goals"], "away": pred["expected_away_goals"]},
@@ -997,6 +1044,8 @@ def shadow_mode_summary(sport_key: str = "soccer_epl") -> dict[str, Any]:
         "models": list_models(),
         "database": database_summary(),
         "automatic_bet_placement": False,
+        "fresh_rebuild": resources().get("fresh_rebuild"),
+        "football_data_source": resources().get("football_data_source"),
     }
 
 
@@ -1020,7 +1069,7 @@ def market_benchmark_summary(sport_key: str = "soccer_epl") -> dict[str, Any]:
         raise HTTPException(status_code=422, detail="Invalid sport_key")
     run = latest_benchmark_run(sport_key)
     if run is None:
-        artifact = ROOT / "artifacts/market_benchmark_v3_3.json"
+        artifact = ROOT / "artifacts/market_benchmark_v3_4.json"
         if artifact.exists():
             report = json.loads(artifact.read_text(encoding="utf-8"))
             return {"source": "artifact", "summary": benchmark_summary(report), "report": report}

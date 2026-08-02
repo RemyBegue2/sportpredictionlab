@@ -254,7 +254,7 @@ def test_shadow_api_and_frontend_are_exposed() -> None:
     with TestClient(webapp.app) as client:
         health = client.get("/api/health")
         assert health.status_code == 200
-        assert health.json()["version"] == "3.3.0"
+        assert health.json()["version"] == "3.4.0"
         summary = client.get("/api/shadow/summary")
         assert summary.status_code == 200
         assert summary.json()["automatic_bet_placement"] is False
@@ -264,10 +264,10 @@ def test_shadow_api_and_frontend_are_exposed() -> None:
     root = Path(__file__).resolve().parents[1]
     html = (root / "static/index.html").read_text(encoding="utf-8")
     js = (root / "static/app.js").read_text(encoding="utf-8")
-    assert "VERSION 3.3" in html
+    assert "VERSION 3.4" in html
     assert 'id="shadow"' in html
     assert "renderShadow" in js
-    assert "app.js?v=3.3.0" in html
+    assert "app.js?v=3.4.0" in html
 
 
 def test_stale_football_model_vetoes_market_candidates() -> None:
@@ -312,14 +312,14 @@ def test_shadow_cycle_orchestration_and_quota_guard(monkeypatch, tmp_path: Path)
         assert cycle.main() == 0
         last = latest_shadow_cycle()
         assert last is not None
-        assert last["status"] == "ok"
+        assert last["status"] == "success"
         assert last["predictions_created"] == 2
         assert last["predictions_settled"] == 1
 
         low_settings = CloudSettings(**{**settings.__dict__, "shadow_quota_floor": 600})
         monkeypatch.setattr(cycle.CloudSettings, "from_env", classmethod(lambda cls, root=None: low_settings))
         assert cycle.main() == 0
-        assert latest_shadow_cycle()["status"] == "quota_guard"
+        assert latest_shadow_cycle()["status"] == "skipped_quota"
     finally:
         dispose_database()
         init_database(webapp.SETTINGS)

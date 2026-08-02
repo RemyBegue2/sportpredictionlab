@@ -1,50 +1,27 @@
-# Model Card — Sports Prediction Lab V3.3
+# Model Card V3.4
 
-## Usage prévu
+## Modèle actif livré
 
-Recherche privée sur des probabilités pré-match football et tennis, comparaison avec des cotes et validation en shadow mode.
+Le modèle actif de l'archive reste le modèle V3.3 construit sur le snapshot EPL 2023. Il est classé `degraded` et ses sélections opérationnelles sont bloquées.
 
-## Usage interdit
+## Candidat V3.4
 
+Le pipeline peut entraîner un candidat sur les saisons 2021-22 à 2025-26 avec les caractéristiques suivantes : Elo, formes offensives/défensives, repos, taux de buts de ligue, Poisson/Dixon–Coles et CatBoost tabulaire.
+
+## Validation
+
+La séparation est chronologique et ne coupe pas les timestamps identiques. La calibration et le blend sont estimés sur une partition distincte. Le candidat doit passer les règles dans `PromotionPolicy` avant de remplacer l'artefact actif.
+
+## Utilisation autorisée
+
+- recherche personnelle ;
+- comparaison probabiliste ;
+- shadow mode ;
+- audit de calibration.
+
+## Utilisation refusée
+
+- promesse de gains ;
 - placement automatique ;
-- conseil de mise ;
-- garantie de gain ;
-- crédit ou décision financière ;
-- service commercial fondé sur les données tennis embarquées.
-
-## Football
-
-**Marché :** 1N2 pré-match, Premier League.
-
-**Données embarquées :** 90 matchs du 11 août au 23 octobre 2023.
-
-**Méthodes :** Elo, variables séquentielles, Poisson, Dixon–Coles et composante ML évaluée. Le poids ML final du snapshot est nul.
-
-**Forces :** traitement groupé des timestamps, probabilités normalisées, backtest chronologique, journal shadow.
-
-**Limites critiques :** échantillon réduit, données anciennes, aucune information d’effectif 2026, paramètres instables sur petit échantillon.
-
-**Statut :** `degraded` pour les fixtures dépassant `MODEL_MAX_AGE_DAYS`. Les candidats marché sont alors bloqués.
-
-## Tennis
-
-**Méthode servie :** Elo global et surface.
-
-**Données :** 32 matchs et seulement deux timestamps de tournoi.
-
-**Statut :** `experimental`, non calibré. Aucune sélection opérationnelle.
-
-## Shadow mode
-
-Les observations sont immuables, horodatées et séparées par horizon. Une empreinte SHA-256 permet de détecter un changement de contenu. Les violations temporelles sont mises en quarantaine.
-
-## Critères de promotion d’un nouveau modèle
-
-- données récentes et multi-saisons ;
-- folds chronologiques ;
-- calibration hors entraînement ;
-- meilleure performance qu’une baseline naïve ;
-- comparaison contre Winamax et consensus ;
-- stabilité sur plusieurs périodes ;
-- modèle non périmé ;
-- au moins plusieurs centaines d’observations shadow valides.
+- taille de mise ;
+- utilisation du candidat non promu comme modèle actif.

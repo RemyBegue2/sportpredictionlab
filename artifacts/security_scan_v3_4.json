@@ -1,0 +1,8 @@
+{
+  "version": "3.4.0",
+  "real_secret_hits": [],
+  "passed": true,
+  "notes": [
+    "Scans direct secret assignments only; placeholders and variable references are ignored."
+  ]
+}

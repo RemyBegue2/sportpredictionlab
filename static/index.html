@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V3.3 Shadow Mode</title>
+  <title>Sports Prediction Lab V3.4 Fresh Data Rebuild</title>
   <meta name="description" content="Application cloud privée avec prédictions pré-match immuables, règlement automatique des résultats et validation en shadow mode.">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -19,7 +19,7 @@
   <main>
     <section id="overview" class="hero">
       <div>
-        <p class="eyebrow">VERSION 3.3 · SHADOW MODE · POSTGRESQL</p>
+        <p class="eyebrow">VERSION 3.4 · FRESH DATA REBUILD · EXPLAINABLE SHADOW</p>
         <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
         <p class="lede">Une application privée qui fige automatiquement les prédictions avant match, récupère les résultats et mesure sa qualité sans placer le moindre pari.</p>
         <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
@@ -95,7 +95,11 @@
       </div>
       <div id="shadowModelWarning" class="policy-note"><b>Modèle football :</b> contrôle de fraîcheur en cours.</div>
       <div class="history-panel">
-        <div class="history-heading"><div><small>CYCLE AUTOMATIQUE</small><h3 id="shadowLastCycle">Aucun cycle enregistré</h3></div><button id="refreshShadow" class="button ghost" type="button">Actualiser</button></div>
+        <div class="history-heading"><div><small>CYCLE AUTOMATIQUE</small><h3 id="shadowLastCycle">Aucun cycle enregistré</h3><p id="shadowCycleMeta">Durée et quota indisponibles.</p></div><button id="refreshShadow" class="button ghost" type="button">Actualiser</button></div>
+        <div class="zero-explainer">
+          <div><small>POURQUOI ZÉRO ?</small><h3 id="shadowZeroReason">Diagnostic en attente</h3></div>
+          <div id="shadowFunnel" class="funnel-grid"><p>Aucun compteur disponible.</p></div>
+        </div>
         <div id="shadowHistory" class="history-list"><p>Chargement du journal shadow…</p></div>
       </div>
       <div class="policy-note"><b>Veto statistique :</b> moins de 100 résultats reste anecdotique. Le mode shadow valide la collecte et la discipline temporelle ; il ne démontre pas encore un avantage rentable.</div>
@@ -152,7 +156,7 @@
     </section>
 
     <section id="audit" class="audit-section">
-      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.3</h2></div>
+      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.4</h2></div>
       <div class="role-grid">
         <article><span>01</span><h3>Quant marchés</h3><p>Le shadow mode sépare la qualité du modèle, le prix Winamax et le consensus sans confondre signal et résultat financier.</p></article>
         <article><span>02</span><h3>Statisticien</h3><p>Chaque prédiction est figée avant match et l’échantillon est classé anecdotique, exploratoire ou évaluable.</p></article>
@@ -162,15 +166,15 @@
         <article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
       </div>
       <div class="audit-callout">
-        <div><b>Verdict</b><p>V3.3 = chaîne d’observation automatique prête. Le verdict sportif reste « non évaluable » tant qu’un nombre suffisant de prédictions réglées n’est pas disponible.</p></div>
+        <div><b>Verdict</b><p>V3.4 = cycles explicables et pipeline de reconstruction fraîche. Aucun modèle n’est promu sans tests chronologiques et validation face au marché.</p></div>
         <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
       </div>
       <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V3.3 Shadow Mode</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V3.4 Fresh Data Rebuild</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/app.js?v=3.3.0"></script>
+  <script src="/static/app.js?v=3.4.0"></script>
 </body>
 </html>

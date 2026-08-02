@@ -1,27 +1,12 @@
 # Changelog
 
-## 3.3.0
+## 3.4.0
 
-- shadow mode automatique ;
-- tables `shadow_predictions`, `model_registry`, `shadow_cycles` ;
-- empreinte SHA-256 et contrôle temporel ;
-- horizons `t-24h`, `t-6h`, `t-1h`, `pre-close` ;
-- unicité par événement, modèle, version et horizon ;
-- récupération ciblée des résultats ;
-- règlement et métriques football ;
-- registre de modèles multi-version ;
-- détection du modèle périmé ;
-- veto sur les sélections lorsque le modèle est trop ancien ;
-- quota guard ;
-- service cron Railway fini ;
-- endpoints et interface shadow ;
-- migration compatible depuis V3.2.1.
-
-## 3.2.1
-
-- correction de l’intervalle de confiance vide dans le frontend ;
-- suppression du faux statut API indisponible.
-
-## 3.2.0
-
-- benchmark historique et worker de backfill.
+- Ajout des diagnostics détaillés de cycles shadow.
+- Ajout du verrou anti-chevauchement PostgreSQL.
+- Ajout des statuts de cycle explicites.
+- Ajout du pipeline multi-saisons Premier League.
+- Ajout des règles de promotion et du candidat séparé.
+- Ajout du workflow GitHub Actions de reconstruction.
+- Conservation des artefacts préconstruits dans Docker.
+- Version API et frontend portée à 3.4.0.
