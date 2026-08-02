@@ -1,0 +1,12 @@
+.git
+.github
+.venv
+__pycache__
+.pytest_cache
+.coverage
+htmlcov
+*.pyc
+.env
+data/odds_api/cache
+data/odds_api/historical
+artifacts/site_preview_v3.png

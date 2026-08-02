@@ -1,0 +1,15 @@
+{
+  "football": {
+    "source": "footballcsv/cache.footballdata mirror of Football-Data.co.uk",
+    "url": "https://github.com/footballcsv/cache.footballdata/blob/master/2023-24/eng.1.csv",
+    "scope": "First 90 EPL matches, 2023-24",
+    "purpose": "Application smoke test only"
+  },
+  "tennis": {
+    "source": "Kadantte/tennis_atp archive",
+    "url": "https://github.com/Kadantte/tennis_atp/blob/master/atp_matches_2025.csv",
+    "scope": "First 32 ATP matches in file",
+    "purpose": "Application smoke test only",
+    "license": "Non-commercial/research constraints apply"
+  }
+}

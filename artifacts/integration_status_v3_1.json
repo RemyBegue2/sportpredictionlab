@@ -1,0 +1,34 @@
+{
+  "version": "3.1.0",
+  "generated_at": "2026-08-02T12:18:41.555342+00:00",
+  "verdicts": {
+    "local_software": "go",
+    "private_cloud_single_instance": "conditional_go_after_platform_smoke_test",
+    "public_multi_user": "no_go",
+    "betting_profitability": "not_validated"
+  },
+  "verified": {
+    "pytest_passed": 41,
+    "coverage_percent": 85.74416172882538,
+    "python_compile": true,
+    "javascript_syntax": true,
+    "railway_toml_parse": true,
+    "render_yaml_parse": true,
+    "authenticated_http_smoke": true,
+    "static_browser_render": true,
+    "browser_console_errors": 0,
+    "artifact_manifest_verified_by_api_readiness": true,
+    "secret_scan": "no non-placeholder production secret detected"
+  },
+  "not_executed": {
+    "docker_build": "Docker/Podman unavailable",
+    "managed_postgresql": "No managed database credentials or platform project available",
+    "railway_deployment": "No user Railway project connected",
+    "render_deployment": "No user Render project connected",
+    "real_platform_cron": "Not deployed",
+    "real_the_odds_api_call": "User key not provided to runtime",
+    "historical_market_benchmark": "Requires real historical collection",
+    "backup_restore": "Requires managed database"
+  },
+  "next_version": "3.2 Real Historical Benchmark"
+}

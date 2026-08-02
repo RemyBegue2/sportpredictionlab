@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sports-prediction-v3-1"
+version = "0.3.1"
+description = "Authenticated cloud sports prediction research app with PostgreSQL, scheduled odds sync and market benchmarking"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26,<3",
+  "pandas>=2.1,<3",
+  "scipy>=1.11,<2",
+  "scikit-learn>=1.4,<2",
+  "catboost>=1.2,<2",
+  "joblib>=1.3,<2",
+  "requests>=2.31,<3",
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.30,<1",
+  "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4",
+  "itsdangerous>=2.2,<3",
+]
+
+[project.optional-dependencies]
+streamlit = ["streamlit>=1.42,<2", "plotly>=5.20,<7"]
+dev = ["pytest>=8,<10", "coverage>=7,<8", "httpx>=0.27,<1", "PyYAML>=6,<7"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sports_predictor*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

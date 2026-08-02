@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "python scripts/sync_current_odds.py --football soccer_epl"
+cronSchedule = "*/15 * * * *"
+restartPolicyType = "NEVER"

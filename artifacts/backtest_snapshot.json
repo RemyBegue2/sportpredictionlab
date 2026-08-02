@@ -1,0 +1,46 @@
+{
+  "audit_version": "2.1",
+  "football": {
+    "sport": "football",
+    "protocol": "external expanding-window; identical timestamps predicted as a batch",
+    "n_predictions": 30,
+    "folds": [
+      {
+        "fold": 0,
+        "train_start": "2023-08-11 00:00:00+00:00",
+        "train_end": "2023-09-24 00:00:00+00:00",
+        "test_start": "2023-09-30 00:00:00+00:00",
+        "test_end": "2023-10-22 00:00:00+00:00",
+        "n_train": 59,
+        "n_test": 30,
+        "metrics": {
+          "log_loss": 0.987162354423049,
+          "naive_log_loss": 1.0739858400140667,
+          "brier": 0.5933075223483593,
+          "rps": 0.4095040341392977,
+          "accuracy": 0.5333333333333333,
+          "ece": 0.17670673335928622
+        }
+      }
+    ],
+    "aggregate": {
+      "log_loss": 0.987162354423049,
+      "naive_log_loss": 1.0739858400140667,
+      "brier": 0.5933075223483593,
+      "rps": 0.4095040341392977,
+      "accuracy": 0.5333333333333333,
+      "ece": 0.17670673335928622,
+      "mean_log_loss_delta_vs_naive": -0.08682348559101749,
+      "delta_95pct_block_bootstrap": [
+        -0.10939579474815063,
+        -0.017637361709013925
+      ]
+    }
+  },
+  "tennis": {
+    "status": "not_evaluable",
+    "reason": "The bundled 32-row snapshot contains only two tournament timestamps. A leakage-safe train/calibration/test or external fold cannot be formed.",
+    "serving_mode": "elo_only_uncalibrated"
+  },
+  "interpretation": "A negative log-loss delta favors the model. Promotion still requires a multi-season interval entirely below zero and materially larger samples."
+}

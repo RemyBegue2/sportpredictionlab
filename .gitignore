@@ -1,0 +1,9 @@
+.venv/
+.env
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+data/odds_api/cache/*.json
+data/odds_api/historical/*.csv
+data/odds_api/historical/*.json

@@ -1,0 +1,35 @@
+{
+  "mode": "real-data-snapshot-smoke-test",
+  "warning": "Snapshot is for application verification, not performance conclusions.",
+  "football": {
+    "n_test": 20,
+    "log_loss": 0.9398655005299267,
+    "naive_log_loss": 1.1159396906095167,
+    "poisson_dc_log_loss": 0.9398655005299267,
+    "ml_only_log_loss": 1.041535499339392,
+    "brier": 0.5666607699239754,
+    "rps": 0.34204281372195094,
+    "accuracy": 0.6,
+    "ece": 0.07807664560356356,
+    "calibration_temperature": 4.999971938328189,
+    "ml_blend_weight": 0.0,
+    "dixon_coles_rho": -0.15
+  },
+  "tennis": {
+    "n_test": 0,
+    "serving_mode": "elo_only_uncalibrated",
+    "ml_blend_weight": 0.0,
+    "calibration_temperature": 1.0,
+    "symmetry_error": 0.0
+  },
+  "data": {
+    "football_rows": 90,
+    "football_distinct_timestamps": 28,
+    "tennis_rows": 32,
+    "tennis_distinct_tournament_timestamps": 2
+  },
+  "audit_decisions": [
+    "Identical timestamps are processed as a batch to prevent same-day/tournament leakage.",
+    "Tennis snapshot uses Elo-only serving because two timestamps cannot support calibration."
+  ]
+}

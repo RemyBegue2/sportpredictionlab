@@ -1,0 +1,60 @@
+{
+  "date": "2026-08-02",
+  "timezone": "Europe/Paris",
+  "generated_at": "2026-08-02T13:22:00+02:00",
+  "bookmaker": "Winamax",
+  "automatic_odds_collection": false,
+  "summary": {
+    "events_reviewed": 2,
+    "research_candidates": 0,
+    "abstentions": 2
+  },
+  "events": [
+    {
+      "sport": "tennis",
+      "tour": "ATP",
+      "competition": "Mubadala Citi DC Open",
+      "event": "Taylor Fritz - Rafael Jodar",
+      "surface": "hard",
+      "market": "vainqueur du match",
+      "winamax_odds": null,
+      "model_status": "unsupported_current_snapshot",
+      "decision": "abstention",
+      "reasons": [
+        "Rafael Jodar est absent du snapshot ATP embarqué",
+        "aucune cote Winamax horodatée n'a été vérifiée",
+        "le modèle tennis embarqué est Elo-only non calibré"
+      ],
+      "sources": [
+        "ATP Tour tournament calendar",
+        "Reuters, 2026-08-02"
+      ]
+    },
+    {
+      "sport": "tennis",
+      "tour": "WTA",
+      "competition": "Mubadala DC Open",
+      "event": "Jessica Pegula - Alexandra Eala",
+      "surface": "hard",
+      "market": "vainqueur du match",
+      "winamax_odds": null,
+      "model_status": "no_wta_model",
+      "decision": "abstention",
+      "reasons": [
+        "la V2.2 ne contient pas encore de modèle WTA",
+        "aucune cote Winamax horodatée n'a été vérifiée"
+      ],
+      "sources": [
+        "WTA official match notes",
+        "Reuters, 2026-08-02"
+      ]
+    }
+  ],
+  "warning": "Une liste vide de paris validés est un résultat normal lorsque les données, la calibration ou les cotes fraîches manquent.",
+  "source_urls": {
+    "atp_calendar": "https://www.atptour.com/en/tournaments/",
+    "wta_match_notes": "https://www.wtatennis.com/match-notes",
+    "atp_final_report": "https://www.reuters.com/sports/tennis/fritz-outlasts-compatriot-nakashima-set-face-jodar-washington-open-final-2026-08-02/",
+    "wta_final_report": "https://www.reuters.com/sports/tennis/wta-roundup-alexandra-eala-upsets-naomi-osaka-reach-final-washington--flm-2026-08-02/"
+  }
+}

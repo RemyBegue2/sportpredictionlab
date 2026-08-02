@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Connexion · Sports Prediction Lab</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-card">
+      <div class="login-mark">SP</div>
+      <p class="eyebrow">V3.1 CLOUD PRIVÉE</p>
+      <h1>Accès personnel</h1>
+      <p>La clé The Odds API, les snapshots et le journal des prédictions restent côté serveur.</p>
+      <form id="loginForm">
+        <label>Mot de passe<input id="password" type="password" autocomplete="current-password" minlength="12" required autofocus></label>
+        <button class="button primary full" type="submit">Se connecter</button>
+      </form>
+      <p id="loginError" class="login-error" role="alert"></p>
+      <small>Aucun compte Winamax n’est connecté et aucun pari n’est placé automatiquement.</small>
+    </section>
+  </main>
+  <script src="/static/login.js"></script>
+</body>
+</html>

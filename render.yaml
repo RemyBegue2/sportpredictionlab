@@ -1,0 +1,62 @@
+services:
+  - type: web
+    name: sports-prediction-web
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerCommand: sh -c 'uvicorn webapp:app --host 0.0.0.0 --port ${PORT:-10000} --no-server-header'
+    preDeployCommand: python scripts/db_migrate.py
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_AUTH_REQUIRED
+        value: "true"
+      - key: APP_COOKIE_SECURE
+        value: "true"
+      - key: APP_SESSION_SECRET
+        generateValue: true
+      - key: APP_PASSWORD
+        sync: false
+      - key: THE_ODDS_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sports-prediction-db
+          property: connectionString
+      - key: ODDS_SYNC_SPORTS
+        value: soccer_epl
+      - key: ODDS_STALE_MINUTES
+        value: "15"
+
+  - type: cron
+    name: sports-prediction-odds-sync
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    schedule: "*/15 * * * *"
+    dockerfilePath: ./Dockerfile
+    dockerCommand: python scripts/sync_current_odds.py --football soccer_epl
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_AUTH_REQUIRED
+        value: "false"
+      - key: THE_ODDS_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sports-prediction-db
+          property: connectionString
+      - key: ODDS_SYNC_SPORTS
+        value: soccer_epl
+
+databases:
+  - name: sports-prediction-db
+    plan: basic-256mb
+    region: frankfurt
+    databaseName: sports_prediction
+    user: sports_prediction
+    ipAllowList: []

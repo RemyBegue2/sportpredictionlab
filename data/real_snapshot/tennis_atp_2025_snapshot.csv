@@ -1,0 +1,33 @@
+date,tour,surface,tournament_level,tournament,best_of,winner_name,loser_name,winner_rank,loser_rank,winner_rank_points,loser_rank_points
+2024-12-27,ATP,hard,A,United Cup,3,Taylor Fritz,Hubert Hurkacz,4,16,5100,2640
+2024-12-27,ATP,hard,A,United Cup,3,Taylor Fritz,Tomas Machac,4,25,5100,1758
+2024-12-27,ATP,hard,A,United Cup,3,Hubert Hurkacz,Alexander Shevchenko,16,78,2640,715
+2024-12-27,ATP,hard,A,United Cup,3,Taylor Fritz,Zhizhen Zhang,4,45,5100,1155
+2024-12-27,ATP,hard,A,United Cup,3,Tomas Machac,Flavio Cobolli,25,32,1758,1472
+2024-12-27,ATP,hard,A,United Cup,3,Hubert Hurkacz,Billy Harris,16,125,2640,474
+2024-12-27,ATP,hard,A,United Cup,3,Felix Auger Aliassime,Taylor Fritz,29,4,1635,5100
+2024-12-27,ATP,hard,A,United Cup,3,Taylor Fritz,Borna Coric,4,90,5100,639
+2024-12-27,ATP,hard,A,United Cup,3,Borna Coric,Felix Auger Aliassime,90,29,639,1635
+2024-12-27,ATP,hard,A,United Cup,3,Tomas Machac,Hubert Hurkacz,25,16,1758,2640
+2024-12-27,ATP,hard,A,United Cup,3,Casper Ruud,Hubert Hurkacz,6,16,4255,2640
+2024-12-27,ATP,hard,A,United Cup,3,Casper Ruud,Tomas Machac,6,25,4255,1758
+2024-12-27,ATP,hard,A,United Cup,3,Alexander Shevchenko,Stefanos Tsitsipas,78,11,715,3165
+2024-12-27,ATP,hard,A,United Cup,3,Stefanos Tsitsipas,Pablo Carreno Busta,11,196,3165,292
+2024-12-27,ATP,hard,A,United Cup,3,Pablo Carreno Busta,Alexander Shevchenko,196,78,292,715
+2024-12-27,ATP,hard,A,United Cup,3,Flavio Cobolli,Ugo Humbert,32,14,1472,2765
+2024-12-27,ATP,hard,A,United Cup,3,Flavio Cobolli,Dominic Stricker,32,300,1472,173
+2024-12-27,ATP,hard,A,United Cup,3,Ugo Humbert,Dominic Stricker,14,300,2765,173
+2024-12-27,ATP,hard,A,United Cup,3,Alexander Zverev,Zhizhen Zhang,2,45,7915,1155
+2024-12-27,ATP,hard,A,United Cup,3,Zhizhen Zhang,Thiago Monteiro,45,109,1155,566
+2024-12-27,ATP,hard,A,United Cup,3,Alexander Zverev,Thiago Monteiro,2,109,7915,566
+2024-12-27,ATP,hard,A,United Cup,3,Alex De Minaur,Billy Harris,9,125,3745,474
+2024-12-27,ATP,hard,A,United Cup,3,Tomas Martin Etcheverry,Billy Harris,39,125,1315,474
+2024-12-27,ATP,hard,A,United Cup,3,Alex De Minaur,Tomas Martin Etcheverry,9,39,3745,1315
+2024-12-30,ATP,hard,A,Brisbane,3,Jiri Lehecka,Reilly Opelka,28,293,1660,176
+2024-12-30,ATP,hard,A,Brisbane,3,Reilly Opelka,Giovanni Mpetshi Perricard,293,31,176,1561
+2024-12-30,ATP,hard,A,Brisbane,3,Jiri Lehecka,Grigor Dimitrov,28,10,1660,3350
+2024-12-30,ATP,hard,A,Brisbane,3,Reilly Opelka,Novak Djokovic,293,7,176,3910
+2024-12-30,ATP,hard,A,Brisbane,3,Giovanni Mpetshi Perricard,Jakub Mensik,31,48,1561,1136
+2024-12-30,ATP,hard,A,Brisbane,3,Jiri Lehecka,Nicolas Jarry,28,35,1660,1370
+2024-12-30,ATP,hard,A,Brisbane,3,Grigor Dimitrov,Jordan Thompson,10,26,3350,1745
+2024-12-30,ATP,hard,A,Brisbane,3,Novak Djokovic,Gael Monfils,7,55,3910,1005

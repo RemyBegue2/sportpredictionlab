@@ -1,0 +1,13 @@
+{
+  "version": "3.0.0",
+  "generated_at": "2026-08-02T13:36:00+02:00",
+  "tests_passed": 35,
+  "coverage_percent": 86,
+  "javascript_syntax": "passed",
+  "python_compileall": "passed",
+  "static_preview": "rendered_with_chromium_no_console_errors",
+  "real_odds_api_calls": 0,
+  "user_credits_consumed": 0,
+  "api_key_in_artifact": false,
+  "status": "technical_go_statistical_no_go_until_historical_backtest"
+}

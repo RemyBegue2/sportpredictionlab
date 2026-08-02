@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sports Prediction Lab V3.1 Cloud</title>
+  <meta name="description" content="Application cloud privée avec FastAPI, PostgreSQL, flux Winamax via The Odds API, historique des cotes et comparaison au marché.">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
+    <nav>
+      <a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
+    </nav>
+    <div class="top-actions"><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
+  </header>
+
+  <main>
+    <section id="overview" class="hero">
+      <div>
+        <p class="eyebrow">VERSION 3.1 · CLOUD PRIVÉ · POSTGRESQL</p>
+        <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
+        <p class="lede">Une application accessible par URL, protégée par mot de passe, avec snapshots PostgreSQL, synchronisation planifiée et journal auditable des prédictions.</p>
+        <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
+      </div>
+      <aside class="trust-card">
+        <div class="trust-title">Chaîne de décision</div>
+        <ol>
+          <li><b>Probabilité modèle</b><span>Pré-match uniquement</span></li>
+          <li><b>Cote horodatée</b><span>Winamax via API ou saisie</span></li>
+          <li><b>Consensus</b><span>Marchés dévigés</span></li>
+          <li><b>Closing line</b><span>Contrôle hors temps</span></li>
+          <li><b>Abstention possible</b><span>Aucun pari forcé</span></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="stats" aria-label="Résumé des données">
+      <article><span id="footballRows">—</span><small>matchs football embarqués</small></article>
+      <article><span id="tennisRows">—</span><small>matchs tennis embarqués</small></article>
+      <article><span id="dailyCandidates">—</span><small>candidats recherche aujourd’hui</small></article>
+      <article><span id="oddsApiState">—</span><small>connexion The Odds API</small></article><article><span id="dbSnapshots">—</span><small>snapshots persistés</small></article>
+    </section>
+
+    <section id="bets" class="workbench bets-section">
+      <div class="section-heading"><p class="eyebrow">SHORTLIST QUOTIDIENNE</p><h2>Paris du jour</h2><p>La liste distingue les événements à examiner des paris réellement validés par le protocole. Une cote absente, trop ancienne ou un modèle non calibré déclenchent une abstention.</p></div>
+      <div id="dailySlate" class="daily-grid"><div class="slate-card loading-card">Chargement de la revue du jour…</div></div>
+      <div class="policy-note"><b>Mode Winamax :</b> aucune connexion au compte, aucun scraping authentifié et aucune prise de pari automatique. Recopiez les cotes décimales dans les formulaires ci-dessous pour obtenir l’edge, l’EV et le verdict.</div>
+    </section>
+
+    <section id="odds-api" class="workbench odds-api-section">
+      <div class="section-heading"><p class="eyebrow">WINAMAX + CONSENSUS</p><h2>Flux de cotes</h2><p>La clé reste exclusivement sur le serveur. Un appel charge le 1N2 Winamax France et un consensus de bookmakers pour les rencontres EPL disponibles, puis applique le même protocole d’abstention.</p></div>
+      <div class="provider-grid">
+        <article class="provider-card"><small>État du connecteur</small><h3 id="providerStatus">Chargement…</h3><p id="providerQuota">Quota inconnu</p><code>THE_ODDS_API_KEY</code></article>
+        <div class="provider-control">
+          <label>Football<select id="oddsSport"><option value="soccer_epl">Premier League · soccer_epl</option></select></label>
+          <button id="loadLiveOdds" class="button primary full" type="button">Charger le football</button>
+          <p class="fineprint">Modèle embarqué : EPL. Coût attendu : 1 crédit pour h2h et jusqu’à 10 bookmakers.</p>
+        </div>
+        <div class="provider-control">
+          <label>Tournoi tennis actif<select id="oddsTennisSport"><option value="">Clé chargée depuis le fournisseur</option></select></label>
+          <label>Surface<select id="oddsTennisSurface"><option value="hard">Dur</option><option value="clay">Terre battue</option><option value="grass">Gazon</option></select></label>
+          <button id="loadTennisOdds" class="button ghost full" type="button">Charger le tennis</button>
+          <p class="fineprint">Les tournois sont découverts dynamiquement. Le modèle snapshot reste non calibré et doit normalement s’abstenir.</p>
+        </div>
+      </div>
+      <div id="liveOddsResult" class="daily-grid provider-results"><div class="slate-card loading-card">Connecteur en attente.</div></div>
+      <div class="policy-note"><b>Secret :</b> ne collez pas la clé dans cette page. Définissez-la dans l’environnement du serveur. L’application ne place aucun pari et exige toujours une vérification directe de la cote chez Winamax.</div>
+    </section>
+
+
+    <section id="cloud" class="workbench cloud-section">
+      <div class="section-heading"><p class="eyebrow">CLOUD & TRAÇABILITÉ</p><h2>État de la plateforme</h2><p>La version cloud sépare liveness, readiness, stockage et historique. Une prédiction n’est considérée exploitable que si les modèles sont chargés et si son journal peut être écrit en base.</p></div>
+      <div class="cloud-grid">
+        <article class="cloud-card"><small>Authentification</small><h3 id="cloudAuth">—</h3><p>Session privée et protection CSRF pour les actions d’écriture.</p></article>
+        <article class="cloud-card"><small>Base de données</small><h3 id="cloudDatabase">—</h3><p id="cloudLastSync">Dernière synchronisation inconnue.</p></article>
+        <article class="cloud-card"><small>Readiness</small><h3 id="cloudReady">—</h3><p id="cloudIssues">Contrôle en cours.</p></article>
+      </div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>JOURNAL D’AUDIT</small><h3>Dernières prédictions</h3></div><button id="refreshHistory" class="button ghost" type="button">Actualiser</button></div>
+        <div id="predictionHistory" class="history-list"><p>Chargement du journal…</p></div>
+      </div>
+    </section>
+
+    <section id="football" class="workbench alt">
+      <div class="section-heading"><p class="eyebrow">MODÈLE 1N2 + COTES</p><h2>Football</h2><p>Poisson, correction Dixon–Coles et Elo. Les trois cotes Winamax sont facultatives, mais doivent être saisies ensemble pour calculer la marge et comparer le marché complet.</p></div>
+      <div class="panel-grid">
+        <form id="footballForm" class="control-panel">
+          <label>Équipe à domicile<select id="homeTeam" required></select></label>
+          <label>Équipe à l’extérieur<select id="awayTeam" required></select></label>
+          <label>Date du match<input id="footballDate" type="date"></label>
+          <fieldset class="odds-fieldset">
+            <legend>Cotes Winamax facultatives</legend>
+            <div class="odds-grid three"><label>1<input id="footballHomeOdds" type="number" min="1.01" max="1000" step="0.01" placeholder="1,80"></label><label>N<input id="footballDrawOdds" type="number" min="1.01" max="1000" step="0.01" placeholder="3,60"></label><label>2<input id="footballAwayOdds" type="number" min="1.01" max="1000" step="0.01" placeholder="4,20"></label></div>
+            <label>Heure relevée<input id="footballOddsTime" type="datetime-local"></label>
+          </fieldset>
+          <button class="button primary full" type="submit">Calculer probabilités et valeur</button>
+          <p class="fineprint">Le snapshot embarqué sert à tester le produit. Un statut « candidat recherche » n’est pas une consigne de mise.</p>
+        </form>
+        <div id="footballResult" class="result-panel empty"><p>Sélectionnez deux équipes et, éventuellement, les trois cotes Winamax.</p></div>
+      </div>
+    </section>
+
+    <section id="tennis" class="workbench">
+      <div class="section-heading"><p class="eyebrow">ELO GLOBAL + SURFACE</p><h2>Tennis</h2><p>Orientation symétrique et Elo par surface. Le snapshot ATP embarqué reste non calibré : même avec des cotes, le comparateur doit conclure à l’abstention.</p></div>
+      <div class="panel-grid">
+        <form id="tennisForm" class="control-panel">
+          <label>Joueur 1<select id="player1" required></select></label>
+          <label>Joueur 2<select id="player2" required></select></label>
+          <label>Surface<select id="surface"><option value="hard">Dur</option><option value="clay">Terre battue</option><option value="grass">Gazon</option><option value="carpet">Moquette</option></select></label>
+          <fieldset class="odds-fieldset">
+            <legend>Cotes Winamax facultatives</legend>
+            <div class="odds-grid"><label>Joueur 1<input id="tennisP1Odds" type="number" min="1.01" max="1000" step="0.01" placeholder="1,65"></label><label>Joueur 2<input id="tennisP2Odds" type="number" min="1.01" max="1000" step="0.01" placeholder="2,25"></label></div>
+            <label>Heure relevée<input id="tennisOddsTime" type="datetime-local"></label>
+          </fieldset>
+          <button class="button primary full" type="submit">Calculer probabilités et valeur</button>
+          <p class="fineprint">Les walkovers et abandons sont exclus. Blessures, fatigue tardive et informations de dernière minute restent hors modèle.</p>
+        </form>
+        <div id="tennisResult" class="result-panel empty"><p>Sélectionnez deux joueurs et, éventuellement, les deux cotes Winamax.</p></div>
+      </div>
+    </section>
+
+    <section id="audit" class="audit-section">
+      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3</h2></div>
+      <div class="role-grid">
+        <article><span>01</span><h3>Quant marchés</h3><p>La V3 juge le modèle contre Winamax, le consensus et la closing line, pas seulement contre une fréquence naïve.</p></article>
+        <article><span>02</span><h3>Statisticien</h3><p>Les seuils d’edge sont figés avant le test et évalués en walk-forward avec intervalles de confiance.</p></article>
+        <article><span>03</span><h3>Data engineer</h3><p>Identifiants d’événements, timestamps UTC, snapshots bruts immuables, cache et appariement d’identités.</p></article>
+        <article><span>04</span><h3>FinOps API</h3><p>Dry-run, estimation des crédits et regroupement de plusieurs bookmakers dans une même requête.</p></article>
+        <article><span>05</span><h3>Sécurité</h3><p>Clé côté serveur uniquement, hôte figé, erreurs expurgées et absence de secret dans le cache.</p></article>
+        <article><span>06</span><h3>Conformité</h3><p>Analyse utilisateur autorisée, mais aucune redistribution des données brutes ni exécution automatique.</p></article>
+      </div>
+      <div class="audit-callout">
+        <div><b>Verdict</b><p>V3.1 = cloud techniquement exploitable. Le GO statistique dépend encore d’un backtest historique réel exécuté avec votre abonnement, sans fuite et avec budget verrouillé.</p></div>
+        <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
+      </div>
+      <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
+    </section>
+  </main>
+
+  <footer><span>Sports Prediction Lab V3.1 Cloud</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

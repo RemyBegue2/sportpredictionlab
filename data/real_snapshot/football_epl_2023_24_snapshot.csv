@@ -1,0 +1,91 @@
+date,league,season,home_team,away_team,home_goals,away_goals
+2023-08-11,E0,2023-24,Burnley,Man City,0,3
+2023-08-12,E0,2023-24,Arsenal,Nott'm Forest,2,1
+2023-08-12,E0,2023-24,Bournemouth,West Ham,1,1
+2023-08-12,E0,2023-24,Brighton,Luton,4,1
+2023-08-12,E0,2023-24,Everton,Fulham,0,1
+2023-08-12,E0,2023-24,Sheffield United,Crystal Palace,0,1
+2023-08-12,E0,2023-24,Newcastle,Aston Villa,5,1
+2023-08-13,E0,2023-24,Brentford,Tottenham,2,2
+2023-08-13,E0,2023-24,Chelsea,Liverpool,1,1
+2023-08-14,E0,2023-24,Man United,Wolves,1,0
+2023-08-18,E0,2023-24,Nott'm Forest,Sheffield United,2,1
+2023-08-19,E0,2023-24,Fulham,Brentford,0,3
+2023-08-19,E0,2023-24,Liverpool,Bournemouth,3,1
+2023-08-19,E0,2023-24,Wolves,Brighton,1,4
+2023-08-19,E0,2023-24,Tottenham,Man United,2,0
+2023-08-19,E0,2023-24,Man City,Newcastle,1,0
+2023-08-20,E0,2023-24,Aston Villa,Everton,4,0
+2023-08-20,E0,2023-24,West Ham,Chelsea,3,1
+2023-08-21,E0,2023-24,Crystal Palace,Arsenal,0,1
+2023-08-25,E0,2023-24,Chelsea,Luton,3,0
+2023-08-26,E0,2023-24,Bournemouth,Tottenham,0,2
+2023-08-26,E0,2023-24,Arsenal,Fulham,2,2
+2023-08-26,E0,2023-24,Brentford,Crystal Palace,1,1
+2023-08-26,E0,2023-24,Everton,Wolves,0,1
+2023-08-26,E0,2023-24,Man United,Nott'm Forest,3,2
+2023-08-26,E0,2023-24,Brighton,West Ham,1,3
+2023-08-27,E0,2023-24,Burnley,Aston Villa,1,3
+2023-08-27,E0,2023-24,Sheffield United,Man City,1,2
+2023-08-27,E0,2023-24,Newcastle,Liverpool,1,2
+2023-09-01,E0,2023-24,Luton,West Ham,1,2
+2023-09-02,E0,2023-24,Sheffield United,Everton,2,2
+2023-09-02,E0,2023-24,Brentford,Bournemouth,2,2
+2023-09-02,E0,2023-24,Burnley,Tottenham,2,5
+2023-09-02,E0,2023-24,Chelsea,Nott'm Forest,0,1
+2023-09-02,E0,2023-24,Man City,Fulham,5,1
+2023-09-02,E0,2023-24,Brighton,Newcastle,3,1
+2023-09-03,E0,2023-24,Crystal Palace,Wolves,3,2
+2023-09-03,E0,2023-24,Liverpool,Aston Villa,3,0
+2023-09-03,E0,2023-24,Arsenal,Man United,3,1
+2023-09-16,E0,2023-24,Wolves,Liverpool,1,3
+2023-09-16,E0,2023-24,Aston Villa,Crystal Palace,3,1
+2023-09-16,E0,2023-24,Fulham,Luton,1,0
+2023-09-16,E0,2023-24,Man United,Brighton,1,3
+2023-09-16,E0,2023-24,Tottenham,Sheffield United,2,1
+2023-09-16,E0,2023-24,West Ham,Man City,1,3
+2023-09-16,E0,2023-24,Newcastle,Brentford,1,0
+2023-09-17,E0,2023-24,Bournemouth,Chelsea,0,0
+2023-09-17,E0,2023-24,Everton,Arsenal,0,1
+2023-09-18,E0,2023-24,Nott'm Forest,Burnley,1,1
+2023-09-23,E0,2023-24,Crystal Palace,Fulham,0,0
+2023-09-23,E0,2023-24,Luton,Wolves,1,1
+2023-09-23,E0,2023-24,Man City,Nott'm Forest,2,0
+2023-09-23,E0,2023-24,Brentford,Everton,1,3
+2023-09-23,E0,2023-24,Burnley,Man United,0,1
+2023-09-24,E0,2023-24,Arsenal,Tottenham,2,2
+2023-09-24,E0,2023-24,Brighton,Bournemouth,3,1
+2023-09-24,E0,2023-24,Chelsea,Aston Villa,0,1
+2023-09-24,E0,2023-24,Liverpool,West Ham,3,1
+2023-09-24,E0,2023-24,Sheffield United,Newcastle,0,8
+2023-09-30,E0,2023-24,Aston Villa,Brighton,6,1
+2023-09-30,E0,2023-24,Bournemouth,Arsenal,0,4
+2023-09-30,E0,2023-24,Everton,Luton,1,2
+2023-09-30,E0,2023-24,Man United,Crystal Palace,0,1
+2023-09-30,E0,2023-24,Newcastle,Burnley,2,0
+2023-09-30,E0,2023-24,West Ham,Sheffield United,2,0
+2023-09-30,E0,2023-24,Wolves,Man City,2,1
+2023-09-30,E0,2023-24,Tottenham,Liverpool,2,1
+2023-10-01,E0,2023-24,Nott'm Forest,Brentford,1,1
+2023-10-02,E0,2023-24,Fulham,Chelsea,0,2
+2023-10-03,E0,2023-24,Luton,Burnley,1,2
+2023-10-07,E0,2023-24,Luton,Tottenham,0,1
+2023-10-07,E0,2023-24,Burnley,Chelsea,1,4
+2023-10-07,E0,2023-24,Everton,Bournemouth,3,0
+2023-10-07,E0,2023-24,Fulham,Sheffield United,3,1
+2023-10-07,E0,2023-24,Man United,Brentford,2,1
+2023-10-07,E0,2023-24,Crystal Palace,Nott'm Forest,0,0
+2023-10-08,E0,2023-24,Brighton,Liverpool,2,2
+2023-10-08,E0,2023-24,West Ham,Newcastle,2,2
+2023-10-08,E0,2023-24,Wolves,Aston Villa,1,1
+2023-10-08,E0,2023-24,Arsenal,Man City,1,0
+2023-10-21,E0,2023-24,Liverpool,Everton,2,0
+2023-10-21,E0,2023-24,Bournemouth,Wolves,1,2
+2023-10-21,E0,2023-24,Brentford,Burnley,3,0
+2023-10-21,E0,2023-24,Man City,Brighton,2,1
+2023-10-21,E0,2023-24,Newcastle,Crystal Palace,4,0
+2023-10-21,E0,2023-24,Nott'm Forest,Luton,2,2
+2023-10-21,E0,2023-24,Chelsea,Arsenal,2,2
+2023-10-21,E0,2023-24,Sheffield United,Man United,1,2
+2023-10-22,E0,2023-24,Aston Villa,West Ham,4,1
+2023-10-23,E0,2023-24,Tottenham,Fulham,2,0
