@@ -74,8 +74,9 @@ function renderBenchmark(data){
   $('#benchmarkRows').textContent=summary.evaluated_rows ?? 0;
   const delta=summary.model_vs_winamax_log_loss_delta;
   $('#benchmarkDelta').textContent=Number.isFinite(delta)?`${delta<0?'−':'+'}${Math.abs(delta).toFixed(4)}`:'—';
-  const ci=summary.ci95||[];
-  $('#benchmarkCi').textContent=ci.every(Number.isFinite)?`IC 95 % [${ci[0].toFixed(4)} ; ${ci[1].toFixed(4)}]`:'Intervalle de confiance indisponible.';
+  const ci=Array.isArray(summary.ci95)?summary.ci95:[];
+  const hasValidCi=ci.length===2 && ci.every(value=>Number.isFinite(value));
+  $('#benchmarkCi').textContent=hasValidCi?`IC 95 % [${ci[0].toFixed(4)} ; ${ci[1].toFixed(4)}]`:'Intervalle de confiance indisponible.';
   const clv=summary.clv;
   $('#benchmarkClv').textContent=clv&&Number.isFinite(clv.mean_log_clv)?`${(100*clv.mean_log_clv).toFixed(2)} %`:'—';
 }
@@ -111,7 +112,17 @@ function renderDaily(data){
 
 async function init(){
   try{
-    const health=await jsonFetch('/api/health'); $('#health').textContent=`API ${health.status} · v${health.version}`; $('#health').classList.add('ok');
+    const health=await jsonFetch('/api/health');
+    $('#health').textContent=`API ${health.status} · v${health.version}`;
+    $('#health').classList.add('ok');
+  }catch(e){
+    $('#health').textContent='API indisponible';
+    $('#health').classList.add('error');
+    toast(e.message);
+    return;
+  }
+
+  try{
     const auth=await jsonFetch('/api/auth/status'); CSRF_TOKEN=auth.csrf_token||null;
     const readyResponse=await fetch('/api/ready',{credentials:'same-origin'}); const readiness=await readyResponse.json(); renderCloud(auth,readiness);
     const cat=await jsonFetch('/api/catalog');
@@ -124,7 +135,9 @@ async function init(){
     const [audit, slate, provider, history, benchmark]=await Promise.all([jsonFetch('/api/metrics'),jsonFetch('/api/bets/today'),jsonFetch('/api/odds/status'),jsonFetch('/api/history/predictions?limit=20'),jsonFetch('/api/benchmark/summary')]);
     $('#metrics').textContent=JSON.stringify(audit,null,2); renderDaily(slate); renderProviderStatus(provider); renderHistory(history); renderBenchmark(benchmark);
     if(provider.configured){ try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); } }
-  }catch(e){ $('#health').textContent='API indisponible'; $('#health').classList.add('error'); toast(e.message); }
+  }catch(e){
+    toast(`Interface partiellement chargée : ${e.message}`);
+  }
 }
 
 $('#footballForm').addEventListener('submit',async e=>{

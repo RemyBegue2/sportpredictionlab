@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sports-prediction-v3-2"
-version = "0.3.2"
+version = "0.3.2.1"
 description = "Cloud sports prediction research app with historical odds backfills, temporal audits and model-vs-market benchmarking"
 requires-python = ">=3.10"
 dependencies = [

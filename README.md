@@ -1,5 +1,8 @@
 # Sports Prediction Lab V3.2 — Real Historical Benchmark
 
+> **V3.2.1** corrige un faux statut « API indisponible » provoqué par l'affichage d'un intervalle de confiance encore absent avant le premier benchmark.
+
+
 Application privée de recherche pour le football et le tennis. La V3.2 conserve le déploiement cloud de la V3.1 et ajoute une chaîne reproductible pour confronter les probabilités du modèle à Winamax, au consensus dévigé et à la closing line.
 
 ## Verdict actuel

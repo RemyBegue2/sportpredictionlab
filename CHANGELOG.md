@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.1
+
+- Corrige le crash `ci[0].toFixed` lorsqu'aucun benchmark historique n'a encore été exécuté.
+- Empêche une erreur de rendu secondaire de transformer le badge de santé en `API indisponible`.
+- Ajoute un cache-busting du JavaScript et des tests de non-régression.
+
 ## 3.2.0
 
 - ajout du benchmark historique modèle–Winamax–consensus ;
