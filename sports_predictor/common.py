@@ -38,7 +38,7 @@ def chronological_group_split_indices(
     split can therefore train on one result while evaluating another event that has the
     same timestamp. Boundaries are selected only between timestamp groups.
     """
-    ts = pd.Series(pd.to_datetime(list(dates), utc=True, errors="raise"))
+    ts = pd.Series(pd.to_datetime(list(dates), utc=True, errors="raise",format="mixed",))
     n = len(ts)
     if n < min_train + min_calibration + min_test:
         raise ValueError("Not enough observations for grouped train/calibration/test split.")
