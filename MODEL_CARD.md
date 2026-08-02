@@ -1,42 +1,38 @@
-# Model card — Sports Prediction Lab V3.1 Cloud
+# Model Card — V3.2
 
-## Modification par rapport à la V3.0
+## Usage prévu
 
-La V3.1 modifie le **serving**, le stockage et la sécurité. Elle ne change pas les modèles statistiques embarqués et ne publie aucune nouvelle mesure de performance.
+Recherche probabiliste pré-match, comparaison aux marchés et audit de calibration. Pas de conseil financier, pas de mise automatique et pas de garantie de rendement.
 
 ## Football
 
-- données snapshot EPL 2023-2024 ;
-- Elo et forme pré-match ;
-- buts CatBoost Poisson ;
+- Elo et forme séquentielle ;
+- CatBoost Poisson pour les buts ;
 - correction Dixon–Coles ;
-- calibration et blend gardés par validation ;
-- modèle ML rejeté dans le snapshot livré (`ml_blend_weight=0`) ;
-- usage limité à la recherche.
+- classifieur 1N2 calibré ;
+- prédiction par groupes de timestamps identiques ;
+- walk-forward externe pour le benchmark V3.2.
+
+Le modèle snapshot livré n’est pas refitté sur un corpus multi-saisons complet. Il sert principalement au fonctionnement de l’application.
 
 ## Tennis
 
-- petit snapshot ATP 2025 ;
-- Elo global et surface ;
-- seulement deux timestamps de tournoi distincts ;
-- aucune calibration valide possible ;
-- service `elo_only_uncalibrated` ;
-- abstention normale dès qu'une décision de marché est demandée.
+Mode livré : Elo global/surface non calibré. Aucune promotion analytique autorisée.
 
-## Contrôles de serving V3.1
+## Marché
 
-- aucune date antérieure au cutoff ;
-- aucune analyse après le début du match ;
-- marchés complets seulement ;
-- cote horodatée ;
-- journal de version du modèle ;
-- échec si le journal ne peut être écrit ;
-- cote devenue ancienne reclassée à l'affichage.
+Les cotes sont déviguées avant comparaison. Winamax est séparé du consensus. Le blend modèle/consensus apprend son poids sur le train de chaque fold seulement.
 
-## Usages interdits
+## Critères de promotion
 
-- garantie de gain ;
-- automatisation des mises ;
-- taille de mise ou gestion de bankroll ;
-- usage public sans revue de sécurité et conformité ;
-- interprétation du snapshot comme preuve de rentabilité.
+- folds chronologiques disponibles ;
+- au moins 500 prédictions hors échantillon par défaut ;
+- intégrité temporelle ;
+- matching fiable ;
+- amélioration probabiliste robuste contre Winamax ;
+- résultats non concentrés sur une courte période ;
+- CLV observée comme signal secondaire.
+
+## État actuel
+
+`not_run` pour le benchmark historique réel.

@@ -1,44 +1,33 @@
-# Roadmap après V3.1
+# Roadmap après V3.2
 
-## V3.1 Cloud — livrée
+## V3.3 Performance
 
-- déploiement Railway/Render ;
-- PostgreSQL ;
-- authentification et CSRF ;
-- cron de cotes ;
-- journal des prédictions ;
-- page quotidienne alimentée par la base ;
-- contrôle de fraîcheur ;
-- health/readiness ;
-- 41 tests.
+À choisir uniquement si le benchmark réel est favorable :
 
-## V3.2 — benchmark historique réel
+- extension Ligue 1, Liga, Bundesliga et Serie A ;
+- seuils spécifiques par championnat ;
+- monitoring de calibration et de CLV ;
+- alertes de dérive ;
+- registre de modèles et rollback ;
+- rapport hebdomadaire automatique.
 
-1. Collecter EPL sur plusieurs saisons avec budget validé.
-2. Capturer 24 h, 6 h, 1 h et closing 10 min.
-3. Appairer résultats, modèle, Winamax et consensus.
-4. Exécuter cinq folds expanding-window.
-5. Choisir les seuils uniquement dans les folds d'entraînement.
-6. Mesurer log-loss, Brier, RPS, calibration, couverture et CLV.
-7. Produire des intervalles par block bootstrap.
-8. Geler une règle de sélection avant le dernier fold.
-9. Publier aussi les segments où le modèle perd contre le marché.
+## V3.3 Rebuild
 
-## V3.3 — durcissement cloud
+À choisir si Winamax ou le consensus battent le modèle :
 
-- Alembic ;
-- Redis pour rate limiting et verrou de cron ;
-- alertes quota et fraîcheur ;
-- sauvegarde et test de restauration ;
-- métriques Prometheus/OpenTelemetry ;
-- filtre d'historique ;
-- comptes individuels/MFA seulement si plusieurs utilisateurs ;
-- format d'artefact signé ou plus sûr.
+- refonte des données multi-saisons ;
+- horaires exacts et composition des équipes ;
+- ratings de joueurs/absences ;
+- modèles hiérarchiques par championnat ;
+- calibration cross-fittée ;
+- étude du marché comme baseline ou prior principal ;
+- abandon explicite des segments sans signal.
 
-## V3.4 — extension de données
+## P0 commun
 
-- Ligue 1, Liga, Bundesliga et Serie A ;
-- identités canoniques versionnées ;
-- WTA et ATP avec timestamps exacts ;
-- modèle tennis calibré uniquement après données suffisantes ;
-- comparaison par ligue, surface et horizon.
+- exécuter un benchmark EPL réel ;
+- vérifier les sauvegardes PostgreSQL ;
+- adopter Alembic ;
+- enrichir les aliases canoniques ;
+- tester le worker Railway ;
+- documenter le coût réel en crédits.

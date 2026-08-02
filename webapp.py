@@ -33,6 +33,9 @@ from sports_predictor.database import (
     predictions_for_date,
     recent_predictions,
     recent_sync_runs,
+    recent_backfill_jobs,
+    recent_data_quality_issues,
+    latest_benchmark_run,
     record_prediction,
 )
 from sports_predictor.betting import analyze_market, analyze_three_way, analyze_two_way
@@ -46,6 +49,7 @@ from sports_predictor.data_sources.the_odds_api import (
 )
 from sports_predictor.identity import football_model_name, normalize_identity
 from sports_predictor.odds_data import bookmaker_h2h_markets, consensus_h2h, normalize_odds_payload
+from sports_predictor.market_benchmark import benchmark_summary
 
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / "static"
@@ -78,9 +82,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V3.1 Cloud",
-    version="3.1.1",
-    description="Authenticated cloud edition with PostgreSQL persistence, scheduled odds synchronization and market-aware research.",
+    title="Sports Prediction Lab V3.2 Historical Validation",
+    version="3.2.0",
+    description="Authenticated cloud edition with PostgreSQL persistence, historical odds backfills, temporal audits and model-vs-market benchmarking.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -767,6 +771,7 @@ def metrics() -> dict[str, Any]:
         "backtest": r["backtest"],
         "provenance": r["provenance"],
         "artifact_manifest": r["artifact_manifest"],
+        "market_benchmark": benchmark_summary((latest_benchmark_run("soccer_epl") or {}).get("report")),
     }
 
 
@@ -849,6 +854,37 @@ def bets_today(date: str | None = None) -> dict[str, Any]:
         "events": [],
         "warning": "No fresh persisted slate is available. Run the sync job or load the odds feed.",
     }
+
+
+
+
+@app.get("/api/benchmark/summary")
+def market_benchmark_summary(sport_key: str = "soccer_epl") -> dict[str, Any]:
+    if not SPORT_KEY_RE.fullmatch(sport_key):
+        raise HTTPException(status_code=422, detail="Invalid sport_key")
+    run = latest_benchmark_run(sport_key)
+    if run is None:
+        artifact = ROOT / "artifacts/market_benchmark_v3_2.json"
+        if artifact.exists():
+            report = json.loads(artifact.read_text(encoding="utf-8"))
+            return {"source": "artifact", "summary": benchmark_summary(report), "report": report}
+        return {
+            "source": "none",
+            "summary": benchmark_summary(None),
+            "report": None,
+            "required_next_step": "Run the historical backfill and benchmark worker with a reviewed credit cap.",
+        }
+    return {"source": "postgresql", "summary": run.get("summary") or benchmark_summary(run.get("report")), "report": run.get("report"), "run": {k: v for k, v in run.items() if k != "report"}}
+
+
+@app.get("/api/admin/data-quality")
+def data_quality(limit: int = 100) -> dict[str, Any]:
+    return {"issues": recent_data_quality_issues(limit), "database": database_summary()}
+
+
+@app.get("/api/admin/backfills")
+def backfill_history(limit: int = 20) -> dict[str, Any]:
+    return {"jobs": recent_backfill_jobs(limit), "database": database_summary()}
 
 
 @app.get("/api/odds/status")

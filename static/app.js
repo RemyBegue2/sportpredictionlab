@@ -64,6 +64,22 @@ function renderHistory(data){
 
 async function refreshHistory(){ try{ renderHistory(await jsonFetch('/api/history/predictions?limit=20')); }catch(error){ toast(error.message); } }
 
+function renderBenchmark(data){
+  const summary=data.summary||{};
+  const status=summary.status||'not_run';
+  const labels={not_run:'Non exécuté',not_evaluable:'Non évaluable',exploratory:'Exploratoire',preliminary_go:'Signal préliminaire',no_go:'Aucun avantage robuste',unknown:'Inconnu'};
+  $('#benchmarkVerdict').textContent=labels[status]||status;
+  $('#benchmarkState').textContent=labels[status]||status;
+  $('#benchmarkReason').textContent=summary.reason||data.required_next_step||'Aucun benchmark historique réel disponible.';
+  $('#benchmarkRows').textContent=summary.evaluated_rows ?? 0;
+  const delta=summary.model_vs_winamax_log_loss_delta;
+  $('#benchmarkDelta').textContent=Number.isFinite(delta)?`${delta<0?'−':'+'}${Math.abs(delta).toFixed(4)}`:'—';
+  const ci=summary.ci95||[];
+  $('#benchmarkCi').textContent=ci.every(Number.isFinite)?`IC 95 % [${ci[0].toFixed(4)} ; ${ci[1].toFixed(4)}]`:'Intervalle de confiance indisponible.';
+  const clv=summary.clv;
+  $('#benchmarkClv').textContent=clv&&Number.isFinite(clv.mean_log_clv)?`${(100*clv.mean_log_clv).toFixed(2)} %`:'—';
+}
+
 
 function renderLiveOdds(data){
   const events=data.events||[];
@@ -105,8 +121,8 @@ async function init(){
     fill('#homeTeam',cat.football_teams,'Arsenal'); fill('#awayTeam',cat.football_teams,'Man City');
     fill('#player1',cat.tennis_players,'Taylor Fritz'); fill('#player2',cat.tennis_players,'Alexander Zverev');
     syncDifferent('#homeTeam','#awayTeam'); syncDifferent('#player1','#player2');
-    const [audit, slate, provider, history]=await Promise.all([jsonFetch('/api/metrics'),jsonFetch('/api/bets/today'),jsonFetch('/api/odds/status'),jsonFetch('/api/history/predictions?limit=20')]);
-    $('#metrics').textContent=JSON.stringify(audit,null,2); renderDaily(slate); renderProviderStatus(provider); renderHistory(history);
+    const [audit, slate, provider, history, benchmark]=await Promise.all([jsonFetch('/api/metrics'),jsonFetch('/api/bets/today'),jsonFetch('/api/odds/status'),jsonFetch('/api/history/predictions?limit=20'),jsonFetch('/api/benchmark/summary')]);
+    $('#metrics').textContent=JSON.stringify(audit,null,2); renderDaily(slate); renderProviderStatus(provider); renderHistory(history); renderBenchmark(benchmark);
     if(provider.configured){ try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); } }
   }catch(e){ $('#health').textContent='API indisponible'; $('#health').classList.add('error'); toast(e.message); }
 }

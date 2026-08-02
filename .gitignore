@@ -7,3 +7,8 @@ htmlcov/
 data/odds_api/cache/*.json
 data/odds_api/historical/*.csv
 data/odds_api/historical/*.json
+data/odds_api/backfill/chunks/
+data/odds_api/backfill/state.json
+data/odds_api/backfill/historical_odds_long.csv
+data/benchmark/*.csv
+artifacts/market_benchmark_v3_2.json

@@ -3,6 +3,6 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "sh -lc 'cd /app && PYTHONPATH=/app python -m scripts.sync_current_odds --football soccer_epl'"
+startCommand = "sh -lc 'cd /app && PYTHONPATH=/app python -m scripts.sync_current_odds --football soccer_epl && python -m scripts.sync_recent_results --sports soccer_epl'"
 cronSchedule = "*/15 * * * *"
 restartPolicyType = "NEVER"

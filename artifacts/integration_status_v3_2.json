@@ -1,0 +1,40 @@
+{
+  "version": "3.2.0",
+  "generated_at": "2026-08-02T16:42:00+02:00",
+  "tests": {
+    "passed": 59,
+    "failed": 0,
+    "coverage_percent": 85.44286113439509,
+    "market_benchmark_coverage_percent": 87,
+    "odds_backtest_coverage_percent": 94,
+    "historical_orchestration_coverage_percent": 58
+  },
+  "validation": {
+    "python_compile": true,
+    "javascript_syntax": true,
+    "railway_toml_parsed": true,
+    "railway_cron_toml_parsed": true,
+    "railway_worker_toml_parsed": true,
+    "render_yaml_parsed": true,
+    "api_smoke_tests": true,
+    "browser_visual_validation": false,
+    "browser_visual_validation_note": "Local browser navigation was blocked by the generation environment; the standalone preview and JavaScript syntax were validated.",
+    "docker_image_built": false,
+    "docker_image_note": "Docker was not available in the generation environment."
+  },
+  "historical_benchmark": {
+    "status": "not_run",
+    "evaluated_predictions": 0,
+    "historical_api_calls": 0,
+    "historical_credits_consumed": 0,
+    "real_api_key_used": false,
+    "profitability_claim_allowed": false
+  },
+  "deployment_verdict": {
+    "private_research_instance": "go",
+    "controlled_historical_backfill": "conditional_go",
+    "profitability_claim": "no_go",
+    "public_multi_user_service": "no_go",
+    "automated_betting": "no_go"
+  }
+}

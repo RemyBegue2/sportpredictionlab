@@ -38,7 +38,7 @@ services:
     region: frankfurt
     schedule: "*/15 * * * *"
     dockerfilePath: ./Dockerfile
-    dockerCommand: python -m scripts.sync_current_odds --football soccer_epl
+    dockerCommand: python -m scripts.sync_current_odds --football soccer_epl && python -m scripts.sync_recent_results --sports soccer_epl
     envVars:
       - key: APP_ENV
         value: production

@@ -1,213 +1,163 @@
-# Sports Prediction Lab V3.1 Cloud
+# Sports Prediction Lab V3.2 — Real Historical Benchmark
 
-Application privée de recherche pour prédictions pré-match football/tennis, comparaison Winamax, consensus de marché, historique des cotes et journalisation PostgreSQL.
+Application privée de recherche pour le football et le tennis. La V3.2 conserve le déploiement cloud de la V3.1 et ajoute une chaîne reproductible pour confronter les probabilités du modèle à Winamax, au consensus dévigé et à la closing line.
 
-La V3.1 transforme la V3 locale en service utilisable depuis une URL. Elle n'ajoute pas de nouvelle revendication de performance du modèle.
+## Verdict actuel
 
-## Ce que livre la V3.1
+- **GO technique** pour une instance privée Railway/Render.
+- **GO collecte contrôlée** avec dry-run, plafond de crédits et reprise sur incident.
+- **NO-GO statistique** tant qu’un benchmark historique réel suffisamment large n’a pas été exécuté.
+- **NO-GO automatisation de paris** : aucune connexion au compte, aucune mise, aucun placement automatique.
 
-- déploiement Docker sur Railway ou Render ;
-- interface web mobile et ordinateur ;
-- accès privé par mot de passe ;
-- session signée, cookie `SameSite=Strict` et protection CSRF ;
-- clé The Odds API uniquement côté serveur ;
-- PostgreSQL pour les événements, snapshots, prédictions et synchronisations ;
-- tâche planifiée pour récupérer les cotes ;
-- page « Paris du jour » alimentée par les prédictions persistées ;
-- expiration automatique des cotes anciennes à l'affichage ;
-- endpoints distincts de liveness et readiness ;
-- journal des dernières prédictions dans l'interface ;
-- aucune connexion au compte Winamax et aucun placement automatique.
+L’archive ne contient ni clé The Odds API ni résultat historique inventé.
 
-## Architecture
+## Nouveautés V3.2
 
-```text
-Navigateur
-   │ HTTPS + session privée
-   ▼
-FastAPI + interface statique
-   ├── modèles football et tennis
-   ├── comparaison Winamax / consensus
-   ├── contrôle de fraîcheur
-   └── journal d'audit
-          │
-          ▼
-      PostgreSQL
-          ▲
-          │
-Cron de synchronisation ── The Odds API
+- planification historique à plusieurs horizons ;
+- worker Railway séparé du service web ;
+- téléchargement reprenable, par fragments immuables ;
+- budget estimé et plafond dur avant chaque appel ;
+- séparation correcte des snapshots d’un même événement ;
+- collecte des résultats récents via l’endpoint scores ;
+- rapprochement événement/résultat avec score de confiance et veto d’ambiguïté ;
+- audit temporel strict ;
+- folds chronologiques en fenêtre croissante ;
+- comparaison modèle, Winamax, consensus et blend appris sur le passé seulement ;
+- log-loss, Brier, RPS, calibration, bootstrap par blocs et CLV ;
+- stockage PostgreSQL des résultats, jobs, problèmes de qualité et benchmarks ;
+- écran « Validation marché » et endpoints d’administration.
+
+## Installation locale
+
+```bash
+python -m venv .venv
+source .venv/bin/activate       # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+python -m scripts.train_snapshot
+uvicorn webapp:app --reload
 ```
 
+Ouvrir `http://localhost:8000`.
 
-## Correctif Railway V3.1.1
+## Déploiement Railway
 
-La V3.1.0 lançait les scripts de migration et de cron par chemin de fichier. Dans un conteneur Railway, cela pouvait retirer la racine du projet de `sys.path` et provoquer `ModuleNotFoundError: No module named 'sports_predictor'`. La V3.1.1 utilise des modules Python (`python -m scripts.db_migrate` et `python -m scripts.sync_current_odds`) et conserve aussi un bootstrap compatible avec l'exécution directe.
+La V3.2 reprend la configuration qui a fonctionné pour la V3.1.2.
 
-## Déploiement recommandé : Railway
-
-1. Publier ce dossier dans un dépôt GitHub privé.
-2. Créer un projet Railway à partir du dépôt.
-3. Ajouter un service PostgreSQL.
-4. Configurer les variables suivantes sur le service web :
+Variables minimales du service web :
 
 ```text
 APP_ENV=production
 APP_AUTH_REQUIRED=true
 APP_COOKIE_SECURE=true
-APP_PASSWORD=<mot de passe long>
-APP_SESSION_SECRET=<secret aléatoire de 32 caractères minimum>
-THE_ODDS_API_KEY=<votre clé>
+APP_PASSWORD=<12 caractères minimum>
+APP_SESSION_SECRET=<32 caractères minimum>
 DATABASE_URL=${{Postgres.DATABASE_URL}}
+THE_ODDS_API_KEY=<secret Railway>
 ODDS_SYNC_SPORTS=soccer_epl
 ODDS_STALE_MINUTES=15
+MODEL_VERSION=3.2.0
 ```
 
-5. Générer un domaine public Railway.
-6. Dupliquer le service depuis le même dépôt pour le cron.
-7. Dans le service cron, sélectionner `railway.cron.toml` comme fichier de configuration et réutiliser `DATABASE_URL` et `THE_ODDS_API_KEY`.
+Le service principal utilise `railway.toml`. Le cron courant utilise `railway.cron.toml`. Le backfill historique utilise `railway.worker.toml` et doit être déclenché manuellement après vérification de son budget.
 
-Le fichier `railway.toml` configure le Dockerfile, la migration, le démarrage, le healthcheck et la politique de redémarrage. Voir `DEPLOY_RAILWAY.md`.
+## Workflow historique recommandé
 
-## Déploiement alternatif : Render Blueprint
-
-Le fichier `render.yaml` crée :
-
-- un service web Docker ;
-- une base PostgreSQL ;
-- un cron toutes les quinze minutes.
-
-Render demande `APP_PASSWORD` et `THE_ODDS_API_KEY` lors de la création. Le secret de session est généré automatiquement. Le Blueprint utilise des ressources payantes `starter` et une base `basic-256mb`; vérifiez les tarifs affichés avant confirmation.
-
-Voir `DEPLOY_RENDER.md`.
-
-## Pourquoi pas Netlify seul ?
-
-Le projet nécessite un runtime Python persistant, CatBoost, PostgreSQL et une tâche planifiée. Netlify peut servir une façade statique, mais ne remplace pas proprement le backend FastAPI. Ajouter Netlify devant Railway/Render créerait deux déploiements et une configuration CORS sans bénéfice suffisant pour cette version.
-
-## Générer les secrets
+### 1. Découvrir les événements
 
 ```bash
-python scripts/generate_cloud_secrets.py
+python -m scripts.discover_historical_events \
+  --sport-key soccer_epl \
+  --start 2024-08-01 \
+  --end 2025-05-31
 ```
 
-Copiez les deux valeurs dans le gestionnaire de secrets de la plateforme. Ne créez pas de fichier `.env` dans le dépôt.
+Relancer avec `--execute` seulement après inspection du plan.
 
-## Utilisation locale facultative
+### 2. Construire un plan budgété
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e '.[dev]'
-python scripts/train_snapshot.py
-uvicorn webapp:app --reload
+python -m scripts.plan_historical_backfill \
+  --events-csv data/odds_api/historical/events.csv \
+  --horizons 24 6 1 \
+  --closing-minutes 10 \
+  --max-credits 5000
 ```
 
-Le mode local utilise SQLite dans `/tmp` et désactive l'authentification par défaut.
+Cette commande ne consomme aucun crédit.
 
-Pour reproduire le mode cloud avec Docker Compose :
+### 3. Exécuter le backfill
 
 ```bash
-export POSTGRES_PASSWORD='un-secret-base-long'
-export APP_PASSWORD='un-mot-de-passe-long'
-export APP_SESSION_SECRET='une-valeur-aleatoire-d-au-moins-32-caracteres'
-export THE_ODDS_API_KEY='votre-cle'
-docker compose up --build
+python -m scripts.run_historical_backfill \
+  --plan-dir data/odds_api/backfill \
+  --max-credits 5000 \
+  --execute
 ```
 
-## Synchronisation des cotes
+Chaque requête terminée est enregistrée dans `state.json`. Une relance reprend les requêtes manquantes et réutilise le cache fournisseur.
 
-Le cron par défaut collecte uniquement l'EPL pour protéger le quota :
+### 4. Préparer les lignes d’évaluation
+
+Le CSV de résultats doit utiliser le schéma normalisé :
+
+```text
+date,league,home_team,away_team,home_goals,away_goals
+```
+
+Puis :
 
 ```bash
-python scripts/sync_current_odds.py --football soccer_epl
+python -m scripts.prepare_market_benchmark \
+  --results-csv data/real/football_real.csv \
+  --events-csv data/odds_api/historical/events.csv \
+  --odds-csv data/odds_api/backfill/historical_odds_long.csv \
+  --stage t-1h \
+  --initial-train 600
 ```
 
-Le tennis est volontairement désactivé par défaut :
+Les correspondances ambiguës restent dans `data/benchmark/event_mapping.csv` mais sont exclues du benchmark.
+
+### 5. Lancer le benchmark
 
 ```bash
-python scripts/sync_current_odds.py \
-  --football soccer_epl \
-  --include-tennis \
-  --max-tennis-tournaments 4
+python -m scripts.run_market_benchmark \
+  --input data/benchmark/evaluation_t-1h.csv \
+  --sport-key soccer_epl \
+  --minimum-predictions 500 \
+  --persist
 ```
 
-Chaque exécution :
+Le rapport est écrit dans `artifacts/market_benchmark_v3_2.json` et, avec `--persist`, dans PostgreSQL.
 
-1. demande les cotes au fournisseur ;
-2. normalise et dévigue les marchés ;
-3. persiste les snapshots sans doublons ;
-4. bloque les événements déjà commencés ;
-5. calcule les prédictions couvertes ;
-6. journalise les analyses ;
-7. renvoie un résumé sans secret.
+## Endpoints V3.2
 
-## Paris du jour
-
-`GET /api/bets/today` utilise d'abord PostgreSQL. Les prédictions sont dédupliquées par événement. Une cote trop ancienne est reclassée `à actualiser`, même si son verdict initial était positif.
-
-Une shortlist vide est un résultat valide.
-
-## Endpoints cloud
-
-Publics :
-
-- `GET /api/health` : liveness minimal pour la plateforme ;
-- `GET /login` et `POST /api/auth/login`.
-
-Protégés lorsque `APP_AUTH_REQUIRED=true` :
-
-- `GET /api/ready` : modèles, intégrité, base et configuration ;
-
-- `GET /api/catalog`
-- `GET /api/metrics`
-- `GET /api/bets/today`
-- `GET /api/odds/status`
-- `GET /api/odds/football/slate`
-- `GET /api/odds/tennis/slate`
-- `GET /api/history/predictions`
-- `GET /api/history/sync-runs`
-- `POST /api/football/predict`
-- `POST /api/tennis/predict`
-
-Les requêtes d'écriture authentifiées exigent `X-CSRF-Token`.
-
-## Vérifier un déploiement
-
-```bash
-APP_PASSWORD='votre-mot-de-passe' \
-python scripts/cloud_smoke_test.py https://votre-domaine.example
+```text
+GET  /api/benchmark/summary
+GET  /api/admin/data-quality
+GET  /api/admin/backfills
+GET  /api/history/predictions
+GET  /api/history/sync-runs
+POST /api/odds/historical/estimate
 ```
 
-Le script vérifie la santé, la connexion, la readiness, le catalogue et le journal, puis se déconnecte.
+Tous les endpoints, sauf liveness et authentification, sont protégés lorsque `APP_AUTH_REQUIRED=true`.
 
 ## Tests
 
 ```bash
 pytest -q
-coverage run -m pytest -q
+coverage run -m pytest
 coverage report -m
 ```
 
-État livré : **41 tests réussis**. La base, la déduplication, l'authentification, le CSRF, les configurations cloud, la fraîcheur du slate et les endpoints sont testés avec SQLite et des fournisseurs simulés.
-
-## Limites importantes
-
-- Aucun appel réel à votre clé n'a été effectué pendant la génération.
-- PostgreSQL managé et le cron n'ont pas pu être exécutés dans cet environnement.
-- Le Dockerfile a été inspecté, mais aucun moteur Docker n'était disponible pour construire l'image ici.
-- `create_all` initialise le schéma, mais une future évolution de colonnes nécessitera Alembic ou une migration versionnée.
-- Le limiteur de connexion est en mémoire et convient à une seule instance ; plusieurs réplicas nécessiteraient Redis.
-- Le snapshot football reste petit et limité à l'EPL.
-- Le tennis embarqué reste Elo non calibré et doit s'abstenir.
-- La performance contre Winamax et la closing line n'est pas encore démontrée.
+État livré : **59 tests réussis**, **85,44 % de couverture globale**.
 
 ## Documents
 
-- `AUDIT_MULTI_ROLES_V3_1.md` : audit contradictoire et arbitrages.
-- `RESULTATS_V3_1.md` : validations réellement exécutées.
-- `DEPLOY_RAILWAY.md` : procédure Railway.
-- `DEPLOY_RENDER.md` : procédure Render.
-- `CLOUD_ARCHITECTURE.md` : architecture et modèle de données.
-- `SECURITY.md` : menace, secrets et limites.
-- `MODEL_CARD.md` : portée statistique du service.
-- `ROADMAP_V3.md` : benchmark historique et prochaines étapes.
+- `AUDIT_MULTI_ROLES_V3_2.md`
+- `HISTORICAL_BENCHMARK_GUIDE.md`
+- `RESULTATS_V3_2.md`
+- `MODEL_CARD.md`
+- `SECURITY.md`
+- `DEPLOY_RAILWAY.md`
+- `ROADMAP_V3.md`

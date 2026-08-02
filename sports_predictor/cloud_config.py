@@ -39,7 +39,7 @@ class CloudSettings:
         if not session_secret and not auth_required:
             # Development-only deterministic fallback. Production readiness rejects it.
             session_secret = "development-only-change-me"
-        raw_db = os.getenv("DATABASE_URL") or f"sqlite:///{Path(os.getenv('APP_DATABASE_PATH', '/tmp/sports_prediction_v3_1.db'))}"
+        raw_db = os.getenv("DATABASE_URL") or f"sqlite:///{Path(os.getenv('APP_DATABASE_PATH', '/tmp/sports_prediction_v3_2.db'))}"
         if raw_db.startswith("postgres://"):
             raw_db = "postgresql+psycopg://" + raw_db.removeprefix("postgres://")
         elif raw_db.startswith("postgresql://") and "+" not in raw_db.split(":", 1)[0]:
@@ -58,7 +58,7 @@ class CloudSettings:
             database_url=raw_db,
             odds_sync_sports=_csv(os.getenv("ODDS_SYNC_SPORTS"), ("soccer_epl",)),
             odds_stale_minutes=stale,
-            model_version=os.getenv("MODEL_VERSION", "3.1.1"),
+            model_version=os.getenv("MODEL_VERSION", "3.2.0"),
         )
 
     @property

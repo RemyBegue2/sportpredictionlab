@@ -118,8 +118,9 @@ def bookmaker_h2h_markets(rows: pd.DataFrame, *, method: str = "power") -> list[
         return []
     data = rows[rows["market_key"].eq("h2h") & rows["price"].notna()].copy()
     results: list[dict[str, Any]] = []
-    keys = ["event_id", "bookmaker_key"]
-    for (_, _), group in data.groupby(keys, dropna=False, sort=False):
+    snapshot_column = next((col for col in ("requested_snapshot_at", "snapshot_time") if col in data.columns), None)
+    keys = ["event_id", "bookmaker_key"] + ([snapshot_column] if snapshot_column else [])
+    for _, group in data.groupby(keys, dropna=False, sort=False):
         labels = _ordered_h2h_labels(group)
         price_by_name = dict(zip(group["outcome_name"].astype(str), group["price"].astype(float), strict=False))
         if any(label not in price_by_name for label in labels):
@@ -137,6 +138,7 @@ def bookmaker_h2h_markets(rows: pd.DataFrame, *, method: str = "power") -> list[
             "bookmaker_title": group["bookmaker_title"].iloc[0],
             "last_update": group["market_last_update"].max(),
             "snapshot_time": group["snapshot_time"].max(),
+            "requested_snapshot_at": group[snapshot_column].iloc[0] if snapshot_column else group["snapshot_time"].max(),
             "labels": labels,
             "odds": odds,
             "probabilities": probs,
@@ -188,3 +190,37 @@ def market_age_minutes(last_update: Any, *, now: datetime | None = None) -> floa
         return None
     reference = now or datetime.now(timezone.utc)
     return max(0.0, (reference - parsed.to_pydatetime()).total_seconds() / 60.0)
+
+
+def normalize_scores_payload(payload: Any) -> pd.DataFrame:
+    """Normalize The Odds API scores response to completed event rows."""
+    events = payload.get("data", []) if isinstance(payload, Mapping) and "data" in payload else payload
+    rows: list[dict[str, Any]] = []
+    for event in events or []:
+        score_map = {
+            str(item.get("name")): item.get("score")
+            for item in event.get("scores", []) or []
+            if item.get("name") is not None
+        }
+        home = str(event.get("home_team") or "")
+        away = str(event.get("away_team") or "")
+        home_score = pd.to_numeric(score_map.get(home), errors="coerce")
+        away_score = pd.to_numeric(score_map.get(away), errors="coerce")
+        rows.append({
+            "event_id": event.get("id"),
+            "sport_key": event.get("sport_key"),
+            "commence_time": event.get("commence_time"),
+            "completed": bool(event.get("completed")),
+            "home_team": home,
+            "away_team": away,
+            "home_score": home_score,
+            "away_score": away_score,
+            "last_update": event.get("last_update"),
+        })
+    frame = pd.DataFrame(rows)
+    if not frame.empty:
+        for col in ("commence_time", "last_update"):
+            frame[col] = pd.to_datetime(frame[col], utc=True, errors="coerce")
+        for col in ("home_score", "away_score"):
+            frame[col] = pd.to_numeric(frame[col], errors="coerce")
+    return frame

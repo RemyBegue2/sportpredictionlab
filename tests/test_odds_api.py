@@ -220,3 +220,17 @@ def test_historical_estimate_endpoint():
     })
     assert response.status_code == 200
     assert response.json()["estimated_credits"] == 120
+
+
+def test_scores_endpoint_and_payload_do_not_expose_key(tmp_path: Path):
+    payload = [{
+        "id": "score-1", "sport_key": "soccer_epl", "commence_time": "2026-08-01T15:00:00Z", "completed": True,
+        "home_team": "Arsenal", "away_team": "Chelsea", "scores": [{"name": "Arsenal", "score": "1"}, {"name": "Chelsea", "score": "0"}],
+    }]
+    session = FakeSession(FakeResponse(payload, headers={"x-requests-remaining": "20", "x-requests-used": "2", "x-requests-last": "2"}))
+    client = OddsApiClient(OddsApiConfig(api_key="score-secret", cache_dir=tmp_path), session=session)
+    response = client.scores("soccer_epl", days_from=3)
+    assert response.payload[0]["completed"] is True
+    assert session.calls[0][0].endswith("/v4/sports/soccer_epl/scores")
+    assert session.calls[0][1]["params"]["daysFrom"] == 3
+    assert "score-secret" not in "\n".join(path.read_text() for path in tmp_path.glob("*.json"))

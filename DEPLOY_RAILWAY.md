@@ -1,45 +1,72 @@
-# Déploiement Railway — V3.1
+# Déploiement Railway V3.2
 
-## 1. Préparer le dépôt
+## Services
 
-Publiez le dossier V3.1 dans un dépôt GitHub privé. Ne commitez jamais `.env`, la clé The Odds API ou les secrets générés.
+1. **Web** — `railway.toml`
+2. **PostgreSQL** — plugin Railway
+3. **Cron courant** — `railway.cron.toml`
+4. **Worker historique manuel** — `railway.worker.toml`
 
-## 2. Créer le service web
+## Web
 
-Dans Railway :
+Conserver les variables de la V3.1.2 et ajouter :
 
-1. `New Project` → `Deploy from GitHub repo` ;
-2. sélectionnez le dépôt ;
-3. Railway détecte le `Dockerfile` et `railway.toml` ;
-4. ajoutez un service PostgreSQL au projet ;
-5. ajoutez les variables du README ;
-6. référencez la base avec `DATABASE_URL=${{Postgres.DATABASE_URL}}` ;
-7. générez un domaine pour le service web.
+```text
+MODEL_VERSION=3.2.0
+```
 
-Le healthcheck public est `/api/health`. Après connexion, la page `/api/ready` doit retourner 200.
+Le pre-deploy reste :
 
-## 3. Créer le cron
+```text
+python -m scripts.db_migrate
+```
 
-Dupliquez le service depuis le même dépôt, puis :
+Il crée les nouvelles tables avec SQLAlchemy. Cette méthode ne remplace pas Alembic pour de futures migrations destructives ou modifications de colonnes.
 
-1. choisissez `railway.cron.toml` comme fichier Config as Code ;
-2. partagez `DATABASE_URL` et `THE_ODDS_API_KEY` ;
-3. ne générez pas de domaine ;
-4. vérifiez que la commande est `python -m scripts.sync_current_odds --football soccer_epl` ;
-5. vérifiez le cron `*/15 * * * *`.
+## Cron courant
 
-Le tennis n'est pas synchronisé par défaut pour éviter une consommation incontrôlée du quota.
+Créer un second service depuis le même dépôt et sélectionner `railway.cron.toml` comme chemin de configuration. Il synchronise les cotes puis les scores récents toutes les quinze minutes.
 
-## 4. Contrôles après déploiement
+Variables :
 
-- `/api/health` retourne `ok` ;
-- `/api/ready` retourne `ready` ;
-- la page `/` redirige vers `/login` sans session ;
-- la clé n'apparaît jamais dans l'inspecteur réseau ;
-- `/api/odds/status` indique PostgreSQL connecté ;
-- un run du cron ajoute des lignes dans `/api/history/sync-runs` ;
-- les cotes trop anciennes passent à `à actualiser`.
+```text
+APP_ENV=production
+APP_AUTH_REQUIRED=false
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+THE_ODDS_API_KEY=<secret>
+ODDS_SYNC_SPORTS=soccer_epl
+```
 
-## 5. Sauvegardes et coûts
+## Worker historique
 
-Activez les sauvegardes disponibles sur le plan PostgreSQL choisi. Configurez une alerte de quota The Odds API et une alerte d'échec du cron. Les prix des plateformes évoluent : contrôlez le devis Railway avant validation.
+Créer un troisième service depuis le même dépôt et sélectionner `railway.worker.toml`.
+
+Variables obligatoires :
+
+```text
+APP_ENV=production
+APP_AUTH_REQUIRED=false
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+THE_ODDS_API_KEY=<secret>
+BACKFILL_PLAN_DIR=data/odds_api/backfill
+BACKFILL_MAX_CREDITS=5000
+```
+
+Le plan doit être présent dans l’image ou téléchargé vers un stockage accessible. Ne démarrez pas le worker avec `BACKFILL_MAX_CREDITS=0`.
+
+Le worker est volontairement `NEVER` pour sa politique de redémarrage. Une erreur de budget ou de données nécessite une inspection humaine.
+
+## Après déploiement
+
+Vérifier :
+
+```text
+/api/health
+/api/ready
+/api/odds/status
+/api/benchmark/summary
+/api/admin/backfills
+/api/admin/data-quality
+```
+
+Puis vérifier que la première exécution cron ajoute des lignes à `sync_runs` et que la page reste accessible après un redémarrage du service web.

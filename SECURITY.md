@@ -1,71 +1,38 @@
-# Sécurité — V3.1 Cloud
+# Sécurité V3.2
+
+## Protections actives
+
+- authentification privée en production ;
+- sessions signées, cookie Secure et SameSite strict ;
+- CSRF sur les écritures ;
+- clé The Odds API uniquement côté serveur ;
+- hôte fournisseur figé pour limiter le SSRF ;
+- paramètres API validés ;
+- clé exclue des empreintes, caches, réponses et erreurs ;
+- CSP, anti-framing, nosniff et politique de permissions ;
+- manifeste SHA-256 avant chargement des modèles ;
+- PostgreSQL obligatoire en production ;
+- plafond explicite pour les backfills historiques.
+
+## Worker historique
+
+Le worker ne doit jamais recevoir une commande arbitraire depuis l’interface web. Son plan est un fichier contrôlé et son budget est une variable serveur. Les fragments historiques restent privés et ne sont pas exposés par l’API.
+
+## Risques restants
+
+- Joblib repose sur Pickle. Ne jamais charger un artefact non maîtrisé.
+- `Base.metadata.create_all` ne fournit pas un historique de migrations ; adopter Alembic avant modifications complexes.
+- La restauration PostgreSQL n’a pas été testée dans cet environnement.
+- Une personne ayant accès au projet Railway peut lire ou remplacer les variables non scellées.
+- Une dépendance compromise reste un risque ; utiliser les mises à jour et scanners du dépôt.
 
 ## Secrets
 
-Les secrets attendus sont :
+Ne jamais placer dans Git :
 
-- `APP_PASSWORD` ;
-- `APP_SESSION_SECRET` ;
-- `THE_ODDS_API_KEY` ;
-- `DATABASE_URL`.
-
-Ils doivent être stockés dans le gestionnaire de variables de Railway ou Render. Ils ne doivent pas être placés dans GitHub, le JavaScript, un fichier `.env` versionné ou un message public.
-
-## Authentification
-
-La V3.1 utilise un mot de passe personnel et une session signée. En production :
-
-- `APP_AUTH_REQUIRED=true` ;
-- mot de passe d'au moins 12 caractères ;
-- secret de session d'au moins 32 caractères ;
-- cookie `Secure` ;
-- `SameSite=Strict` ;
-- durée de session 12 heures ;
-- CSRF requis sur les écritures.
-
-Le limiteur de connexion est en mémoire. Il protège une instance unique mais pas plusieurs réplicas.
-
-## Exposition API
-
-`/api/health` et la connexion sont publics. `/api/ready` est protégé. Le healthcheck ne révèle aucun secret. Les endpoints métier, l'OpenAPI et la documentation sont protégés lorsque l'authentification est active.
-
-## The Odds API
-
-- clé exclusivement côté serveur ;
-- cache indexé par empreinte sans clé ;
-- erreur utilisateur générique ;
-- quota exposé, jamais la clé ;
-- pas de proxy arbitraire permettant de choisir une URL fournisseur ;
-- pas de rafraîchissement forcé depuis l'interface.
-
-## PostgreSQL
-
-- connexion par `DATABASE_URL` ;
-- base Render sans liste d'accès IP public dans le Blueprint ;
-- snapshots dédupliqués ;
-- aucune URL de base renvoyée par l'API ;
-- échec de stockage transformé en 503.
-
-## Artefacts ML
-
-Le manifeste SHA-256 détecte une modification accidentelle ou partielle. Joblib/Pickle ne doit jamais charger un fichier fourni par un utilisateur. Si un attaquant peut remplacer à la fois l'artefact et le manifeste, cette protection ne suffit pas. Une version future devrait utiliser un format plus sûr ou une signature externe.
-
-## En-têtes
-
-- Content Security Policy ;
-- `X-Content-Type-Options: nosniff` ;
-- `X-Frame-Options: DENY` ;
-- `Referrer-Policy: no-referrer` ;
-- permissions caméra/micro/géolocalisation désactivées.
-
-## Limites restantes
-
-- pas de MFA ;
-- pas de comptes individuels ;
-- pas de Redis partagé ;
-- pas de WAF configuré dans le dépôt ;
-- pas de SIEM ou audit log de connexion ;
-- pas de scan SAST externe ;
-- pas de test d'intrusion ;
-- pas de rotation automatisée ;
-- pas de migration Alembic.
+```text
+THE_ODDS_API_KEY
+APP_PASSWORD
+APP_SESSION_SECRET
+DATABASE_URL
+```

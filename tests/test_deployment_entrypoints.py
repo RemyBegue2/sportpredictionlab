@@ -115,3 +115,25 @@ def test_railway_predeploy_uses_absolute_runtime_context() -> None:
     assert "cd /app" in config
     assert "PYTHONPATH=/app" in config
     assert "python -m scripts.db_migrate" in config
+
+
+def test_v32_worker_and_cloud_cycle_configs() -> None:
+    cron = (ROOT / "railway.cron.toml").read_text(encoding="utf-8")
+    worker = (ROOT / "railway.worker.toml").read_text(encoding="utf-8")
+    render = (ROOT / "render.yaml").read_text(encoding="utf-8")
+    assert "scripts.sync_recent_results" in cron
+    assert "scripts.run_historical_backfill" in worker
+    assert "BACKFILL_MAX_CREDITS" in worker
+    assert "scripts.sync_recent_results" in render
+
+
+def test_v32_historical_scripts_have_safe_dry_run_help() -> None:
+    for module in (
+        "scripts.plan_historical_backfill",
+        "scripts.run_historical_backfill",
+        "scripts.prepare_market_benchmark",
+        "scripts.run_market_benchmark",
+        "scripts.sync_recent_results",
+    ):
+        result = subprocess.run([sys.executable, "-m", module, "--help"], cwd=ROOT, capture_output=True, text=True, timeout=30)
+        assert result.returncode == 0, result.stderr

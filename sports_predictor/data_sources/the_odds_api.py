@@ -68,7 +68,7 @@ class OddsApiConfig:
     timeout_seconds: float = 20.0
     max_retries: int = 3
     cache_dir: Path = Path("data/odds_api/cache")
-    user_agent: str = "sports-prediction-lab/0.3.1"
+    user_agent: str = "sports-prediction-lab/0.3.2"
 
     @classmethod
     def from_env(cls, *, root: Path | None = None) -> "OddsApiConfig":
@@ -372,3 +372,27 @@ class OddsApiClient:
             cache_ttl_seconds=None,
             force_refresh=force_refresh,
         )
+
+    def scores(
+        self,
+        sport_key: str,
+        *,
+        days_from: int | None = 3,
+        event_ids: Sequence[str] | None = None,
+        force_refresh: bool = False,
+    ) -> OddsApiEnvelope:
+        sport = self._validate_tokens((sport_key,), label="sport key")[0]
+        params: dict[str, Any] = {"dateFormat": "iso"}
+        if days_from is not None:
+            if int(days_from) not in {1, 2, 3}:
+                raise ValueError("days_from must be 1, 2, 3 or None")
+            params["daysFrom"] = int(days_from)
+        if event_ids:
+            params["eventIds"] = ",".join(self._validate_tokens(event_ids, label="event id"))
+        return self._request(
+            f"/v4/sports/{sport}/scores",
+            params,
+            cache_ttl_seconds=60,
+            force_refresh=force_refresh,
+        )
+

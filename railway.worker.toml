@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Configure BACKFILL_PLAN_DIR and BACKFILL_MAX_CREDITS, then run this service manually.
+startCommand = "sh -lc 'cd /app && PYTHONPATH=/app python -m scripts.run_historical_backfill --plan-dir ${BACKFILL_PLAN_DIR:-data/odds_api/backfill} --max-credits ${BACKFILL_MAX_CREDITS:-0} --execute'"
+restartPolicyType = "NEVER"

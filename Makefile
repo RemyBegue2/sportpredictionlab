@@ -2,13 +2,13 @@ install:
 	pip install -e .
 
 snapshot:
-	python scripts/train_snapshot.py
+	python -m scripts.train_snapshot
 
 data:
-	python scripts/download_real_data.py
+	python -m scripts.download_real_data
 
 train:
-	python scripts/train_real.py
+	python -m scripts.train_real
 
 app:
 	uvicorn webapp:app --reload
@@ -16,5 +16,17 @@ app:
 test:
 	pytest -q
 
+coverage:
+	coverage run -m pytest -q && coverage report -m
+
 backtest:
-	python scripts/backtest_real.py
+	python -m scripts.backtest_real
+
+historical-plan:
+	@echo "Use: python -m scripts.plan_historical_backfill --events-csv <csv> --max-credits <cap>"
+
+historical-run:
+	@echo "Use: python -m scripts.run_historical_backfill --plan-dir data/odds_api/backfill --max-credits <cap> --execute"
+
+benchmark:
+	@echo "Use: python -m scripts.run_market_benchmark --input <evaluation.csv> --persist"

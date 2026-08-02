@@ -10,3 +10,7 @@ htmlcov
 data/odds_api/cache
 data/odds_api/historical
 artifacts/site_preview_v3.png
+data/odds_api/backfill/chunks
+data/odds_api/backfill/state.json
+data/benchmark
+artifacts/site_preview_v3_1.png

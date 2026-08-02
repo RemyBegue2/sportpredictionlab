@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V3.1 Cloud</title>
-  <meta name="description" content="Application probabiliste et auditable avec flux Winamax via The Odds API, historique des cotes et comparaison au marché.">
+  <title>Sports Prediction Lab V3.2 Historical Validation</title>
+  <meta name="description" content="Application cloud privée avec FastAPI, PostgreSQL, flux Winamax via The Odds API, historique des cotes et comparaison au marché.">
   <style>:root{--ink:#101820;--muted:#64707a;--paper:#f4f1ea;--card:#fff;--accent:#bbff36;--line:#d7d5cf;--deep:#172b25;--danger:#c53d2f;--shadow:0 22px 70px rgba(16,24,32,.10)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.topbar{position:sticky;top:0;z-index:20;height:72px;padding:0 max(24px,calc((100vw - 1240px)/2));display:flex;align-items:center;gap:32px;border-bottom:1px solid rgba(16,24,32,.12);background:rgba(244,241,234,.92);backdrop-filter:blur(16px)}.brand{display:flex;align-items:center;gap:11px;font-weight:800;color:var(--ink);text-decoration:none}.logo{display:grid;place-items:center;width:38px;height:38px;background:var(--ink);color:var(--accent);border-radius:10px;font-size:13px;letter-spacing:.08em}.topbar nav{display:flex;gap:24px;margin-left:auto}.topbar nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:700}.topbar nav a:hover{color:var(--ink)}.pill{padding:7px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;font-weight:800}.pill.ok{color:#1f6b46;border-color:#98c6ac;background:#eaf7ef}.pill.error{color:var(--danger);border-color:#e1aaa5;background:#fff0ee}main{overflow:hidden}.hero{max-width:1240px;margin:0 auto;min-height:650px;padding:96px 24px 72px;display:grid;grid-template-columns:1.35fr .65fr;gap:70px;align-items:center}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.18em;color:#61705c;margin:0 0 14px}.hero h1,.section-heading h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.045em}.hero h1{font-size:clamp(56px,7vw,96px);line-height:.92;margin:0 0 28px}.hero h1 span{color:#58725f}.lede{max-width:720px;font-size:20px;color:var(--muted)}.actions{display:flex;gap:12px;margin-top:34px}.button{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:13px 18px;border:1px solid var(--ink);font-weight:800;font-size:14px;text-decoration:none;cursor:pointer;transition:.18s ease}.button:hover{transform:translateY(-1px)}.button.primary{background:var(--ink);color:#fff}.button.primary:hover{background:var(--deep)}.button.ghost{background:transparent;color:var(--ink)}.button.full{width:100%}.trust-card{background:var(--deep);color:#fff;border-radius:22px;padding:28px;box-shadow:var(--shadow);transform:rotate(1.1deg)}.trust-title{text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:900;color:var(--accent);margin-bottom:18px}.trust-card ol{list-style:none;padding:0;margin:0;counter-reset:item}.trust-card li{padding:16px 0;border-top:1px solid rgba(255,255,255,.15);display:grid;grid-template-columns:1fr auto;gap:10px}.trust-card li b{font-size:15px}.trust-card li span{font-size:12px;color:#b9c6c1}.stats{max-width:1240px;margin:0 auto 70px;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}.stats article{background:var(--card);padding:26px}.stats span{display:block;font-family:Georgia,serif;font-size:42px}.stats small{color:var(--muted)}.workbench{padding:100px max(24px,calc((100vw - 1240px)/2));background:#fff;border-top:1px solid var(--line)}.workbench.alt{background:#e9eee8}.section-heading{max-width:760px;margin-bottom:45px}.section-heading h2{font-size:58px;margin:0 0 10px}.section-heading>p:last-child{color:var(--muted);font-size:18px}.panel-grid{display:grid;grid-template-columns:380px 1fr;gap:28px}.control-panel,.result-panel{border:1px solid var(--line);border-radius:18px;background:var(--card);padding:28px;box-shadow:0 12px 40px rgba(16,24,32,.05)}.control-panel{display:grid;gap:18px}.control-panel label{font-size:13px;font-weight:800;display:grid;gap:8px}.control-panel select,.control-panel input{width:100%;padding:12px 13px;border:1px solid #c9cbc5;border-radius:9px;background:#fff;color:var(--ink);font:inherit}.fineprint{font-size:12px;color:var(--muted);margin:0}.result-panel{min-height:360px}.result-panel.empty{display:grid;place-items:center;color:var(--muted);border-style:dashed}.result-panel h3{margin:0 0 4px;font-size:22px}.result-subtitle{color:var(--muted);margin:0 0 26px}.prob-row{display:grid;grid-template-columns:150px 1fr 64px;gap:14px;align-items:center;margin:16px 0}.prob-label{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar-track{height:18px;background:#eef0eb;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:var(--deep);border-radius:inherit;transition:width .55s ease}.prob-value{text-align:right;font-variant-numeric:tabular-nums;font-weight:900}.result-meta{display:flex;gap:24px;padding-top:22px;margin-top:24px;border-top:1px solid var(--line)}.result-meta div{flex:1}.result-meta small{display:block;color:var(--muted)}.result-meta b{font-size:24px}.score-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}.score-table th,.score-table td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}.warning{margin-top:18px;padding:12px 14px;border-left:4px solid #d3a517;background:#fff9dc;color:#62531b;font-size:12px}.audit-section{padding:100px max(24px,calc((100vw - 1240px)/2));background:var(--ink);color:#fff}.audit-section .eyebrow{color:var(--accent)}.audit-section .section-heading>p:last-child{color:#b6c0c5}.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#334048;border:1px solid #334048}.role-grid article{background:var(--ink);padding:28px;min-height:205px}.role-grid article span{color:var(--accent);font-size:12px;font-weight:900}.role-grid h3{font-size:20px;margin:24px 0 8px}.role-grid p{color:#afbac0;font-size:14px}.audit-callout{display:flex;justify-content:space-between;align-items:center;gap:20px;border:1px solid #445058;border-radius:14px;padding:22px;margin-top:30px}.audit-callout p{margin:5px 0 0;color:#b7c0c5}.audit-callout .button{border-color:#fff;color:#fff}details{margin-top:24px;border-top:1px solid #445058;padding-top:20px}summary{cursor:pointer;font-weight:800}pre{white-space:pre-wrap;word-break:break-word;color:#b9c6c1;font-size:12px;background:#0a1015;padding:18px;border-radius:12px;max-height:460px;overflow:auto}footer{display:flex;justify-content:space-between;padding:28px max(24px,calc((100vw - 1240px)/2));font-size:12px;color:var(--muted);background:#fff;border-top:1px solid var(--line)}#toast{position:fixed;right:24px;bottom:24px;max-width:380px;padding:14px 16px;border-radius:10px;background:var(--danger);color:#fff;font-weight:700;box-shadow:var(--shadow);opacity:0;pointer-events:none;transform:translateY(12px);transition:.2s}#toast.show{opacity:1;transform:none}.loader{display:flex;gap:8px;align-items:center;justify-content:center;height:100%}.loader:before{content:"";width:18px;height:18px;border:3px solid #ccd1ca;border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:900px){.topbar nav{display:none}.hero{grid-template-columns:1fr;padding-top:70px}.trust-card{transform:none}.stats{grid-template-columns:1fr 1fr}.panel-grid{grid-template-columns:1fr}.role-grid{grid-template-columns:1fr 1fr}.hero h1{font-size:58px}}@media(max-width:600px){.topbar{height:64px}.pill{display:none}.hero{min-height:auto;padding:60px 18px}.hero h1{font-size:47px}.lede{font-size:17px}.stats{margin:0 18px 50px;padding:0;grid-template-columns:1fr}.workbench,.audit-section{padding:72px 18px}.section-heading h2{font-size:46px}.role-grid{grid-template-columns:1fr}.prob-row{grid-template-columns:100px 1fr 54px}.audit-callout,footer{align-items:flex-start;flex-direction:column}}
@@ -13,23 +13,33 @@
 @media(max-width:600px){.odds-grid,.odds-grid.three{grid-template-columns:1fr}.market-heading{flex-direction:column}.daily-grid{gap:12px}}
 .odds-api-section{background:#eef2ec}.provider-grid{display:grid;grid-template-columns:.8fr 1fr 1fr;gap:18px;margin-bottom:22px}.provider-card,.provider-control{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}.provider-card small{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:900}.provider-card h3{font-size:27px;margin:8px 0}.provider-card p{color:var(--muted)}.provider-card code{display:inline-block;background:#eef2ec;padding:7px 9px;border-radius:7px}.provider-control{display:grid;gap:16px}.provider-control label{display:grid;gap:8px;font-size:13px;font-weight:800}.provider-control select{padding:12px 13px;border:1px solid #c9cbc5;border-radius:9px;background:#fff}.provider-results{margin-top:18px}.odds-line{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}.odds-line:last-child{border-bottom:0}.odds-line b{font-variant-numeric:tabular-nums}.provider-error{border-color:#e1aaa5;background:#fff0ee}
 @media(max-width:800px){.provider-grid{grid-template-columns:1fr}}
+.top-actions{display:flex;align-items:center;gap:10px}.logout-button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:8px 11px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}.logout-button:hover{border-color:var(--ink)}
+.stats{grid-template-columns:repeat(6,1fr)}
+.cloud-section{background:#f4f1e9}.cloud-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.cloud-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}.cloud-card small,.history-heading small{color:#61705c;font-size:11px;font-weight:900;letter-spacing:.1em}.cloud-card h3{font-size:27px;margin:9px 0}.cloud-card p{color:var(--muted);margin-bottom:0}.history-panel{margin-top:22px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}.history-heading{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:16px}.history-heading h3{font-size:24px;margin:5px 0 0}.history-list{display:grid;gap:10px}.history-row{display:grid;grid-template-columns:120px 1fr 150px 150px;gap:14px;align-items:center;padding:13px 0;border-top:1px solid var(--line);font-size:13px}.history-row:first-child{border-top:0}.history-row small{color:var(--muted)}.history-row b{display:block}.history-decision{justify-self:end;padding:5px 8px;border-radius:999px;background:#f2ece8;color:#765948;font-size:11px;font-weight:900}.history-time{text-align:right;color:var(--muted)}
+.login-page{min-height:100vh;background:linear-gradient(145deg,#eef2ec,#f4f0e7);display:grid;place-items:center}.login-shell{width:min(100%,480px);padding:24px}.login-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:36px;box-shadow:var(--shadow)}.login-mark{width:48px;height:48px;border-radius:12px;background:var(--deep);color:#fff;display:grid;place-items:center;font-weight:900;margin-bottom:24px}.login-card h1{font-family:Georgia,"Times New Roman",serif;font-size:44px;letter-spacing:-.04em;margin:0 0 12px}.login-card>p:not(.eyebrow){color:var(--muted)}.login-card form{display:grid;gap:18px;margin:28px 0 18px}.login-card label{display:grid;gap:8px;font-size:13px;font-weight:800}.login-card input{padding:13px;border:1px solid #c9cbc5;border-radius:9px;font:inherit}.login-card small{display:block;color:var(--muted);line-height:1.5}.login-error{min-height:22px;color:var(--danger)!important;font-size:13px;font-weight:800}
+@media(max-width:1000px){.stats{grid-template-columns:repeat(3,1fr)}.cloud-grid{grid-template-columns:1fr}.history-row{grid-template-columns:100px 1fr}.history-decision,.history-time{justify-self:start;text-align:left}}
+@media(max-width:600px){.top-actions .logout-button{padding:7px 9px}.stats{grid-template-columns:1fr}.history-heading{align-items:flex-start;flex-direction:column}.login-card{padding:26px}.login-card h1{font-size:38px}}
+
+.benchmark-section{background:#f1f5ef}.benchmark-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.benchmark-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;min-height:190px}.benchmark-card small{color:#61705c;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.benchmark-card h3{font-size:28px;margin:12px 0 8px}.benchmark-card p{color:var(--muted);font-size:13px}.benchmark-card .good{color:#1d6b43}.benchmark-card .bad{color:var(--danger)}
+@media(max-width:1000px){.benchmark-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.benchmark-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
     <nav>
-      <a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
+      <a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#benchmark">Benchmark</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
     </nav>
-    <span id="health" class="pill">Connexion…</span>
+    <div class="top-actions"><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
   </header>
 
   <main>
     <section id="overview" class="hero">
       <div>
-        <p class="eyebrow">VERSION 3.1 · CLOUD PRIVÉ · MARKET-AWARE</p>
+        <p class="eyebrow">VERSION 3.2 · BENCHMARK HISTORIQUE · POSTGRESQL</p>
         <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
-        <p class="lede">Une application cloud privée avec authentification, stockage PostgreSQL, flux Winamax côté serveur, historique des décisions et comparaison modèle–marché.</p>
+        <p class="lede">Une application accessible par URL, protégée par mot de passe, avec snapshots PostgreSQL, historique budgété, audit temporel et comparaison modèle–Winamax–consensus.</p>
         <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
       </div>
       <aside class="trust-card">
@@ -48,7 +58,8 @@
       <article><span id="footballRows">—</span><small>matchs football embarqués</small></article>
       <article><span id="tennisRows">—</span><small>matchs tennis embarqués</small></article>
       <article><span id="dailyCandidates">—</span><small>candidats recherche aujourd’hui</small></article>
-      <article><span id="oddsApiState">—</span><small>connexion The Odds API</small></article>
+      <article><span id="oddsApiState">—</span><small>connexion The Odds API</small></article><article><span id="dbSnapshots">—</span><small>snapshots persistés</small></article>
+      <article><span id="benchmarkState">—</span><small>validation contre Winamax</small></article>
     </section>
 
     <section id="bets" class="workbench bets-section">
@@ -75,6 +86,32 @@
       </div>
       <div id="liveOddsResult" class="daily-grid provider-results"><div class="slate-card loading-card">Connecteur en attente.</div></div>
       <div class="policy-note"><b>Secret :</b> ne collez pas la clé dans cette page. Définissez-la dans l’environnement du serveur. L’application ne place aucun pari et exige toujours une vérification directe de la cote chez Winamax.</div>
+    </section>
+
+
+    <section id="cloud" class="workbench cloud-section">
+      <div class="section-heading"><p class="eyebrow">CLOUD & TRAÇABILITÉ</p><h2>État de la plateforme</h2><p>La version cloud sépare liveness, readiness, stockage et historique. Une prédiction n’est considérée exploitable que si les modèles sont chargés et si son journal peut être écrit en base.</p></div>
+      <div class="cloud-grid">
+        <article class="cloud-card"><small>Authentification</small><h3 id="cloudAuth">—</h3><p>Session privée et protection CSRF pour les actions d’écriture.</p></article>
+        <article class="cloud-card"><small>Base de données</small><h3 id="cloudDatabase">—</h3><p id="cloudLastSync">Dernière synchronisation inconnue.</p></article>
+        <article class="cloud-card"><small>Readiness</small><h3 id="cloudReady">—</h3><p id="cloudIssues">Contrôle en cours.</p></article>
+      </div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>JOURNAL D’AUDIT</small><h3>Dernières prédictions</h3></div><button id="refreshHistory" class="button ghost" type="button">Actualiser</button></div>
+        <div id="predictionHistory" class="history-list"><p>Chargement du journal…</p></div>
+      </div>
+    </section>
+
+
+    <section id="benchmark" class="workbench benchmark-section">
+      <div class="section-heading"><p class="eyebrow">PREUVE HORS ÉCHANTILLON</p><h2>Validation marché</h2><p>Le benchmark compare séparément le modèle, Winamax, le consensus dévigé et une combinaison apprise uniquement sur les périodes antérieures. Les lignes temporellement invalides sont rejetées, jamais réparées silencieusement.</p></div>
+      <div class="benchmark-grid">
+        <article class="benchmark-card"><small>Verdict actuel</small><h3 id="benchmarkVerdict">Non exécuté</h3><p id="benchmarkReason">Le cloud fonctionne, mais aucun historique réel suffisant n’a encore été évalué.</p></article>
+        <article class="benchmark-card"><small>Échantillon évalué</small><h3 id="benchmarkRows">0</h3><p>Promotion analytique seulement après un nombre suffisant de prédictions hors échantillon.</p></article>
+        <article class="benchmark-card"><small>Modèle − Winamax</small><h3 id="benchmarkDelta">—</h3><p id="benchmarkCi">Intervalle de confiance indisponible.</p></article>
+        <article class="benchmark-card"><small>Closing line value</small><h3 id="benchmarkClv">—</h3><p>Indicateur secondaire : une CLV positive ne garantit pas un bénéfice futur.</p></article>
+      </div>
+      <div class="policy-note"><b>Règle de promotion :</b> le ROI seul ne suffit pas. La décision exige des scores probabilistes, des folds chronologiques, un intervalle bootstrap par blocs, une identité d’événement fiable et une absence de fuite temporelle.</div>
     </section>
 
     <section id="football" class="workbench alt">
@@ -116,9 +153,9 @@
     </section>
 
     <section id="audit" class="audit-section">
-      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.1</h2></div>
+      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.2</h2></div>
       <div class="role-grid">
-        <article><span>01</span><h3>Quant marchés</h3><p>La V3.1 juge le modèle contre Winamax, le consensus et la closing line, pas seulement contre une fréquence naïve.</p></article>
+        <article><span>01</span><h3>Quant marchés</h3><p>La V3 juge le modèle contre Winamax, le consensus et la closing line, pas seulement contre une fréquence naïve.</p></article>
         <article><span>02</span><h3>Statisticien</h3><p>Les seuils d’edge sont figés avant le test et évalués en walk-forward avec intervalles de confiance.</p></article>
         <article><span>03</span><h3>Data engineer</h3><p>Identifiants d’événements, timestamps UTC, snapshots bruts immuables, cache et appariement d’identités.</p></article>
         <article><span>04</span><h3>FinOps API</h3><p>Dry-run, estimation des crédits et regroupement de plusieurs bookmakers dans une même requête.</p></article>
@@ -126,31 +163,28 @@
         <article><span>06</span><h3>Conformité</h3><p>Analyse utilisateur autorisée, mais aucune redistribution des données brutes ni exécution automatique.</p></article>
       </div>
       <div class="audit-callout">
-        <div><b>Verdict</b><p>V3.1 = application cloud privée prête à déployer. Le GO statistique dépend encore d’un backtest historique réel exécuté avec votre abonnement, sans fuite et avec budget verrouillé.</p></div>
+        <div><b>Verdict</b><p>V3.2 = chaîne de benchmark prête et contrôlée. Le verdict reste « non exécuté » tant que votre historique réel n’a pas produit un échantillon hors échantillon suffisant.</p></div>
         <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
       </div>
       <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V3.1 Cloud</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V3.2 Historical Validation</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
   <script>
-const $=(s)=>document.querySelector(s);
-$('#health').textContent='Aperçu statique · v3.0'; $('#health').classList.add('ok');
-$('#footballRows').textContent='90'; $('#tennisRows').textContent='32'; $('#dailyCandidates').textContent='0'; $('#oddsApiState').textContent='serveur';
-$('#providerStatus').textContent='Clé à configurer localement'; $('#providerQuota').textContent='Quota visible après le premier appel';
-const teams=['Arsenal','Aston Villa','Chelsea','Liverpool','Man City','Man United','Newcastle','Tottenham'];
-const players=['Taylor Fritz','Alexander Zverev','Casper Ruud','Stefanos Tsitsipas'];
-for(const id of ['#homeTeam','#awayTeam']) $(id).innerHTML=teams.map(x=>`<option>${x}</option>`).join('');
-for(const id of ['#player1','#player2']) $(id).innerHTML=players.map(x=>`<option>${x}</option>`).join('');
-$('#awayTeam').value='Man City'; $('#player2').value='Alexander Zverev';
-$('#oddsTennisSport').innerHTML='<option>ATP Canadian Open · tennis_atp_canadian_open</option>';
-$('#dailySlate').innerHTML='<article class="slate-card"><div class="slate-top"><span>V3.1 CLOUD</span><b class="decision abstention">abstention</b></div><h3>Shortlist non chargée</h3><p>La version cloud privée utilisera Winamax France et le consensus après configuration sécurisée de la clé.</p><ul><li>aucune cote réelle incluse dans cet aperçu</li><li>aucun pari automatique</li></ul></article><article class="slate-card"><div class="slate-top"><span>HISTORIQUE</span><b class="decision abstention">dry-run</b></div><h3>Budget verrouillé</h3><p>24 h · 6 h · 1 h · closing 10 min</p><ul><li>plan de requêtes avant consommation</li><li>cache et suivi du quota</li></ul></article>';
-$('#metrics').textContent=JSON.stringify({version:'3.0.0',tests:'35/35',coverage:'86%',odds_api:{key_in_frontend:false,historical_dry_run:true,winamax_key:'winamax_fr',tennis_keys:'dynamic'}},null,2);
-const demo=(sport)=>{$('#liveOddsResult').innerHTML=`<article class="slate-card"><div class="slate-top"><span>EXEMPLE ${sport.toUpperCase()}</span><b class="decision abstention">abstention</b></div><h3>${sport==='football'?'Arsenal — Manchester City':'Taylor Fritz — Alexander Zverev'}</h3><p>Le vrai écran affichera les cotes horodatées du fournisseur.</p><div class="odds-line"><span>Winamax</span><b>non chargé</b></div><div class="odds-line"><span>Consensus</span><b>non chargé</b></div><small>Configurez THE_ODDS_API_KEY côté serveur.</small></article>`;};
-$('#loadLiveOdds').addEventListener('click',()=>demo('football')); $('#loadTennisOdds').addEventListener('click',()=>demo('tennis'));
-for(const form of document.querySelectorAll('form')) form.addEventListener('submit',e=>{e.preventDefault();alert('Aperçu statique : lancez FastAPI pour calculer une prédiction.');});
+const $=s=>document.querySelector(s);
+$('#health').textContent='Aperçu V3.2'; $('#health').classList.add('ok');
+$('#logoutButton').hidden=true;
+$('#footballRows').textContent='90'; $('#tennisRows').textContent='32'; $('#dailyCandidates').textContent='0'; $('#oddsApiState').textContent='Serveur'; $('#dbSnapshots').textContent='—'; $('#benchmarkState').textContent='Non exécuté';
+$('#providerStatus').textContent='Clé serveur requise'; $('#providerQuota').textContent='Aucun crédit consommé par cet aperçu';
+$('#cloudAuth').textContent='Privée'; $('#cloudDatabase').textContent='PostgreSQL'; $('#cloudReady').textContent='Architecture prête'; $('#cloudIssues').textContent='Le benchmark réel reste à exécuter.'; $('#cloudLastSync').textContent='Synchronisation cron + résultats récents.';
+$('#benchmarkVerdict').textContent='Non exécuté'; $('#benchmarkReason').textContent='La chaîne de benchmark est prête, mais aucun historique réel de votre compte API n’est inclus dans l’archive.'; $('#benchmarkRows').textContent='0'; $('#benchmarkDelta').textContent='—'; $('#benchmarkCi').textContent='IC 95 % indisponible avant collecte.'; $('#benchmarkClv').textContent='—';
+$('#dailySlate').innerHTML='<article class="slate-card"><div class="slate-top"><span>PROTOCOLE</span><b class="decision abstention">abstention</b></div><h3>Aucun pari forcé</h3><p>Une sélection n’apparaît qu’avec cote fraîche, edge robuste et modèle validé.</p><ul><li>Winamax dévigué</li><li>Consensus indépendant</li><li>Contrôle de fraîcheur</li></ul></article><article class="slate-card"><div class="slate-top"><span>V3.2</span><b class="decision abstention">non évalué</b></div><h3>Benchmark historique</h3><p>Le worker est budgété, reprenable et séparé du service web.</p><ul><li>24 h, 6 h, 1 h, clôture</li><li>Folds chronologiques</li><li>CLV et scores probabilistes</li></ul></article>';
+$('#liveOddsResult').innerHTML='<article class="slate-card"><div class="slate-top"><span>THE ODDS API</span><b class="decision abstention">serveur uniquement</b></div><h3>Winamax + consensus</h3><p>La clé n’est jamais envoyée au navigateur.</p><ul><li>Cache sans secret</li><li>Quota journalisé</li><li>Marchés historiques séparés par snapshot</li></ul></article>';
+$('#predictionHistory').innerHTML='<div class="history-row"><div><b>football</b><small>v3.2</small></div><div><b>Journal PostgreSQL</b><small>aperçu statique</small></div><span class="history-decision">abstention possible</span><time class="history-time">horodaté UTC</time></div>';
+$('#metrics').textContent=JSON.stringify({version:'3.2.0',tests:'58 passed',coverage:'86%',benchmark_status:'not_run',automatic_bet_placement:false},null,2);
+for(const id of ['loadLiveOdds','loadTennisOdds','refreshHistory','footballForm','tennisForm']){ const el=document.getElementById(id); if(el){ el.addEventListener('click',e=>e.preventDefault()); el.addEventListener('submit',e=>e.preventDefault()); }}
 </script>
 </body>
 </html>

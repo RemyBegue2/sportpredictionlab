@@ -76,6 +76,57 @@ class SyncRunRecord(Base):
     finished_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
+class EventResultRecord(Base):
+    __tablename__ = "event_results"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_id: Mapped[int] = mapped_column(ForeignKey("events.id", ondelete="CASCADE"), unique=True, index=True)
+    home_score: Mapped[int] = mapped_column(Integer)
+    away_score: Mapped[int] = mapped_column(Integer)
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    source: Mapped[str] = mapped_column(String(120))
+    imported_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class BenchmarkRunRecord(Base):
+    __tablename__ = "benchmark_runs"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    sport_key: Mapped[str] = mapped_column(String(100), index=True)
+    model_version: Mapped[str] = mapped_column(String(40), index=True)
+    status: Mapped[str] = mapped_column(String(40), index=True)
+    config: Mapped[dict[str, Any]] = mapped_column(JSON)
+    summary: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    report: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class DataQualityIssueRecord(Base):
+    __tablename__ = "data_quality_issues"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    issue_type: Mapped[str] = mapped_column(String(100), index=True)
+    severity: Mapped[str] = mapped_column(String(30), index=True)
+    provider_event_id: Mapped[str | None] = mapped_column(String(160), index=True)
+    details: Mapped[dict[str, Any]] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(30), default="open", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class BackfillJobRecord(Base):
+    __tablename__ = "backfill_jobs"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    sport_key: Mapped[str] = mapped_column(String(100), index=True)
+    status: Mapped[str] = mapped_column(String(40), index=True)
+    plan: Mapped[dict[str, Any]] = mapped_column(JSON)
+    request_count: Mapped[int] = mapped_column(Integer, default=0)
+    completed_requests: Mapped[int] = mapped_column(Integer, default=0)
+    estimated_credits: Mapped[int] = mapped_column(Integer, default=0)
+    consumed_credits: Mapped[int] = mapped_column(Integer, default=0)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
 _ENGINE = None
 _SESSION_FACTORY: sessionmaker[Session] | None = None
 _SETTINGS: CloudSettings | None = None
@@ -300,13 +351,189 @@ def recent_sync_runs(limit: int = 20) -> list[dict[str, Any]]:
         } for row in rows]
 
 
+
+def persist_event_result(*, provider_event_id: str, home_score: int, away_score: int, completed_at: Any, source: str = "the_odds_api_scores") -> int:
+    if home_score < 0 or away_score < 0:
+        raise ValueError("scores must be non-negative")
+    with session_scope() as session:
+        event = session.scalar(select(EventRecord).where(EventRecord.provider_event_id == provider_event_id))
+        if event is None:
+            raise ValueError(f"unknown provider event id: {provider_event_id}")
+        record = session.scalar(select(EventResultRecord).where(EventResultRecord.event_id == event.id))
+        if record is None:
+            record = EventResultRecord(
+                event_id=event.id,
+                home_score=int(home_score),
+                away_score=int(away_score),
+                completed_at=_utc(completed_at),
+                source=str(source),
+            )
+            session.add(record)
+        else:
+            record.home_score = int(home_score)
+            record.away_score = int(away_score)
+            record.completed_at = _utc(completed_at)
+            record.source = str(source)
+        session.flush()
+        return int(record.id)
+
+
+def record_data_quality_issue(*, issue_type: str, severity: str, details: Mapping[str, Any], provider_event_id: str | None = None) -> int:
+    if severity not in {"info", "warning", "error", "critical"}:
+        raise ValueError("invalid severity")
+    with session_scope() as session:
+        record = DataQualityIssueRecord(
+            issue_type=str(issue_type),
+            severity=severity,
+            provider_event_id=provider_event_id,
+            details=_json_safe(dict(details)),
+        )
+        session.add(record)
+        session.flush()
+        return int(record.id)
+
+
+def recent_data_quality_issues(limit: int = 100) -> list[dict[str, Any]]:
+    with session_scope() as session:
+        rows = session.scalars(select(DataQualityIssueRecord).order_by(DataQualityIssueRecord.created_at.desc()).limit(max(1, min(500, limit)))).all()
+        return [{
+            "id": row.id,
+            "issue_type": row.issue_type,
+            "severity": row.severity,
+            "provider_event_id": row.provider_event_id,
+            "details": row.details,
+            "status": row.status,
+            "created_at": row.created_at.isoformat(),
+        } for row in rows]
+
+
+def create_backfill_job(*, sport_key: str, plan: Mapping[str, Any], request_count: int, estimated_credits: int) -> int:
+    with session_scope() as session:
+        record = BackfillJobRecord(
+            sport_key=sport_key,
+            status="planned",
+            plan=_json_safe(dict(plan)),
+            request_count=int(request_count),
+            estimated_credits=int(estimated_credits),
+        )
+        session.add(record)
+        session.flush()
+        return int(record.id)
+
+
+def update_backfill_job(job_id: int, *, status: str | None = None, completed_requests: int | None = None, consumed_credits: int | None = None, error_message: str | None = None) -> None:
+    with session_scope() as session:
+        record = session.get(BackfillJobRecord, int(job_id))
+        if record is None:
+            raise ValueError("unknown backfill job")
+        if status is not None:
+            record.status = status
+        if completed_requests is not None:
+            record.completed_requests = int(completed_requests)
+        if consumed_credits is not None:
+            record.consumed_credits = int(consumed_credits)
+        record.error_message = error_message
+        record.updated_at = datetime.now(timezone.utc)
+
+
+def recent_backfill_jobs(limit: int = 20) -> list[dict[str, Any]]:
+    with session_scope() as session:
+        rows = session.scalars(select(BackfillJobRecord).order_by(BackfillJobRecord.created_at.desc()).limit(max(1, min(100, limit)))).all()
+        return [{
+            "id": row.id,
+            "sport_key": row.sport_key,
+            "status": row.status,
+            "request_count": row.request_count,
+            "completed_requests": row.completed_requests,
+            "estimated_credits": row.estimated_credits,
+            "consumed_credits": row.consumed_credits,
+            "error_message": row.error_message,
+            "created_at": row.created_at.isoformat(),
+            "updated_at": row.updated_at.isoformat(),
+        } for row in rows]
+
+
+def record_benchmark_run(*, sport_key: str, model_version: str, status: str, config: Mapping[str, Any], report: Mapping[str, Any] | None = None, summary: Mapping[str, Any] | None = None, error_message: str | None = None) -> int:
+    now = datetime.now(timezone.utc)
+    with session_scope() as session:
+        record = BenchmarkRunRecord(
+            sport_key=sport_key,
+            model_version=model_version,
+            status=status,
+            config=_json_safe(dict(config)),
+            report=_json_safe(dict(report)) if report else None,
+            summary=_json_safe(dict(summary)) if summary else None,
+            error_message=error_message,
+            started_at=now,
+            finished_at=now if status in {"completed", "failed", "not_evaluable"} else None,
+        )
+        session.add(record)
+        session.flush()
+        return int(record.id)
+
+
+def latest_benchmark_run(sport_key: str | None = None) -> dict[str, Any] | None:
+    with session_scope() as session:
+        statement = select(BenchmarkRunRecord).order_by(BenchmarkRunRecord.started_at.desc())
+        if sport_key:
+            statement = statement.where(BenchmarkRunRecord.sport_key == sport_key)
+        row = session.scalar(statement.limit(1))
+        if row is None:
+            return None
+        return {
+            "id": row.id,
+            "sport_key": row.sport_key,
+            "model_version": row.model_version,
+            "status": row.status,
+            "config": row.config,
+            "summary": row.summary,
+            "report": row.report,
+            "error_message": row.error_message,
+            "started_at": row.started_at.isoformat(),
+            "finished_at": row.finished_at.isoformat() if row.finished_at else None,
+        }
+
+
+def benchmark_source_rows(*, sport_key: str, bookmaker_key: str = "winamax_fr") -> list[dict[str, Any]]:
+    """Return auditable event/result/snapshot rows for offline benchmark preparation.
+
+    This deliberately does not construct model probabilities inside the database layer.
+    """
+    with session_scope() as session:
+        statement = (
+            select(EventRecord, EventResultRecord, OddsSnapshotRecord)
+            .join(EventResultRecord, EventResultRecord.event_id == EventRecord.id)
+            .join(OddsSnapshotRecord, OddsSnapshotRecord.event_id == EventRecord.id)
+            .where(EventRecord.sport_key == sport_key, OddsSnapshotRecord.bookmaker_key == bookmaker_key)
+            .order_by(EventRecord.commence_time, OddsSnapshotRecord.observed_at)
+        )
+        rows = session.execute(statement).all()
+        return [{
+            "event_id": event.provider_event_id,
+            "sport_key": event.sport_key,
+            "commence_time": event.commence_time.isoformat() if event.commence_time else None,
+            "home_team": event.home_name,
+            "away_team": event.away_name,
+            "home_score": result.home_score,
+            "away_score": result.away_score,
+            "result_available_at": result.completed_at.isoformat(),
+            "bookmaker_key": snapshot.bookmaker_key,
+            "market_key": snapshot.market_key,
+            "outcome_name": snapshot.outcome_name,
+            "price": snapshot.price,
+            "odds_observed_at": snapshot.observed_at.isoformat(),
+        } for event, result, snapshot in rows]
+
 def database_summary() -> dict[str, Any]:
     if not ping_database():
-        return {"connected": False, "events": 0, "odds_snapshots": 0, "predictions": 0, "last_snapshot_at": None, "last_sync_at": None}
+        return {"connected": False, "events": 0, "odds_snapshots": 0, "predictions": 0, "event_results": 0, "benchmark_runs": 0, "open_data_quality_issues": 0, "last_snapshot_at": None, "last_sync_at": None}
     with session_scope() as session:
         event_count = int(session.scalar(select(func.count(EventRecord.id))) or 0)
         snapshot_count = int(session.scalar(select(func.count(OddsSnapshotRecord.id))) or 0)
         prediction_count = int(session.scalar(select(func.count(PredictionRecord.id))) or 0)
+        result_count = int(session.scalar(select(func.count(EventResultRecord.id))) or 0)
+        benchmark_count = int(session.scalar(select(func.count(BenchmarkRunRecord.id))) or 0)
+        open_quality_issues = int(session.scalar(select(func.count(DataQualityIssueRecord.id)).where(DataQualityIssueRecord.status == "open")) or 0)
         last_snapshot = session.scalar(select(func.max(OddsSnapshotRecord.observed_at)))
         last_sync = session.scalar(select(func.max(SyncRunRecord.finished_at)))
         return {
@@ -314,6 +541,9 @@ def database_summary() -> dict[str, Any]:
             "events": event_count,
             "odds_snapshots": snapshot_count,
             "predictions": prediction_count,
+            "event_results": result_count,
+            "benchmark_runs": benchmark_count,
+            "open_data_quality_issues": open_quality_issues,
             "last_snapshot_at": last_snapshot.isoformat() if last_snapshot else None,
             "last_sync_at": last_sync.isoformat() if last_sync else None,
         }

@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     THE_ODDS_API_CACHE=/tmp/odds_api_cache \
-    APP_DATABASE_PATH=/tmp/sports_prediction_v3_1.db \
+    APP_DATABASE_PATH=/tmp/sports_prediction_v3_2.db \
     PYTHONPATH=/app
 
 RUN groupadd --system app && useradd --system --gid app --home-dir /app app
