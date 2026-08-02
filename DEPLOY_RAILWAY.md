@@ -25,7 +25,7 @@ Dupliquez le service depuis le même dépôt, puis :
 1. choisissez `railway.cron.toml` comme fichier Config as Code ;
 2. partagez `DATABASE_URL` et `THE_ODDS_API_KEY` ;
 3. ne générez pas de domaine ;
-4. vérifiez que la commande est `python scripts/sync_current_odds.py --football soccer_epl` ;
+4. vérifiez que la commande est `python -m scripts.sync_current_odds --football soccer_epl` ;
 5. vérifiez le cron `*/15 * * * *`.
 
 Le tennis n'est pas synchronisé par défaut pour éviter une consommation incontrôlée du quota.

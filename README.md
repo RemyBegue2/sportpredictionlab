@@ -38,6 +38,11 @@ FastAPI + interface statique
 Cron de synchronisation ── The Odds API
 ```
 
+
+## Correctif Railway V3.1.1
+
+La V3.1.0 lançait les scripts de migration et de cron par chemin de fichier. Dans un conteneur Railway, cela pouvait retirer la racine du projet de `sys.path` et provoquer `ModuleNotFoundError: No module named 'sports_predictor'`. La V3.1.1 utilise des modules Python (`python -m scripts.db_migrate` et `python -m scripts.sync_current_odds`) et conserve aussi un bootstrap compatible avec l'exécution directe.
+
 ## Déploiement recommandé : Railway
 
 1. Publier ce dossier dans un dépôt GitHub privé.

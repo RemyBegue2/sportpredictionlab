@@ -12,7 +12,7 @@ Le fichier `render.yaml` provisionne le web, PostgreSQL et le cron.
    - `THE_ODDS_API_KEY` pour le web ;
    - `THE_ODDS_API_KEY` pour le cron.
 5. Vérifiez le récapitulatif de facturation avant création.
-6. Attendez le pre-deploy `python scripts/db_migrate.py`.
+6. Attendez le pre-deploy `python -m scripts.db_migrate`.
 7. Ouvrez l'URL du service web et connectez-vous.
 
 ## Ressources déclarées

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.1 — Correctif déploiement Railway
+
+- correction des imports des scripts `db_migrate.py` et `sync_current_odds.py` ;
+- exécution Railway/Render via `python -m` pour garantir la présence de la racine du projet dans `sys.path` ;
+- ajout de tests de régression pour les entrypoints de migration et de cron.
+
 ## 2.2.0
 
 - Ajout de la section « Paris du jour ».

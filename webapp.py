@@ -79,7 +79,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title="Sports Prediction Lab V3.1 Cloud",
-    version="3.1.0",
+    version="3.1.1",
     description="Authenticated cloud edition with PostgreSQL persistence, scheduled odds synchronization and market-aware research.",
     lifespan=lifespan,
 )
