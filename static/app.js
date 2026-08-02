@@ -82,6 +82,42 @@ function renderBenchmark(data){
 }
 
 
+function renderShadow(data, history){
+  const summary=data.summary||{};
+  const aggregate=summary.aggregate||{};
+  const settled=aggregate.settled_predictions ?? 0;
+  $('#shadowState').textContent=settled;
+  $('#shadowTotal').textContent=summary.total_predictions ?? 0;
+  $('#shadowSettled').textContent=settled;
+  $('#shadowMaturity').textContent=`Échantillon ${aggregate.maturity?.label || 'anecdotique'}.`;
+  $('#shadowLogLoss').textContent=Number.isFinite(aggregate.log_loss)?aggregate.log_loss.toFixed(4):'—';
+  const unitReturn=aggregate.theoretical_unit_return;
+  $('#shadowReturn').textContent=Number.isFinite(unitReturn)?`${unitReturn>=0?'+':''}${unitReturn.toFixed(2)} u`:'—';
+  const cycle=data.latest_cycle;
+  $('#shadowLastCycle').textContent=cycle?`${cycle.status} · ${new Date(cycle.finished_at||cycle.started_at).toLocaleString('fr-FR')}`:'Aucun cycle enregistré';
+  const footballModel=(data.models||[]).find(model=>model.model_id==='football-1n2-shadow');
+  const modelWarning=$('#shadowModelWarning');
+  if(footballModel){
+    const freshness=footballModel.metrics?.freshness||{};
+    const age=Number.isFinite(freshness.age_days)?`${freshness.age_days} jours`:'âge inconnu';
+    modelWarning.innerHTML=`<b>Modèle football : ${esc(footballModel.status)}</b> · données arrêtées au ${footballModel.trained_until?new Date(footballModel.trained_until).toLocaleDateString('fr-FR'):'—'} · ${esc(age)}. ${footballModel.status==='degraded'?'Toute sélection opérationnelle est bloquée ; observation uniquement.':'Shadow mode actif.'}`;
+  }
+  const rows=history.predictions||[];
+  $('#shadowHistory').innerHTML=rows.map(row=>{
+    const f=row.fixture||{};
+    const label=row.sport==='football'?`${f.home_team||'—'} — ${f.away_team||'—'}`:`${f.player_1||'—'} — ${f.player_2||'—'}`;
+    const result=row.status==='settled'?`${row.home_score}–${row.away_score}`:row.status;
+    return `<div class="history-row"><div><b>${esc(row.status)}</b><small>${esc(row.model_id)} · ${esc(row.horizon||'—')}</small></div><div><b>${esc(label)}</b><small>${new Date(row.commence_time).toLocaleString('fr-FR')}</small></div><span class="history-decision">${esc(row.decision)}</span><time class="history-time">${esc(result)}</time></div>`;
+  }).join('')||'<p>Aucune prédiction shadow enregistrée.</p>';
+}
+
+async function refreshShadow(){
+  try{
+    const [summary,history]=await Promise.all([jsonFetch('/api/shadow/summary'),jsonFetch('/api/shadow/predictions?limit=20')]);
+    renderShadow(summary,history);
+  }catch(error){ toast(error.message); }
+}
+
 function renderLiveOdds(data){
   const events=data.events||[];
   const cards=events.map(event=>{
@@ -132,8 +168,8 @@ async function init(){
     fill('#homeTeam',cat.football_teams,'Arsenal'); fill('#awayTeam',cat.football_teams,'Man City');
     fill('#player1',cat.tennis_players,'Taylor Fritz'); fill('#player2',cat.tennis_players,'Alexander Zverev');
     syncDifferent('#homeTeam','#awayTeam'); syncDifferent('#player1','#player2');
-    const [audit, slate, provider, history, benchmark]=await Promise.all([jsonFetch('/api/metrics'),jsonFetch('/api/bets/today'),jsonFetch('/api/odds/status'),jsonFetch('/api/history/predictions?limit=20'),jsonFetch('/api/benchmark/summary')]);
-    $('#metrics').textContent=JSON.stringify(audit,null,2); renderDaily(slate); renderProviderStatus(provider); renderHistory(history); renderBenchmark(benchmark);
+    const [audit, slate, provider, history, benchmark, shadow, shadowHistory]=await Promise.all([jsonFetch('/api/metrics'),jsonFetch('/api/bets/today'),jsonFetch('/api/odds/status'),jsonFetch('/api/history/predictions?limit=20'),jsonFetch('/api/benchmark/summary'),jsonFetch('/api/shadow/summary'),jsonFetch('/api/shadow/predictions?limit=20')]);
+    $('#metrics').textContent=JSON.stringify(audit,null,2); renderDaily(slate); renderProviderStatus(provider); renderHistory(history); renderBenchmark(benchmark); renderShadow(shadow,shadowHistory);
     if(provider.configured){ try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); } }
   }catch(e){
     toast(`Interface partiellement chargée : ${e.message}`);
@@ -195,6 +231,7 @@ $('#loadTennisOdds').addEventListener('click',async()=>{
 
 
 $('#refreshHistory').addEventListener('click',refreshHistory);
+$('#refreshShadow').addEventListener('click',refreshShadow);
 $('#logoutButton').addEventListener('click',async()=>{
   try{ await jsonFetch('/api/auth/logout',{method:'POST'}); window.location.assign('/login'); }catch(error){ toast(error.message); }
 });

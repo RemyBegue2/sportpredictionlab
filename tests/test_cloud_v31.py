@@ -151,5 +151,5 @@ def test_cloud_deployment_configs_are_safe_and_parseable():
     assert 'healthcheckPath = "/api/health"' in railway
     assert "python -m scripts.db_migrate" in railway
     assert 'cronSchedule = "*/15 * * * *"' in cron
-    assert "python -m scripts.sync_current_odds" in cron
+    assert "python -m scripts.run_shadow_cycle" in cron
     assert "THE_ODDS_API_KEY=" not in (ROOT / "Dockerfile").read_text(encoding="utf-8")

@@ -1,33 +1,41 @@
-# Roadmap après V3.2
+# Roadmap après V3.3
 
-## V3.3 Performance
+## P0 — Exploitation du shadow mode
 
-À choisir uniquement si le benchmark réel est favorable :
+1. Déployer le service `shadow-cron`.
+2. Vérifier un cycle complet et le quota.
+3. Tester la récupération d’un résultat.
+4. Activer et restaurer une sauvegarde PostgreSQL.
+5. Observer pendant 14 jours sans mise.
 
-- extension Ligue 1, Liga, Bundesliga et Serie A ;
-- seuils spécifiques par championnat ;
-- monitoring de calibration et de CLV ;
-- alertes de dérive ;
-- registre de modèles et rollback ;
-- rapport hebdomadaire automatique.
+## P0 — Rebuild football
 
-## V3.3 Rebuild
+1. Importer plusieurs saisons récentes.
+2. Ajouter une identité canonique stable.
+3. Réentraîner sur fenêtres croissantes.
+4. Calibrer hors entraînement.
+5. Comparer modèle, Winamax et consensus.
+6. Promouvoir une nouvelle version sans effacer l’ancienne.
 
-À choisir si Winamax ou le consensus battent le modèle :
+## P1 — Qualité marché
 
-- refonte des données multi-saisons ;
-- horaires exacts et composition des équipes ;
-- ratings de joueurs/absences ;
-- modèles hiérarchiques par championnat ;
-- calibration cross-fittée ;
-- étude du marché comme baseline ou prior principal ;
-- abandon explicite des segments sans signal.
+- closing line réelle ;
+- rapports par horizon ;
+- intervalles bootstrap temporels ;
+- suivi de calibration ;
+- alertes de fraîcheur et dérive.
 
-## P0 commun
+## P1 — SRE
 
-- exécuter un benchmark EPL réel ;
-- vérifier les sauvegardes PostgreSQL ;
-- adopter Alembic ;
-- enrichir les aliases canoniques ;
-- tester le worker Railway ;
-- documenter le coût réel en crédits.
+- alertes sur cron échoué ;
+- sauvegarde et restauration automatisées ;
+- tableau du quota ;
+- politique de rétention ;
+- agrégations SQL lorsque le journal dépasse 10 000 lignes.
+
+## V3.4
+
+Deux branches possibles :
+
+- **V3.4 Rebuild**, chemin attendu avec le modèle actuel ;
+- **V3.4 Performance**, uniquement après preuve hors temps contre le marché.

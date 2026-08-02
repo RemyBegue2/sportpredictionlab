@@ -1,24 +1,27 @@
 # Changelog
 
+## 3.3.0
+
+- shadow mode automatique ;
+- tables `shadow_predictions`, `model_registry`, `shadow_cycles` ;
+- empreinte SHA-256 et contrôle temporel ;
+- horizons `t-24h`, `t-6h`, `t-1h`, `pre-close` ;
+- unicité par événement, modèle, version et horizon ;
+- récupération ciblée des résultats ;
+- règlement et métriques football ;
+- registre de modèles multi-version ;
+- détection du modèle périmé ;
+- veto sur les sélections lorsque le modèle est trop ancien ;
+- quota guard ;
+- service cron Railway fini ;
+- endpoints et interface shadow ;
+- migration compatible depuis V3.2.1.
+
 ## 3.2.1
 
-- Corrige le crash `ci[0].toFixed` lorsqu'aucun benchmark historique n'a encore été exécuté.
-- Empêche une erreur de rendu secondaire de transformer le badge de santé en `API indisponible`.
-- Ajoute un cache-busting du JavaScript et des tests de non-régression.
+- correction de l’intervalle de confiance vide dans le frontend ;
+- suppression du faux statut API indisponible.
 
 ## 3.2.0
 
-- ajout du benchmark historique modèle–Winamax–consensus ;
-- folds chronologiques et blend train-only ;
-- audit temporel et bootstrap par blocs ;
-- matching événement/résultat avec veto d’ambiguïté ;
-- séparation des snapshots historiques ;
-- tables résultats, benchmark, qualité et backfill ;
-- worker Railway reprenable et budgété ;
-- synchronisation des scores récents ;
-- écran Validation marché ;
-- 59 tests, couverture globale 85,44 %.
-
-## 3.1.2
-
-- correction robuste du chemin d’import Python dans Railway.
+- benchmark historique et worker de backfill.

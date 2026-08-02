@@ -16,3 +16,4 @@
 .benchmark-section{background:#f1f5ef}.benchmark-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.benchmark-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;min-height:190px}.benchmark-card small{color:#61705c;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.benchmark-card h3{font-size:28px;margin:12px 0 8px}.benchmark-card p{color:var(--muted);font-size:13px}.benchmark-card .good{color:#1d6b43}.benchmark-card .bad{color:var(--danger)}
 @media(max-width:1000px){.benchmark-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.benchmark-grid{grid-template-columns:1fr}}
+.shadow-section{background:#edf4ef}.shadow-section .history-panel{border-color:#bdcdbf}.shadow-section .history-decision{background:#e4f2e8;color:#275f3e}.shadow-section .benchmark-card:first-child{border-top:4px solid var(--accent)}

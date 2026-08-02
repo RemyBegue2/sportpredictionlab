@@ -1,72 +1,76 @@
-# Déploiement Railway V3.2
+# Déployer la V3.3 sur Railway
 
-## Services
+## 1. Mettre à jour le service web
 
-1. **Web** — `railway.toml`
-2. **PostgreSQL** — plugin Railway
-3. **Cron courant** — `railway.cron.toml`
-4. **Worker historique manuel** — `railway.worker.toml`
+Remplace le dépôt par le contenu de l’archive, puis :
 
-## Web
-
-Conserver les variables de la V3.1.2 et ajouter :
-
-```text
-MODEL_VERSION=3.2.0
+```bash
+git add -A
+git commit -m "Upgrade to V3.3 shadow mode"
+git push
 ```
 
-Le pre-deploy reste :
+Le service existant utilise `railway.toml`. Le pre-deploy créera les nouvelles tables sans supprimer les anciennes données.
 
-```text
-python -m scripts.db_migrate
-```
-
-Il crée les nouvelles tables avec SQLAlchemy. Cette méthode ne remplace pas Alembic pour de futures migrations destructives ou modifications de colonnes.
-
-## Cron courant
-
-Créer un second service depuis le même dépôt et sélectionner `railway.cron.toml` comme chemin de configuration. Il synchronise les cotes puis les scores récents toutes les quinze minutes.
-
-Variables :
+Variables recommandées :
 
 ```text
 APP_ENV=production
-APP_AUTH_REQUIRED=false
+APP_AUTH_REQUIRED=true
+APP_COOKIE_SECURE=true
+APP_PASSWORD=...
+APP_SESSION_SECRET=...
 DATABASE_URL=${{Postgres.DATABASE_URL}}
-THE_ODDS_API_KEY=<secret>
+THE_ODDS_API_KEY=...
+MODEL_VERSION=3.3.0
 ODDS_SYNC_SPORTS=soccer_epl
+ODDS_STALE_MINUTES=15
+SHADOW_MODE_ENABLED=true
+SHADOW_QUOTA_FLOOR=100
+MODEL_MAX_AGE_DAYS=365
 ```
 
-## Worker historique
+## 2. Créer le service cron
 
-Créer un troisième service depuis le même dépôt et sélectionner `railway.worker.toml`.
+1. Nouveau service depuis le même dépôt.
+2. Nom : `shadow-cron`.
+3. Settings → Config file path : `/railway.cron.toml`.
+4. Référence la même base PostgreSQL.
+5. Ajoute la clé The Odds API et les variables shadow.
+6. Ne génère pas de domaine public.
 
-Variables obligatoires :
+Commande exécutée :
 
 ```text
-APP_ENV=production
-APP_AUTH_REQUIRED=false
-DATABASE_URL=${{Postgres.DATABASE_URL}}
-THE_ODDS_API_KEY=<secret>
-BACKFILL_PLAN_DIR=data/odds_api/backfill
-BACKFILL_MAX_CREDITS=5000
+python -m scripts.run_shadow_cycle
 ```
 
-Le plan doit être présent dans l’image ou téléchargé vers un stockage accessible. Ne démarrez pas le worker avec `BACKFILL_MAX_CREDITS=0`.
+Planning : toutes les quinze minutes.
 
-Le worker est volontairement `NEVER` pour sa politique de redémarrage. Une erreur de budget ou de données nécessite une inspection humaine.
+## 3. Contrôler le premier cycle
 
-## Après déploiement
+Dans les logs du service cron, attends un JSON contenant :
 
-Vérifier :
-
-```text
-/api/health
-/api/ready
-/api/odds/status
-/api/benchmark/summary
-/api/admin/backfills
-/api/admin/data-quality
+```json
+{
+  "status": "ok",
+  "events_seen": 0,
+  "predictions_created": 0,
+  "predictions_reused": 0,
+  "predictions_settled": 0,
+  "quota_remaining": 0
+}
 ```
 
-Puis vérifier que la première exécution cron ajoute des lignes à `sync_runs` et que la page reste accessible après un redémarrage du service web.
+Les zéros sont possibles hors saison ou sans événement. Le champ important est l’absence d’erreur de configuration.
+
+## 4. Tester dans l’application
+
+- `/api/health` : version 3.3.0 ;
+- `/api/ready` : base et artefacts disponibles ;
+- `/api/shadow/summary` : dernier cycle visible ;
+- section Shadow : modèle football marqué `degraded` tant qu’il n’est pas réentraîné.
+
+## 5. Sauvegardes
+
+Active une sauvegarde PostgreSQL et teste une restauration avant de compter sur le journal comme historique durable.

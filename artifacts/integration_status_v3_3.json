@@ -1,0 +1,56 @@
+{
+  "version": "3.3.0",
+  "generated_at": "2026-08-02T18:30:00+02:00",
+  "tests": {
+    "passed": 71,
+    "failed": 0
+  },
+  "coverage": {
+    "percent_covered": 85.46,
+    "covered_lines": 3684,
+    "num_statements": 4311,
+    "missing_lines": 627,
+    "shadow_mode_percent": 86.13,
+    "database_percent": 89.07,
+    "shadow_cycle_percent": 80.52
+  },
+  "validated": {
+    "python_compile": true,
+    "javascript_syntax": true,
+    "toml_parse": true,
+    "render_yaml_parse": true,
+    "v321_to_v33_sqlite_migration": true,
+    "static_browser_render": true,
+    "browser_console_errors": 0,
+    "artifact_manifest_verified_by_app_tests": true,
+    "zip_integrity": true,
+    "docker_build": "not_executed_docker_cli_unavailable",
+    "secret_placeholder_scan": true
+  },
+  "shadow_mode": {
+    "real_provider_calls_during_build": 0,
+    "real_credits_consumed_during_build": 0,
+    "real_shadow_predictions_included": 0,
+    "horizons": [
+      "t-24h",
+      "t-6h",
+      "t-1h",
+      "pre-close"
+    ],
+    "automatic_bet_placement": false,
+    "quota_guard": true
+  },
+  "model_status": {
+    "football": "degraded_stale",
+    "football_data_cutoff": "2023-10-23",
+    "football_rows": 90,
+    "tennis": "experimental_uncalibrated",
+    "tennis_rows": 32
+  },
+  "verdict": {
+    "private_research_cloud": "go_conditional_on_cron_smoke_test",
+    "profitability_claim": "no_go",
+    "automatic_betting": "no_go",
+    "public_multi_user": "no_go"
+  }
+}

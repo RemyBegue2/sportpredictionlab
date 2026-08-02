@@ -1,0 +1,7 @@
+{
+  "version": "3.3.0",
+  "actual_secret_candidates": 0,
+  "placeholder_assignments": 10,
+  "status": "passed",
+  "notes": "Binary model artifacts were excluded; configuration examples contain placeholders only."
+}

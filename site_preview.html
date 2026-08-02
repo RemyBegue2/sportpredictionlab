@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V3.2 Historical Validation</title>
-  <meta name="description" content="Application cloud privée avec FastAPI, PostgreSQL, flux Winamax via The Odds API, historique des cotes et comparaison au marché.">
+  <title>Aperçu — Sports Prediction Lab V3.3</title>
+  <meta name="description" content="Application cloud privée avec prédictions pré-match immuables, règlement automatique des résultats et validation en shadow mode.">
   <style>:root{--ink:#101820;--muted:#64707a;--paper:#f4f1ea;--card:#fff;--accent:#bbff36;--line:#d7d5cf;--deep:#172b25;--danger:#c53d2f;--shadow:0 22px 70px rgba(16,24,32,.10)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.topbar{position:sticky;top:0;z-index:20;height:72px;padding:0 max(24px,calc((100vw - 1240px)/2));display:flex;align-items:center;gap:32px;border-bottom:1px solid rgba(16,24,32,.12);background:rgba(244,241,234,.92);backdrop-filter:blur(16px)}.brand{display:flex;align-items:center;gap:11px;font-weight:800;color:var(--ink);text-decoration:none}.logo{display:grid;place-items:center;width:38px;height:38px;background:var(--ink);color:var(--accent);border-radius:10px;font-size:13px;letter-spacing:.08em}.topbar nav{display:flex;gap:24px;margin-left:auto}.topbar nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:700}.topbar nav a:hover{color:var(--ink)}.pill{padding:7px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;font-weight:800}.pill.ok{color:#1f6b46;border-color:#98c6ac;background:#eaf7ef}.pill.error{color:var(--danger);border-color:#e1aaa5;background:#fff0ee}main{overflow:hidden}.hero{max-width:1240px;margin:0 auto;min-height:650px;padding:96px 24px 72px;display:grid;grid-template-columns:1.35fr .65fr;gap:70px;align-items:center}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.18em;color:#61705c;margin:0 0 14px}.hero h1,.section-heading h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.045em}.hero h1{font-size:clamp(56px,7vw,96px);line-height:.92;margin:0 0 28px}.hero h1 span{color:#58725f}.lede{max-width:720px;font-size:20px;color:var(--muted)}.actions{display:flex;gap:12px;margin-top:34px}.button{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:13px 18px;border:1px solid var(--ink);font-weight:800;font-size:14px;text-decoration:none;cursor:pointer;transition:.18s ease}.button:hover{transform:translateY(-1px)}.button.primary{background:var(--ink);color:#fff}.button.primary:hover{background:var(--deep)}.button.ghost{background:transparent;color:var(--ink)}.button.full{width:100%}.trust-card{background:var(--deep);color:#fff;border-radius:22px;padding:28px;box-shadow:var(--shadow);transform:rotate(1.1deg)}.trust-title{text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:900;color:var(--accent);margin-bottom:18px}.trust-card ol{list-style:none;padding:0;margin:0;counter-reset:item}.trust-card li{padding:16px 0;border-top:1px solid rgba(255,255,255,.15);display:grid;grid-template-columns:1fr auto;gap:10px}.trust-card li b{font-size:15px}.trust-card li span{font-size:12px;color:#b9c6c1}.stats{max-width:1240px;margin:0 auto 70px;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}.stats article{background:var(--card);padding:26px}.stats span{display:block;font-family:Georgia,serif;font-size:42px}.stats small{color:var(--muted)}.workbench{padding:100px max(24px,calc((100vw - 1240px)/2));background:#fff;border-top:1px solid var(--line)}.workbench.alt{background:#e9eee8}.section-heading{max-width:760px;margin-bottom:45px}.section-heading h2{font-size:58px;margin:0 0 10px}.section-heading>p:last-child{color:var(--muted);font-size:18px}.panel-grid{display:grid;grid-template-columns:380px 1fr;gap:28px}.control-panel,.result-panel{border:1px solid var(--line);border-radius:18px;background:var(--card);padding:28px;box-shadow:0 12px 40px rgba(16,24,32,.05)}.control-panel{display:grid;gap:18px}.control-panel label{font-size:13px;font-weight:800;display:grid;gap:8px}.control-panel select,.control-panel input{width:100%;padding:12px 13px;border:1px solid #c9cbc5;border-radius:9px;background:#fff;color:var(--ink);font:inherit}.fineprint{font-size:12px;color:var(--muted);margin:0}.result-panel{min-height:360px}.result-panel.empty{display:grid;place-items:center;color:var(--muted);border-style:dashed}.result-panel h3{margin:0 0 4px;font-size:22px}.result-subtitle{color:var(--muted);margin:0 0 26px}.prob-row{display:grid;grid-template-columns:150px 1fr 64px;gap:14px;align-items:center;margin:16px 0}.prob-label{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar-track{height:18px;background:#eef0eb;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:var(--deep);border-radius:inherit;transition:width .55s ease}.prob-value{text-align:right;font-variant-numeric:tabular-nums;font-weight:900}.result-meta{display:flex;gap:24px;padding-top:22px;margin-top:24px;border-top:1px solid var(--line)}.result-meta div{flex:1}.result-meta small{display:block;color:var(--muted)}.result-meta b{font-size:24px}.score-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}.score-table th,.score-table td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}.warning{margin-top:18px;padding:12px 14px;border-left:4px solid #d3a517;background:#fff9dc;color:#62531b;font-size:12px}.audit-section{padding:100px max(24px,calc((100vw - 1240px)/2));background:var(--ink);color:#fff}.audit-section .eyebrow{color:var(--accent)}.audit-section .section-heading>p:last-child{color:#b6c0c5}.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#334048;border:1px solid #334048}.role-grid article{background:var(--ink);padding:28px;min-height:205px}.role-grid article span{color:var(--accent);font-size:12px;font-weight:900}.role-grid h3{font-size:20px;margin:24px 0 8px}.role-grid p{color:#afbac0;font-size:14px}.audit-callout{display:flex;justify-content:space-between;align-items:center;gap:20px;border:1px solid #445058;border-radius:14px;padding:22px;margin-top:30px}.audit-callout p{margin:5px 0 0;color:#b7c0c5}.audit-callout .button{border-color:#fff;color:#fff}details{margin-top:24px;border-top:1px solid #445058;padding-top:20px}summary{cursor:pointer;font-weight:800}pre{white-space:pre-wrap;word-break:break-word;color:#b9c6c1;font-size:12px;background:#0a1015;padding:18px;border-radius:12px;max-height:460px;overflow:auto}footer{display:flex;justify-content:space-between;padding:28px max(24px,calc((100vw - 1240px)/2));font-size:12px;color:var(--muted);background:#fff;border-top:1px solid var(--line)}#toast{position:fixed;right:24px;bottom:24px;max-width:380px;padding:14px 16px;border-radius:10px;background:var(--danger);color:#fff;font-weight:700;box-shadow:var(--shadow);opacity:0;pointer-events:none;transform:translateY(12px);transition:.2s}#toast.show{opacity:1;transform:none}.loader{display:flex;gap:8px;align-items:center;justify-content:center;height:100%}.loader:before{content:"";width:18px;height:18px;border:3px solid #ccd1ca;border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:900px){.topbar nav{display:none}.hero{grid-template-columns:1fr;padding-top:70px}.trust-card{transform:none}.stats{grid-template-columns:1fr 1fr}.panel-grid{grid-template-columns:1fr}.role-grid{grid-template-columns:1fr 1fr}.hero h1{font-size:58px}}@media(max-width:600px){.topbar{height:64px}.pill{display:none}.hero{min-height:auto;padding:60px 18px}.hero h1{font-size:47px}.lede{font-size:17px}.stats{margin:0 18px 50px;padding:0;grid-template-columns:1fr}.workbench,.audit-section{padding:72px 18px}.section-heading h2{font-size:46px}.role-grid{grid-template-columns:1fr}.prob-row{grid-template-columns:100px 1fr 54px}.audit-callout,footer{align-items:flex-start;flex-direction:column}}
@@ -23,13 +23,14 @@
 .benchmark-section{background:#f1f5ef}.benchmark-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.benchmark-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;min-height:190px}.benchmark-card small{color:#61705c;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.benchmark-card h3{font-size:28px;margin:12px 0 8px}.benchmark-card p{color:var(--muted);font-size:13px}.benchmark-card .good{color:#1d6b43}.benchmark-card .bad{color:var(--danger)}
 @media(max-width:1000px){.benchmark-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.benchmark-grid{grid-template-columns:1fr}}
+.shadow-section{background:#edf4ef}.shadow-section .history-panel{border-color:#bdcdbf}.shadow-section .history-decision{background:#e4f2e8;color:#275f3e}.shadow-section .benchmark-card:first-child{border-top:4px solid var(--accent)}
 </style>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
     <nav>
-      <a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#benchmark">Benchmark</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
+      <a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
     </nav>
     <div class="top-actions"><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
   </header>
@@ -37,9 +38,9 @@
   <main>
     <section id="overview" class="hero">
       <div>
-        <p class="eyebrow">VERSION 3.2 · BENCHMARK HISTORIQUE · POSTGRESQL</p>
+        <p class="eyebrow">VERSION 3.3 · SHADOW MODE · POSTGRESQL</p>
         <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
-        <p class="lede">Une application accessible par URL, protégée par mot de passe, avec snapshots PostgreSQL, historique budgété, audit temporel et comparaison modèle–Winamax–consensus.</p>
+        <p class="lede">Une application privée qui fige automatiquement les prédictions avant match, récupère les résultats et mesure sa qualité sans placer le moindre pari.</p>
         <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
       </div>
       <aside class="trust-card">
@@ -59,7 +60,7 @@
       <article><span id="tennisRows">—</span><small>matchs tennis embarqués</small></article>
       <article><span id="dailyCandidates">—</span><small>candidats recherche aujourd’hui</small></article>
       <article><span id="oddsApiState">—</span><small>connexion The Odds API</small></article><article><span id="dbSnapshots">—</span><small>snapshots persistés</small></article>
-      <article><span id="benchmarkState">—</span><small>validation contre Winamax</small></article>
+      <article><span id="shadowState">—</span><small>prédictions shadow réglées</small></article>
     </section>
 
     <section id="bets" class="workbench bets-section">
@@ -100,6 +101,23 @@
         <div class="history-heading"><div><small>JOURNAL D’AUDIT</small><h3>Dernières prédictions</h3></div><button id="refreshHistory" class="button ghost" type="button">Actualiser</button></div>
         <div id="predictionHistory" class="history-list"><p>Chargement du journal…</p></div>
       </div>
+    </section>
+
+
+    <section id="shadow" class="workbench shadow-section">
+      <div class="section-heading"><p class="eyebrow">OBSERVATION EN CONDITIONS RÉELLES</p><h2>Shadow mode</h2><p>Le cron fige les probabilités, l'heure de la cote et la version du modèle avant le coup d’envoi. Les résultats sont ensuite rapprochés automatiquement. Aucune mise n’est proposée ni transmise à Winamax.</p></div>
+      <div class="benchmark-grid">
+        <article class="benchmark-card"><small>Prédictions figées</small><h3 id="shadowTotal">0</h3><p>Enregistrements immuables et dédupliqués par empreinte SHA-256.</p></article>
+        <article class="benchmark-card"><small>Résultats évalués</small><h3 id="shadowSettled">0</h3><p id="shadowMaturity">Échantillon anecdotique.</p></article>
+        <article class="benchmark-card"><small>Log-loss observée</small><h3 id="shadowLogLoss">—</h3><p>Score probabiliste principal, plus fiable qu’un ROI isolé.</p></article>
+        <article class="benchmark-card"><small>Résultat fictif normalisé</small><h3 id="shadowReturn">—</h3><p>Une unité théorique par candidat, sans conseil de mise.</p></article>
+      </div>
+      <div id="shadowModelWarning" class="policy-note"><b>Modèle football :</b> contrôle de fraîcheur en cours.</div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>CYCLE AUTOMATIQUE</small><h3 id="shadowLastCycle">Aucun cycle enregistré</h3></div><button id="refreshShadow" class="button ghost" type="button">Actualiser</button></div>
+        <div id="shadowHistory" class="history-list"><p>Chargement du journal shadow…</p></div>
+      </div>
+      <div class="policy-note"><b>Veto statistique :</b> moins de 100 résultats reste anecdotique. Le mode shadow valide la collecte et la discipline temporelle ; il ne démontre pas encore un avantage rentable.</div>
     </section>
 
 
@@ -153,38 +171,40 @@
     </section>
 
     <section id="audit" class="audit-section">
-      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.2</h2></div>
+      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.3</h2></div>
       <div class="role-grid">
-        <article><span>01</span><h3>Quant marchés</h3><p>La V3 juge le modèle contre Winamax, le consensus et la closing line, pas seulement contre une fréquence naïve.</p></article>
-        <article><span>02</span><h3>Statisticien</h3><p>Les seuils d’edge sont figés avant le test et évalués en walk-forward avec intervalles de confiance.</p></article>
-        <article><span>03</span><h3>Data engineer</h3><p>Identifiants d’événements, timestamps UTC, snapshots bruts immuables, cache et appariement d’identités.</p></article>
-        <article><span>04</span><h3>FinOps API</h3><p>Dry-run, estimation des crédits et regroupement de plusieurs bookmakers dans une même requête.</p></article>
-        <article><span>05</span><h3>Sécurité</h3><p>Clé côté serveur uniquement, hôte figé, erreurs expurgées et absence de secret dans le cache.</p></article>
-        <article><span>06</span><h3>Conformité</h3><p>Analyse utilisateur autorisée, mais aucune redistribution des données brutes ni exécution automatique.</p></article>
+        <article><span>01</span><h3>Quant marchés</h3><p>Le shadow mode sépare la qualité du modèle, le prix Winamax et le consensus sans confondre signal et résultat financier.</p></article>
+        <article><span>02</span><h3>Statisticien</h3><p>Chaque prédiction est figée avant match et l’échantillon est classé anecdotique, exploratoire ou évaluable.</p></article>
+        <article><span>03</span><h3>Data engineer</h3><p>Empreintes, timestamps UTC, déduplication, rapprochement des résultats et journal append-only.</p></article>
+        <article><span>04</span><h3>FinOps API</h3><p>Le cron s’arrête sous un plancher de quota et regroupe les bookmakers dans une seule requête h2h.</p></article>
+        <article><span>05</span><h3>Sécurité</h3><p>Clé côté serveur, endpoints privés, CSP stricte et aucune donnée secrète dans les journaux shadow.</p></article>
+        <article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
       </div>
       <div class="audit-callout">
-        <div><b>Verdict</b><p>V3.2 = chaîne de benchmark prête et contrôlée. Le verdict reste « non exécuté » tant que votre historique réel n’a pas produit un échantillon hors échantillon suffisant.</p></div>
+        <div><b>Verdict</b><p>V3.3 = chaîne d’observation automatique prête. Le verdict sportif reste « non évaluable » tant qu’un nombre suffisant de prédictions réglées n’est pas disponible.</p></div>
         <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
       </div>
       <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V3.2 Historical Validation</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V3.3 Shadow Mode</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script>
-const $=s=>document.querySelector(s);
-$('#health').textContent='Aperçu V3.2'; $('#health').classList.add('ok');
-$('#logoutButton').hidden=true;
-$('#footballRows').textContent='90'; $('#tennisRows').textContent='32'; $('#dailyCandidates').textContent='0'; $('#oddsApiState').textContent='Serveur'; $('#dbSnapshots').textContent='—'; $('#benchmarkState').textContent='Non exécuté';
-$('#providerStatus').textContent='Clé serveur requise'; $('#providerQuota').textContent='Aucun crédit consommé par cet aperçu';
-$('#cloudAuth').textContent='Privée'; $('#cloudDatabase').textContent='PostgreSQL'; $('#cloudReady').textContent='Architecture prête'; $('#cloudIssues').textContent='Le benchmark réel reste à exécuter.'; $('#cloudLastSync').textContent='Synchronisation cron + résultats récents.';
-$('#benchmarkVerdict').textContent='Non exécuté'; $('#benchmarkReason').textContent='La chaîne de benchmark est prête, mais aucun historique réel de votre compte API n’est inclus dans l’archive.'; $('#benchmarkRows').textContent='0'; $('#benchmarkDelta').textContent='—'; $('#benchmarkCi').textContent='IC 95 % indisponible avant collecte.'; $('#benchmarkClv').textContent='—';
-$('#dailySlate').innerHTML='<article class="slate-card"><div class="slate-top"><span>PROTOCOLE</span><b class="decision abstention">abstention</b></div><h3>Aucun pari forcé</h3><p>Une sélection n’apparaît qu’avec cote fraîche, edge robuste et modèle validé.</p><ul><li>Winamax dévigué</li><li>Consensus indépendant</li><li>Contrôle de fraîcheur</li></ul></article><article class="slate-card"><div class="slate-top"><span>V3.2</span><b class="decision abstention">non évalué</b></div><h3>Benchmark historique</h3><p>Le worker est budgété, reprenable et séparé du service web.</p><ul><li>24 h, 6 h, 1 h, clôture</li><li>Folds chronologiques</li><li>CLV et scores probabilistes</li></ul></article>';
-$('#liveOddsResult').innerHTML='<article class="slate-card"><div class="slate-top"><span>THE ODDS API</span><b class="decision abstention">serveur uniquement</b></div><h3>Winamax + consensus</h3><p>La clé n’est jamais envoyée au navigateur.</p><ul><li>Cache sans secret</li><li>Quota journalisé</li><li>Marchés historiques séparés par snapshot</li></ul></article>';
-$('#predictionHistory').innerHTML='<div class="history-row"><div><b>football</b><small>v3.2</small></div><div><b>Journal PostgreSQL</b><small>aperçu statique</small></div><span class="history-decision">abstention possible</span><time class="history-time">horodaté UTC</time></div>';
-$('#metrics').textContent=JSON.stringify({version:'3.2.0',tests:'58 passed',coverage:'86%',benchmark_status:'not_run',automatic_bet_placement:false},null,2);
-for(const id of ['loadLiveOdds','loadTennisOdds','refreshHistory','footballForm','tennisForm']){ const el=document.getElementById(id); if(el){ el.addEventListener('click',e=>e.preventDefault()); el.addEventListener('submit',e=>e.preventDefault()); }}
+  
+<script>
+const set=(id,text)=>{const el=document.getElementById(id);if(el)el.textContent=text};
+set('health','API ok · v3.3.0'); document.getElementById('health').classList.add('ok');
+set('footballRows','90'); set('tennisRows','32'); set('dailyCandidates','0'); set('oddsApiState','Configurée'); set('dbSnapshots','1 284'); set('shadowState','12');
+set('providerStatus','Clé configurée'); set('providerQuota','Quota suivi côté serveur');
+set('cloudAuth','Accès privé'); set('cloudDatabase','Connectée'); set('cloudReady','Prête'); set('cloudIssues','Modèles, intégrité et stockage validés.'); set('cloudLastSync','Dernière synchronisation : 02/08/2026 17:45');
+set('shadowTotal','38'); set('shadowSettled','12'); set('shadowMaturity','Échantillon anecdotique.'); set('shadowLogLoss','1.0712'); set('shadowReturn','−1.00 u'); set('shadowLastCycle','ok · 02/08/2026 17:45');
+document.getElementById('shadowModelWarning').innerHTML='<b>Modèle football : degraded</b> · données arrêtées au 23/10/2023 · 1014 jours. Toute sélection opérationnelle est bloquée ; observation uniquement.';
+document.getElementById('dailySlate').innerHTML='<article class="slate-card"><div class="slate-top"><span>Football · EPL</span><b class="decision abstention">abstention</b></div><h3>Arsenal — Manchester City</h3><p>Modèle shadow · cote horodatée</p><ul><li>modèle trop ancien : shadow mode uniquement</li><li>aucun pari forcé</li></ul><small>Observation pré-match enregistrée</small></article><article class="slate-card"><div class="slate-top"><span>Tennis · ATP</span><b class="decision abstention">abstention</b></div><h3>Joueur A — Joueur B</h3><p>Elo expérimental</p><ul><li>probabilité non calibrée</li></ul><small>Collecte possible, promotion interdite</small></article>';
+document.getElementById('shadowHistory').innerHTML='<div class="history-row"><div><b>settled</b><small>football-1n2-shadow · t-1h</small></div><div><b>Arsenal — Chelsea</b><small>10/08/2026 21:00</small></div><span class="history-decision">abstention</span><time class="history-time">2–1</time></div><div class="history-row"><div><b>open</b><small>football-1n2-shadow · t-24h</small></div><div><b>Liverpool — Newcastle</b><small>16/08/2026 17:30</small></div><span class="history-decision">abstention</span><time class="history-time">open</time></div>';
+document.getElementById('predictionHistory').innerHTML='<div class="history-row"><div><b>football</b><small>v3.3.0</small></div><div><b>Arsenal — Man City</b><small>ID 42</small></div><span class="history-decision">abstention</span><time class="history-time">02/08/2026 18:00</time></div>';
+set('benchmarkVerdict','Non évaluable'); set('benchmarkRows','0'); set('benchmarkDelta','—'); set('benchmarkClv','—');
+document.getElementById('metrics').textContent=JSON.stringify({version:'3.3.0',mode:'shadow',tests:'71 passed',coverage:'85%',model_status:'degraded',automatic_bet_placement:false},null,2);
 </script>
+
 </body>
 </html>

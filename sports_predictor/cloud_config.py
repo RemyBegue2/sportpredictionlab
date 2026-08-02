@@ -28,6 +28,10 @@ class CloudSettings:
     odds_sync_sports: tuple[str, ...]
     odds_stale_minutes: int
     model_version: str
+    shadow_enabled: bool = True
+    shadow_max_events: int = 50
+    shadow_quota_floor: int = 100
+    model_max_age_days: int = 365
 
     @classmethod
     def from_env(cls, root: Path | None = None) -> "CloudSettings":
@@ -39,7 +43,7 @@ class CloudSettings:
         if not session_secret and not auth_required:
             # Development-only deterministic fallback. Production readiness rejects it.
             session_secret = "development-only-change-me"
-        raw_db = os.getenv("DATABASE_URL") or f"sqlite:///{Path(os.getenv('APP_DATABASE_PATH', '/tmp/sports_prediction_v3_2.db'))}"
+        raw_db = os.getenv("DATABASE_URL") or f"sqlite:///{Path(os.getenv('APP_DATABASE_PATH', '/tmp/sports_prediction_v3_3.db'))}"
         if raw_db.startswith("postgres://"):
             raw_db = "postgresql+psycopg://" + raw_db.removeprefix("postgres://")
         elif raw_db.startswith("postgresql://") and "+" not in raw_db.split(":", 1)[0]:
@@ -49,6 +53,18 @@ class CloudSettings:
             stale = max(1, min(1440, int(stale_raw)))
         except ValueError:
             stale = 15
+        try:
+            shadow_max_events = max(1, min(500, int(os.getenv("SHADOW_MAX_EVENTS", "50"))))
+        except ValueError:
+            shadow_max_events = 50
+        try:
+            shadow_quota_floor = max(0, int(os.getenv("SHADOW_QUOTA_FLOOR", "100")))
+        except ValueError:
+            shadow_quota_floor = 100
+        try:
+            model_max_age_days = max(30, min(3650, int(os.getenv("MODEL_MAX_AGE_DAYS", "365"))))
+        except ValueError:
+            model_max_age_days = 365
         return cls(
             environment=environment,
             auth_required=auth_required,
@@ -58,7 +74,11 @@ class CloudSettings:
             database_url=raw_db,
             odds_sync_sports=_csv(os.getenv("ODDS_SYNC_SPORTS"), ("soccer_epl",)),
             odds_stale_minutes=stale,
-            model_version=os.getenv("MODEL_VERSION", "3.2.0"),
+            model_version=os.getenv("MODEL_VERSION", "3.3.0"),
+            shadow_enabled=_truthy(os.getenv("SHADOW_MODE_ENABLED"), default=True),
+            shadow_max_events=shadow_max_events,
+            shadow_quota_floor=shadow_quota_floor,
+            model_max_age_days=model_max_age_days,
         )
 
     @property

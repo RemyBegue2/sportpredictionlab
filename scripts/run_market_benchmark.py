@@ -24,7 +24,7 @@ def main() -> int:
     parser.add_argument("--exploratory-predictions", type=int, default=200)
     parser.add_argument("--minimum-train", type=int, default=150)
     parser.add_argument("--folds", type=int, default=5)
-    parser.add_argument("--output", default="artifacts/market_benchmark_v3_2.json")
+    parser.add_argument("--output", default="artifacts/market_benchmark_v3_3.json")
     parser.add_argument("--persist", action="store_true")
     args = parser.parse_args()
 

@@ -33,6 +33,10 @@ services:
       THE_ODDS_API_KEY: ${THE_ODDS_API_KEY:-}
       THE_ODDS_API_CACHE: /tmp/odds_api_cache
       ODDS_SYNC_SPORTS: soccer_epl
+      MODEL_VERSION: 3.3.0
+      SHADOW_MODE_ENABLED: "true"
+      SHADOW_QUOTA_FLOOR: "100"
+      MODEL_MAX_AGE_DAYS: "365"
     tmpfs:
       - /tmp
     security_opt:

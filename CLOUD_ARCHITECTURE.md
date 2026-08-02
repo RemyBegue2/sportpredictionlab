@@ -1,54 +1,32 @@
-# Architecture cloud V3.1
+# Architecture cloud V3.3
 
-## Composants
+```text
+Navigateur authentifié
+        |
+        v
+Service web FastAPI
+        |
+        +---- PostgreSQL <---- shadow-cron toutes les 15 min
+        |                           |
+        |                           +---- The Odds API
+        |
+        +---- artefacts modèles vérifiés
 
-### Service web
+Worker historique manuel ---- The Odds API historical
+```
 
-FastAPI sert l'interface, les modèles et les endpoints. Les artefacts sont vérifiés par manifeste avant chargement.
+## Service web
 
-### Base PostgreSQL
+Interface, prédictions interactives, lecture des journaux, santé et readiness.
 
-Tables :
+## Shadow cron
 
-- `events` : identité fournisseur et heure de début ;
-- `odds_snapshots` : bookmaker, marché, sélection, cote et horodatages ;
-- `predictions` : fixture, probabilités, analyse de marché, décision et version ;
-- `sync_runs` : statut du collecteur, volume inséré et quota.
+Processus fini : cotes actuelles, prédictions immuables, résultats dus, règlement, journal du cycle.
 
-Les snapshots disposent d'une contrainte d'unicité qui évite de compter plusieurs fois la même cote observée.
+## Worker historique
 
-### Cron
+Backfills coûteux avec plan et plafond. Il ne tourne pas automatiquement.
 
-Le cron exécute un processus court qui collecte, persiste, analyse et se termine. Les erreurs sont résumées sans inclure la clé ni l'URL de base de données.
+## Base
 
-## Flux d'une prédiction manuelle
-
-1. Authentification par session.
-2. Requête POST avec token CSRF.
-3. Calcul du modèle.
-4. Analyse de marché facultative.
-5. Écriture de l'audit en base.
-6. Réponse avec `prediction_id`.
-
-L'étape 5 est obligatoire : une erreur de stockage transforme la réponse en 503.
-
-## Flux d'une synchronisation
-
-1. Requête serveur The Odds API.
-2. Normalisation en lignes.
-3. Écriture des événements et cotes.
-4. Détection in-play.
-5. Appariement d'identités.
-6. Analyse modèle/marché.
-7. Écriture des prédictions couvertes.
-8. Journal du run et du quota.
-
-## Scalabilité
-
-La V3.1 cible une seule instance web. Pour plusieurs réplicas, il faudra :
-
-- rate limiting partagé dans Redis ;
-- verrou distribué pour les synchronisations ;
-- migrations versionnées ;
-- pool PostgreSQL géré ;
-- métriques et tracing centralisés.
+Événements, snapshots, prédictions interactives, résultats, shadow, modèles et benchmarks.
