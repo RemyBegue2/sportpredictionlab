@@ -1,19 +1,19 @@
 {
-  "mode": "real-data-snapshot-smoke-test",
-  "warning": "Snapshot is for application verification, not performance conclusions.",
+  "mode": "fresh-multiseason-football",
+  "warning": "Candidate promoted only after chronological checks; market validation remains required.",
   "football": {
-    "n_test": 20,
-    "log_loss": 0.9398655005299267,
-    "naive_log_loss": 1.1159396906095167,
-    "poisson_dc_log_loss": 0.9398655005299267,
-    "ml_only_log_loss": 1.041535499339392,
-    "brier": 0.5666607699239754,
-    "rps": 0.34204281372195094,
-    "accuracy": 0.6,
-    "ece": 0.07807664560356356,
-    "calibration_temperature": 4.999971938328189,
+    "n_test": 380,
+    "log_loss": 1.0618926736262253,
+    "naive_log_loss": 1.0846018600662934,
+    "poisson_dc_log_loss": 1.0618926736262253,
+    "ml_only_log_loss": 1.0410196388251696,
+    "brier": 0.6409275706193381,
+    "rps": 0.43954820365378716,
+    "accuracy": 0.4605263157894737,
+    "ece": 0.0958730475496105,
+    "calibration_temperature": 1.9711817595785415,
     "ml_blend_weight": 0.0,
-    "dixon_coles_rho": -0.15
+    "dixon_coles_rho": 0.015000000000000013
   },
   "tennis": {
     "n_test": 0,
@@ -31,5 +31,20 @@
   "audit_decisions": [
     "Identical timestamps are processed as a batch to prevent same-day/tournament leakage.",
     "Tennis snapshot uses Elo-only serving because two timestamps cannot support calibration."
-  ]
+  ],
+  "fresh_rebuild": {
+    "path": "/home/runner/work/sportpredictionlab/sportpredictionlab/data/real/football_epl_2021_2026.csv",
+    "sha256": "ae48ba7dc4715936f8891177f054c5a4799c681c0b65fc4bd7aea8031478eac7",
+    "rows": 1900,
+    "distinct_timestamps": 583,
+    "first_date": "2021-08-13T00:00:00+00:00",
+    "last_date": "2026-05-24T00:00:00+00:00",
+    "seasons": [
+      "2021-22",
+      "2022-23",
+      "2023-24",
+      "2024-25",
+      "2025-26"
+    ]
+  }
 }

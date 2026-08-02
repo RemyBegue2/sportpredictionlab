@@ -1,21 +1,21 @@
 {
   "schema_version": "2.1",
-  "created_at_utc": "2026-08-02T11:18:26.210461+00:00",
+  "created_at_utc": "2026-08-02T18:54:15.925885+00:00",
   "files": [
     {
       "name": "football_model.joblib",
-      "sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5",
-      "bytes": 1188721
+      "sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
+      "bytes": 1750957
+    },
+    {
+      "name": "metrics.json",
+      "sha256": "35cbf2ddbbd2e82ba0fa0aef0c54899a2cba9d5a1ba5cddadda60752f44d4f25",
+      "bytes": 1615
     },
     {
       "name": "tennis_model.joblib",
       "sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658",
       "bytes": 625
-    },
-    {
-      "name": "metrics.json",
-      "sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6",
-      "bytes": 1103
     }
   ],
   "trust_note": "Integrity check only. Load artifacts only from a trusted distribution channel."
