@@ -1,27 +1,46 @@
-# Model Card V3.4
+# Model Card V3.5
 
-## Modèle actif livré
+## Football 1N2
 
-Le modèle actif de l'archive reste le modèle V3.3 construit sur le snapshot EPL 2023. Il est classé `degraded` et ses sélections opérationnelles sont bloquées.
+Le modèle réellement chargé est identifié par :
 
-## Candidat V3.4
+- `model_id` ;
+- `model_version` ;
+- SHA-256 de l’artefact ;
+- SHA-256 du dataset ;
+- date limite d’entraînement ;
+- statut de cycle de vie ;
+- métriques hors échantillon disponibles.
 
-Le pipeline peut entraîner un candidat sur les saisons 2021-22 à 2025-26 avec les caractéristiques suivantes : Elo, formes offensives/défensives, repos, taux de buts de ligue, Poisson/Dixon–Coles et CatBoost tabulaire.
+Ces éléments sont exposés dans `/api/system/status` et `artifacts/release_manifest.json`.
 
-## Validation
+## Cycle de vie
 
-La séparation est chronologique et ne coupe pas les timestamps identiques. La calibration et le blend sont estimés sur une partition distincte. Le candidat doit passer les règles dans `PromotionPolicy` avant de remplacer l'artefact actif.
+```text
+candidate → shadow → active → degraded → retired
+```
 
-## Utilisation autorisée
+Les transitions sont enregistrées avec l’ancien statut, le nouveau statut, le motif, l’acteur et l’heure. Un redémarrage de l’application ne doit pas réinitialiser le statut.
 
-- recherche personnelle ;
-- comparaison probabiliste ;
-- shadow mode ;
-- audit de calibration.
+## Critères de promotion
 
-## Utilisation refusée
+La fraîcheur et un workflow réussi ne suffisent pas. La promotion doit considérer :
 
-- promesse de gains ;
+- validation chronologique ;
+- log-loss et calibration ;
+- baseline naïve ;
+- comparaison Winamax/consensus ;
+- stabilité sur plusieurs périodes ;
+- absence de fuite temporelle ;
+- taille d’échantillon.
+
+## Tennis
+
+Le tennis reste expérimental et non calibré. Aucun statut `active` ne doit lui être attribué dans l’état actuel.
+
+## Usages interdits
+
 - placement automatique ;
-- taille de mise ;
-- utilisation du candidat non promu comme modèle actif.
+- recommandation de mise ;
+- promesse de rendement ;
+- réécriture d’anciennes prédictions avec un modèle plus récent.

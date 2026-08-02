@@ -176,6 +176,34 @@ class ModelRegistryRecord(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 
+class ModelStatusTransitionRecord(Base):
+    __tablename__ = "model_status_transitions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    model_id: Mapped[str] = mapped_column(String(120), index=True)
+    version: Mapped[str] = mapped_column(String(40), index=True)
+    sport: Mapped[str] = mapped_column(String(40), index=True)
+    previous_status: Mapped[str | None] = mapped_column(String(30))
+    new_status: Mapped[str] = mapped_column(String(30), index=True)
+    reason: Mapped[str] = mapped_column(Text)
+    actor: Mapped[str] = mapped_column(String(120), default="system")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class ReleaseRegistryRecord(Base):
+    __tablename__ = "release_registry"
+    __table_args__ = (UniqueConstraint("release_id", name="uq_release_registry_release_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    release_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    app_version: Mapped[str] = mapped_column(String(40), index=True)
+    source_commit: Mapped[str] = mapped_column(String(80), index=True)
+    deployment_id: Mapped[str | None] = mapped_column(String(160), index=True)
+    environment: Mapped[str] = mapped_column(String(40), index=True)
+    status: Mapped[str] = mapped_column(String(30), default="running", index=True)
+    evidence: Mapped[dict[str, Any]] = mapped_column(JSON)
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 class ShadowCycleRecord(Base):
     __tablename__ = "shadow_cycles"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -631,7 +659,7 @@ def database_summary() -> dict[str, Any]:
         }
 
 
-def register_model(*, model_id: str, sport: str, version: str, status: str, trained_until: Any | None, dataset_hash: str | None, metrics: Mapping[str, Any] | None = None) -> int:
+def register_model(*, model_id: str, sport: str, version: str, status: str, trained_until: Any | None, dataset_hash: str | None, metrics: Mapping[str, Any] | None = None, update_status: bool = True) -> int:
     allowed = {"candidate", "shadow", "active", "degraded", "retired", "experimental"}
     if status not in allowed:
         raise ValueError("invalid model registry status")
@@ -650,7 +678,8 @@ def register_model(*, model_id: str, sport: str, version: str, status: str, trai
             session.add(record)
         else:
             record.sport = str(sport)
-            record.status = status
+            if update_status:
+                record.status = status
             record.trained_until = _utc(trained_until) if trained_until is not None else None
             record.dataset_hash = str(dataset_hash) if dataset_hash else None
             record.metrics = _json_safe(dict(metrics)) if metrics else None
@@ -668,6 +697,139 @@ def list_models() -> list[dict[str, Any]]:
             "trained_until": row.trained_until.isoformat() if row.trained_until else None,
             "dataset_hash": row.dataset_hash, "metrics": row.metrics,
             "registered_at": row.registered_at.isoformat(), "updated_at": row.updated_at.isoformat(),
+        } for row in rows]
+
+
+MODEL_STATUS_TRANSITIONS: dict[str, set[str]] = {
+    "candidate": {"shadow", "retired"},
+    "shadow": {"active", "degraded", "retired"},
+    "active": {"degraded", "retired"},
+    "degraded": {"shadow", "retired"},
+    "experimental": {"retired"},
+    "retired": set(),
+}
+
+
+def set_model_status(
+    *, model_id: str, version: str, new_status: str, reason: str, actor: str = "system",
+) -> dict[str, Any]:
+    if new_status not in MODEL_STATUS_TRANSITIONS:
+        raise ValueError("invalid model registry status")
+    reason = str(reason).strip()
+    if not reason:
+        raise ValueError("status transition reason is required")
+    with session_scope() as session:
+        record = session.scalar(select(ModelRegistryRecord).where(
+            ModelRegistryRecord.model_id == str(model_id),
+            ModelRegistryRecord.version == str(version),
+        ))
+        if record is None:
+            raise ValueError("model registry entry not found")
+        previous = str(record.status)
+        if previous == new_status:
+            return {
+                "model_id": record.model_id, "version": record.version, "sport": record.sport,
+                "previous_status": previous, "new_status": new_status, "changed": False,
+            }
+        if new_status not in MODEL_STATUS_TRANSITIONS.get(previous, set()):
+            raise ValueError(f"invalid model status transition: {previous} -> {new_status}")
+
+        if new_status == "active":
+            current_active = session.scalars(select(ModelRegistryRecord).where(
+                ModelRegistryRecord.sport == record.sport,
+                ModelRegistryRecord.status == "active",
+                ModelRegistryRecord.id != record.id,
+            )).all()
+            for old in current_active:
+                old_previous = str(old.status)
+                old.status = "degraded"
+                old.updated_at = datetime.now(timezone.utc)
+                session.add(ModelStatusTransitionRecord(
+                    model_id=old.model_id, version=old.version, sport=old.sport,
+                    previous_status=old_previous, new_status="degraded",
+                    reason=f"Superseded by {record.model_id}@{record.version}: {reason}", actor=str(actor),
+                ))
+
+        record.status = new_status
+        record.updated_at = datetime.now(timezone.utc)
+        session.add(ModelStatusTransitionRecord(
+            model_id=record.model_id, version=record.version, sport=record.sport,
+            previous_status=previous, new_status=new_status, reason=reason, actor=str(actor),
+        ))
+        session.flush()
+        return {
+            "model_id": record.model_id, "version": record.version, "sport": record.sport,
+            "previous_status": previous, "new_status": new_status, "changed": True,
+        }
+
+
+def model_status_history(*, limit: int = 100, model_id: str | None = None) -> list[dict[str, Any]]:
+    with session_scope() as session:
+        statement = select(ModelStatusTransitionRecord).order_by(ModelStatusTransitionRecord.created_at.desc())
+        if model_id:
+            statement = statement.where(ModelStatusTransitionRecord.model_id == str(model_id))
+        rows = session.scalars(statement.limit(max(1, min(1000, int(limit))))).all()
+        return [{
+            "id": row.id, "model_id": row.model_id, "version": row.version, "sport": row.sport,
+            "previous_status": row.previous_status, "new_status": row.new_status,
+            "reason": row.reason, "actor": row.actor, "created_at": row.created_at.isoformat(),
+        } for row in rows]
+
+
+def register_release(evidence: Mapping[str, Any], *, status: str = "running") -> int:
+    if status not in {"running", "previous", "failed", "rolled_back"}:
+        raise ValueError("invalid release status")
+    release_id = str(evidence.get("release_id") or "").strip()
+    app = evidence.get("app") if isinstance(evidence.get("app"), Mapping) else {}
+    if not release_id:
+        raise ValueError("release_id is required")
+    now = datetime.now(timezone.utc)
+    with session_scope() as session:
+        if status == "running":
+            for old in session.scalars(select(ReleaseRegistryRecord).where(
+                ReleaseRegistryRecord.status == "running",
+                ReleaseRegistryRecord.release_id != release_id,
+            )).all():
+                old.status = "previous"
+                old.last_seen_at = now
+        record = session.scalar(select(ReleaseRegistryRecord).where(ReleaseRegistryRecord.release_id == release_id))
+        if record is None:
+            record = ReleaseRegistryRecord(
+                release_id=release_id,
+                app_version=str(app.get("version") or "unknown"),
+                source_commit=str(app.get("source_commit") or "unknown"),
+                deployment_id=str(app.get("deployment_id")) if app.get("deployment_id") else None,
+                environment=str(app.get("environment") or "unknown"),
+                status=status,
+                evidence=_json_safe(dict(evidence)),
+                first_seen_at=now,
+                last_seen_at=now,
+            )
+            session.add(record)
+        else:
+            record.app_version = str(app.get("version") or record.app_version)
+            record.source_commit = str(app.get("source_commit") or record.source_commit)
+            record.deployment_id = str(app.get("deployment_id")) if app.get("deployment_id") else record.deployment_id
+            record.environment = str(app.get("environment") or record.environment)
+            record.status = status
+            record.evidence = _json_safe(dict(evidence))
+            record.last_seen_at = now
+        session.flush()
+        return int(record.id)
+
+
+def list_releases(*, limit: int = 50) -> list[dict[str, Any]]:
+    with session_scope() as session:
+        rows = session.scalars(
+            select(ReleaseRegistryRecord)
+            .order_by(ReleaseRegistryRecord.last_seen_at.desc())
+            .limit(max(1, min(500, int(limit))))
+        ).all()
+        return [{
+            "id": row.id, "release_id": row.release_id, "app_version": row.app_version,
+            "source_commit": row.source_commit, "deployment_id": row.deployment_id,
+            "environment": row.environment, "status": row.status, "evidence": row.evidence,
+            "first_seen_at": row.first_seen_at.isoformat(), "last_seen_at": row.last_seen_at.isoformat(),
         } for row in rows]
 
 
@@ -789,6 +951,30 @@ def shadow_summary(*, sport_key: str | None = None) -> dict[str, Any]:
         status_counts[str(row.get("status"))] = status_counts.get(str(row.get("status")), 0) + 1
     horizons = ("t-24h", "t-6h", "t-1h", "pre-close")
     by_horizon = {horizon: aggregate_shadow_evaluations([row for row in rows if row.get("horizon") == horizon]) for horizon in horizons}
+    model_keys = sorted({(str(row.get("model_id")), str(row.get("model_version"))) for row in rows})
+    by_model_horizon: dict[str, Any] = {}
+    for model_id, model_version in model_keys:
+        model_rows = [
+            row for row in rows
+            if str(row.get("model_id")) == model_id and str(row.get("model_version")) == model_version
+        ]
+        key = f"{model_id}@{model_version}"
+        model_by_horizon = {
+            horizon: aggregate_shadow_evaluations([row for row in model_rows if row.get("horizon") == horizon])
+            for horizon in horizons
+        }
+        model_primary = next(
+            (h for h in ("t-1h", "t-6h", "t-24h", "pre-close") if model_by_horizon[h]["settled_predictions"]),
+            "t-1h",
+        )
+        by_model_horizon[key] = {
+            "model_id": model_id,
+            "model_version": model_version,
+            "total_predictions": len(model_rows),
+            "primary_horizon": model_primary,
+            "aggregate": model_by_horizon[model_primary],
+            "by_horizon": model_by_horizon,
+        }
     primary_horizon = next((h for h in ("t-1h", "t-6h", "t-24h", "pre-close") if by_horizon[h]["settled_predictions"]), "t-1h")
     aggregate = by_horizon[primary_horizon]
     market_rows = [row for row in rows if row.get("market_analysis")]
@@ -800,6 +986,7 @@ def shadow_summary(*, sport_key: str | None = None) -> dict[str, Any]:
         "status_counts": status_counts, "market_eligible_predictions": len(market_rows),
         "temporal_invalid": temporal_invalid, "primary_horizon": primary_horizon,
         "aggregate": aggregate, "by_horizon": by_horizon,
+        "by_model_horizon": by_model_horizon,
         "verdict": {
             "status": "not_evaluable" if aggregate["settled_predictions"] < 100 else aggregate["maturity"]["status"],
             "reason": "Shadow metrics are separated by horizon; no profitability claim is allowed before a large, temporally valid sample.",

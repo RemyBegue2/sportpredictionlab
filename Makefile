@@ -30,3 +30,19 @@ historical-run:
 
 benchmark:
 	@echo "Use: python -m scripts.run_market_benchmark --input <evaluation.csv> --persist"
+
+release-manifest:
+	python -m scripts.generate_release_manifest
+
+handoff:
+	python -m scripts.generate_release_manifest
+	python -m scripts.export_handoff
+
+release-snapshot:
+	python -m scripts.snapshot_release
+
+system-proof:
+	@echo "Use: python -m scripts.post_deploy_verify --base-url <url> --expected-version 3.5.0"
+
+db-backup:
+	python -m scripts.portable_db_backup --backup

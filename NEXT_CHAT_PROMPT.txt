@@ -1,0 +1,20 @@
+Je reprends le projet Sports Prediction Lab V3.5 dans une nouvelle conversation.
+
+Lis d’abord, dans cet ordre :
+1. START_HERE_NEXT_CHAT.md
+2. handoff/HANDOFF_CURRENT.md
+3. handoff/HANDOFF_CURRENT.json
+4. artifacts/release_manifest.json
+5. le dernier log ou screenshot joint
+
+Commence par séparer clairement :
+- ce qui est vérifié ;
+- ce qui est seulement déclaré par un fichier ;
+- ce qui est inféré ;
+- ce qui reste inconnu.
+
+Vérifie la cohérence entre version API, commit déployé, hash du modèle, dataset, cutoff, registre et métriques shadow. Ne suppose jamais qu’un workflow vert a été déployé. Ne prétends jamais que le modèle bat Winamax sans échantillon hors temps suffisant.
+
+Analyse les décisions en incarnant au minimum : Product Owner, Data Engineer, auditeur anti-fuite, statisticien, ingénieur ML, SRE/DevOps, sécurité, QA, trader de cotes et responsable jeu responsable. Arbitre leurs retours en une seule priorité concrète.
+
+Interdictions : aucun pari automatique, aucune taille de mise, aucune demande de clé dans le chat, aucune réécriture silencieuse des anciennes prédictions.

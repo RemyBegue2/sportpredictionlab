@@ -73,6 +73,30 @@ function renderCloud(auth, readiness){
   $('#dbSnapshots').textContent=db.odds_snapshots ?? 0;
 }
 
+function renderSystem(data){
+  const release=data.release||{};
+  const app=release.app||{};
+  const model=release.football_model||{};
+  const contract=data.deployment_contract||{};
+  const issues=data.issues||[];
+  $('#systemRelease').textContent=`v${app.version||'—'} · ${String(release.release_id||'—').slice(0,12)}`;
+  $('#systemCommit').textContent=app.source_commit&&app.source_commit!=='unknown'?`Commit ${String(app.source_commit).slice(0,12)}${app.deployment_id?` · déploiement ${String(app.deployment_id).slice(0,10)}`:''}`:'Commit d’exécution inconnu.';
+  $('#systemModel').textContent=model.model_version||'—';
+  $('#systemDataset').textContent=model.dataset_cutoff?`Données jusqu’au ${new Date(model.dataset_cutoff).toLocaleDateString('fr-FR')} · ${model.dataset_rows??'—'} matchs`:'Cutoff dataset indisponible.';
+  const checks=[contract.api_version_matches_manifest,contract.running_commit_known,contract.artifact_integrity_verified,contract.running_model_registered];
+  const passed=checks.filter(Boolean).length;
+  $('#systemIntegrity').textContent=data.status==='verified'?'Vérifié':'Dégradé';
+  $('#systemContract').textContent=`${passed}/${checks.length} contrôles réussis · artefact ${model.artifact_sha256?String(model.artifact_sha256).slice(0,12):'inconnu'}`;
+  $('#systemIssues').innerHTML=issues.length?`<b>À corriger :</b> ${issues.map(esc).join(' · ')}`:'<b>Contrat vérifié :</b> version API, commit, registre et intégrité des artefacts sont cohérents.';
+  const models=data.models||[];
+  $('#systemModels').innerHTML=models.map(row=>`<div class="history-row"><div><b>${esc(row.sport)}</b><small>${esc(row.model_id)}</small></div><div><b>v${esc(row.version)}</b><small>${row.trained_until?`entraîné jusqu’au ${new Date(row.trained_until).toLocaleDateString('fr-FR')}`:'cutoff inconnu'}</small></div><span class="history-decision">${esc(row.status)}</span><time class="history-time">${row.dataset_hash?esc(String(row.dataset_hash).slice(0,12)):'—'}</time></div>`).join('')||'<p>Aucun modèle enregistré.</p>';
+}
+
+async function refreshSystem(){
+  try{ renderSystem(await jsonFetch('/api/system/status')); }
+  catch(error){ toast(`Preuve opérationnelle indisponible : ${error.message}`); }
+}
+
 function renderHistory(data){
   const rows=data.predictions||[];
   $('#predictionHistory').innerHTML=rows.map(row=>{
@@ -149,7 +173,7 @@ function renderShadow(data, history){
     const freshness=footballModel.metrics?.freshness||{};
     const age=Number.isFinite(freshness.age_days)?`${freshness.age_days} jours`:'âge inconnu';
     const rebuild=data.fresh_rebuild||{};
-    const rebuildState=rebuild.promoted?'Candidat V3.4 promu.':'Reconstruction V3.4 non promue : lancer ou consulter le workflow GitHub.';
+    const rebuildState=rebuild.promoted?'Candidat frais promu.':'Reconstruction fraîche non promue : lancer ou consulter le workflow GitHub.';
     modelWarning.innerHTML=`<b>Modèle football : ${esc(footballModel.status)}</b> · données arrêtées au ${footballModel.trained_until?new Date(footballModel.trained_until).toLocaleDateString('fr-FR'):'—'} · ${esc(age)}. ${footballModel.status==='degraded'?'Toute sélection opérationnelle est bloquée ; observation uniquement.':'Shadow mode actif.'} ${esc(rebuildState)}`;
   }
   const rows=history.predictions||[];
@@ -218,9 +242,31 @@ async function init(){
     fill('#homeTeam',cat.football_teams,'Arsenal'); fill('#awayTeam',cat.football_teams,'Man City');
     fill('#player1',cat.tennis_players,'Taylor Fritz'); fill('#player2',cat.tennis_players,'Alexander Zverev');
     syncDifferent('#homeTeam','#awayTeam'); syncDifferent('#player1','#player2');
-    const [audit, slate, provider, history, benchmark, shadow, shadowHistory]=await Promise.all([jsonFetch('/api/metrics'),jsonFetch('/api/bets/today'),jsonFetch('/api/odds/status'),jsonFetch('/api/history/predictions?limit=20'),jsonFetch('/api/benchmark/summary'),jsonFetch('/api/shadow/summary'),jsonFetch('/api/shadow/predictions?limit=20')]);
-    $('#metrics').textContent=JSON.stringify(audit,null,2); renderDaily(slate); renderProviderStatus(provider); renderHistory(history); renderBenchmark(benchmark); renderShadow(shadow,shadowHistory);
-    if(provider.configured){ try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); } }
+    const requests={
+      audit:jsonFetch('/api/metrics'),
+      slate:jsonFetch('/api/bets/today'),
+      provider:jsonFetch('/api/odds/status'),
+      history:jsonFetch('/api/history/predictions?limit=20'),
+      benchmark:jsonFetch('/api/benchmark/summary'),
+      shadow:jsonFetch('/api/shadow/summary'),
+      shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
+      system:jsonFetch('/api/system/status'),
+    };
+    const keys=Object.keys(requests);
+    const settled=await Promise.allSettled(Object.values(requests));
+    const loaded={};
+    settled.forEach((result,index)=>{
+      if(result.status==='fulfilled') loaded[keys[index]]=result.value;
+      else toast(`${keys[index]} : ${result.reason?.message||'chargement impossible'}`);
+    });
+    if(loaded.audit) $('#metrics').textContent=JSON.stringify(loaded.audit,null,2);
+    if(loaded.slate) renderDaily(loaded.slate);
+    if(loaded.provider) renderProviderStatus(loaded.provider);
+    if(loaded.history) renderHistory(loaded.history);
+    if(loaded.benchmark) renderBenchmark(loaded.benchmark);
+    if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
+    if(loaded.system) renderSystem(loaded.system);
+    if(loaded.provider?.configured){ try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); } }
   }catch(e){
     toast(`Interface partiellement chargée : ${e.message}`);
   }
@@ -282,6 +328,7 @@ $('#loadTennisOdds').addEventListener('click',async()=>{
 
 $('#refreshHistory').addEventListener('click',refreshHistory);
 $('#refreshShadow').addEventListener('click',refreshShadow);
+$('#refreshSystem').addEventListener('click',refreshSystem);
 $('#logoutButton').addEventListener('click',async()=>{
   try{ await jsonFetch('/api/auth/logout',{method:'POST'}); window.location.assign('/login'); }catch(error){ toast(error.message); }
 });

@@ -1,28 +1,58 @@
-# Déployer la V3.4 sur Railway
+# Déployer V3.5 sur Railway
 
-## Mise à jour du service web
+## Mise à niveau sûre
 
-1. Copier le contenu de l'archive à la racine du dépôt.
-2. Commit et push.
-3. Vérifier `/api/health` : la version doit être `3.4.0`.
-4. Mettre `MODEL_VERSION=3.4.0` dans les variables du service.
+Utiliser le paquet `sports_prediction_v3_5_upgrade.zip`. Il ne contient pas les modèles ni `data/real/`, afin de préserver les artefacts frais créés par GitHub Actions.
 
-Le pre-deploy lance `python -m scripts.db_migrate` et crée les nouvelles tables.
+Après le push, mettre sur le web et le cron :
 
-## Mise à jour de shadow-cron
+```text
+MODEL_VERSION=3.5.0
+```
 
-Le service existant conserve `/railway.cron.toml`. Mettre également `MODEL_VERSION=3.4.0` puis déployer le dernier commit.
+Puis déployer le dernier commit.
 
-Le prochain cycle doit afficher des compteurs dans **Shadow → Pourquoi zéro ?**.
+## Vérification
 
-## Reconstruction du modèle
+```text
+GET /api/health
+GET /api/release
+```
 
-Ne pas entraîner le modèle dans le cron Railway. Déclencher le workflow GitHub Actions fourni. Celui-ci commit les artefacts générés ; Railway redéploie ensuite l'image contenant le modèle promu.
+Contrôler :
 
-## Vérifications
+```text
+version = 3.5.0
+source_commit = commit déployé
+artifact_integrity_ok = true
+football_model_sha256 = hash attendu
+```
 
-- `/api/health` répond `3.4.0` ;
-- `/api/ready` répond `ready` ;
-- le dernier cycle indique durée et quota ;
-- les diagnostics expliquent les exclusions ;
-- le modèle reste `degraded` tant qu'aucun candidat n'est promu.
+## Post-déploiement GitHub Actions
+
+Secrets :
+
+```text
+RAILWAY_TOKEN
+RAILWAY_PROJECT_ID
+```
+
+Variables :
+
+```text
+RAILWAY_ENVIRONMENT=production
+RAILWAY_WEB_SERVICE=sportpredictionlab
+RAILWAY_CRON_SERVICE=shadow-cron
+APP_PUBLIC_URL=https://votre-domaine.up.railway.app
+```
+
+`APP_PUBLIC_URL` active la preuve post-déploiement. Sans elle, le workflow peut déployer mais ne peut pas confirmer que l’URL publique sert la bonne release.
+
+## Base de données
+
+Le pre-deploy `python -m scripts.db_migrate` crée les tables :
+
+- `release_registry` ;
+- `model_status_transitions`.
+
+Aucune table existante n’est supprimée.

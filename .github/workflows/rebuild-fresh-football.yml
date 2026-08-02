@@ -38,6 +38,11 @@ jobs:
       - name: Run tests
         run: pytest -q
 
+      - name: Generate release evidence and handoff
+        run: |
+          python -m scripts.generate_release_manifest
+          python -m scripts.export_handoff
+
       - name: Commit generated model and reports
         id: generated_commit
         shell: bash
@@ -45,7 +50,7 @@ jobs:
           set -euo pipefail
           git config user.name "sports-prediction-bot"
           git config user.email "sports-prediction-bot@users.noreply.github.com"
-          git add -A artifacts/ data/real/
+          git add -A artifacts/ data/real/ handoff/
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No generated changes"
@@ -54,6 +59,7 @@ jobs:
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Check Railway deployment credentials
         id: railway_deploy
@@ -89,11 +95,29 @@ jobs:
             --environment "$RAILWAY_ENVIRONMENT" \
             --service "$RAILWAY_WEB_SERVICE" \
             --detach \
-            --message "Sports Prediction Lab ${GITHUB_SHA}"
+            --message "Sports Prediction Lab ${{ steps.generated_commit.outputs.head_sha }}"
 
           railway up \
             --project "$RAILWAY_PROJECT_ID" \
             --environment "$RAILWAY_ENVIRONMENT" \
             --service "$RAILWAY_CRON_SERVICE" \
             --detach \
-            --message "Sports Prediction Lab ${GITHUB_SHA}"
+            --message "Sports Prediction Lab ${{ steps.generated_commit.outputs.head_sha }}"
+
+      - name: Verify deployed release evidence
+        if: steps.railway_deploy.outputs.enabled == 'true' && vars.APP_PUBLIC_URL != ''
+        env:
+          APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+          EXPECTED_COMMIT: ${{ steps.generated_commit.outputs.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL_SHA=$(python - <<'PYCODE'
+          import json
+          from pathlib import Path
+          payload=json.loads(Path('artifacts/release_manifest.json').read_text())
+          print(payload['football_model']['artifact_sha256'] or '')
+          PYCODE
+          )
+          python -m scripts.post_deploy_verify             --base-url "$APP_PUBLIC_URL"             --expected-version "3.5.0"             --expected-commit "$EXPECTED_COMMIT"             --expected-model-sha256 "$MODEL_SHA"
+

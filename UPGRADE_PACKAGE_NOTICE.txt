@@ -1,0 +1,1 @@
+This upgrade package intentionally omits artifacts/*.joblib, artifacts/metrics.json, artifacts/artifact_manifest.json, artifacts/fresh_rebuild_report.json, data/real/, and handoff/HANDOFF_CURRENT.*. Extract over the existing repository so generated models and data remain intact.

@@ -1,0 +1,24 @@
+Minimum recommandé :
+1. START_HERE_NEXT_CHAT.md
+2. handoff/HANDOFF_CURRENT.md
+3. handoff/HANDOFF_CURRENT.json
+4. artifacts/release_manifest.json
+
+Pour un incident de modèle :
+5. artifacts/fresh_rebuild_report.json
+6. artifacts/artifact_manifest.json
+7. artifacts/metrics.json
+
+Pour un incident de déploiement :
+8. .github/workflows/rebuild-fresh-football.yml
+9. railway.toml
+10. dernier log GitHub Actions ou Railway
+
+Ne jamais joindre :
+- .env
+- THE_ODDS_API_KEY
+- APP_PASSWORD
+- APP_SESSION_SECRET
+- RAILWAY_TOKEN
+- DATABASE_URL
+- cookies de session

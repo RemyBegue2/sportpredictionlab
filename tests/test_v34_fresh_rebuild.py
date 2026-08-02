@@ -64,7 +64,7 @@ def test_shadow_cycle_diagnostics_round_trip(tmp_path: Path) -> None:
     settings = CloudSettings(
         environment="test", auth_required=False, app_password=None, session_secret="test-secret",
         cookie_secure=False, database_url=f"sqlite:///{tmp_path/'v34.db'}", odds_sync_sports=("soccer_epl",),
-        odds_stale_minutes=15, model_version="3.4.0",
+        odds_stale_minutes=15, model_version="3.4.1",
     )
     try:
         init_database(settings)

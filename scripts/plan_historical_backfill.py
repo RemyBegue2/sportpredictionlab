@@ -46,7 +46,7 @@ def main() -> int:
     plan.requests.to_csv(output / "requests.csv", index=False)
     plan.targets.to_csv(output / "targets.csv", index=False)
     summary = {
-        "version": "3.4.0",
+        "version": "3.5.0",
         "sport_keys": sorted(plan.requests["sport_key"].astype(str).unique().tolist()),
         "request_count": int(len(plan.requests)),
         "target_count": int(len(plan.targets)),

@@ -1,0 +1,7 @@
+{
+  "version": "3.5.0",
+  "generated_at_utc": "2026-08-02T19:55:48.223705+00:00",
+  "probable_real_secret_findings": [],
+  "pass": true,
+  "limitations": "Pattern scan only; use GitHub secret scanning and rotate any exposed credential independently."
+}

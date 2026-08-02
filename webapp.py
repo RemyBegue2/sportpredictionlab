@@ -17,6 +17,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from sports_predictor.artifacts import verify_artifact_manifest
+from sports_predictor.release_registry import APP_VERSION, build_release_evidence
 from sports_predictor.cloud_auth import (
     AuthenticationGateMiddleware,
     LOGIN_LIMITER,
@@ -38,10 +39,14 @@ from sports_predictor.database import (
     latest_benchmark_run,
     latest_shadow_cycle,
     list_models,
+    list_releases,
+    model_status_history,
     recent_shadow_predictions,
     record_prediction,
     record_shadow_prediction,
     register_model,
+    register_release,
+    set_model_status,
     shadow_summary,
 )
 from sports_predictor.betting import analyze_market, analyze_three_way, analyze_two_way
@@ -101,6 +106,7 @@ def _apply_market_veto(analysis: dict[str, Any], *, reason: str) -> dict[str, An
 def initialize_runtime() -> None:
     try:
         init_database(SETTINGS)
+        register_release(build_release_evidence(ROOT, version=APP_VERSION), status="running")
         STARTUP_STATE["database_error"] = None
     except Exception as exc:  # readiness reports the failure without exposing credentials
         STARTUP_STATE["database_error"] = type(exc).__name__
@@ -116,11 +122,13 @@ def initialize_runtime() -> None:
             trained_until=football_cutoff,
             dataset_hash=((loaded.get("fresh_rebuild") or {}).get("dataset") or {}).get("sha256") or manifest_files.get("football_model.joblib"),
             metrics={**(loaded["metrics"].get("football") or {}), "freshness": football_freshness},
+            update_status=False,
         )
         register_model(
             model_id="tennis-elo-experimental", sport="tennis", version=SETTINGS.model_version, status="experimental",
             trained_until=pd.to_datetime(loaded["tennis"]["date"], utc=True).max(),
             dataset_hash=manifest_files.get("tennis_model.joblib"), metrics=loaded["metrics"].get("tennis"),
+            update_status=False,
         )
     except Exception as exc:
         STARTUP_STATE["model_error"] = type(exc).__name__
@@ -133,9 +141,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V3.4 Fresh Data Rebuild",
-    version="3.4.4",
-    description="Authenticated edition with explainable shadow diagnostics, reproducible fresh-data rebuilds and PostgreSQL validation.",
+    title="Sports Prediction Lab V3.5 Operational Evidence",
+    version=APP_VERSION,
+    description="Authenticated edition with release evidence, explicit model lifecycle, shadow validation and portable handoff exports.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -241,6 +249,14 @@ class TennisRequest(BaseModel):
         return self
 
 
+class ModelStatusRequest(BaseModel):
+    model_id: str = Field(min_length=1, max_length=120)
+    version: str = Field(min_length=1, max_length=40)
+    new_status: str = Field(pattern=r"^(shadow|active|degraded|retired)$")
+    reason: str = Field(min_length=3, max_length=500)
+    actor: str = Field(default="admin", min_length=1, max_length=120)
+
+
 class HistoricalEstimateRequest(BaseModel):
     snapshot_count: int = Field(ge=0, le=100000)
     markets: list[str] = Field(default_factory=lambda: ["h2h"], min_length=1, max_length=20)
@@ -280,7 +296,7 @@ def resources() -> dict[str, Any]:
     fresh_rebuild_path = artifact_dir / "fresh_rebuild_report.json"
     fresh_rebuild = json.loads(fresh_rebuild_path.read_text(encoding="utf-8")) if fresh_rebuild_path.exists() else None
     football_model_version = (
-        f"{fresh_rebuild.get('version', '3.4.0')}-fresh"
+        f"{fresh_rebuild.get('version', '3.5.0')}-fresh"
         if fresh_rebuild and fresh_rebuild.get("promoted")
         else "3.3.0-snapshot"
     )
@@ -887,6 +903,26 @@ def health() -> dict[str, Any]:
     }
 
 
+@app.get("/api/release")
+def release_proof() -> dict[str, Any]:
+    evidence = build_release_evidence(ROOT, version=app.version)
+    app_info = evidence.get("app") or {}
+    football = evidence.get("football_model") or {}
+    integrity = evidence.get("integrity") or {}
+    return {
+        "status": "ok" if integrity.get("artifact_integrity_ok") else "degraded",
+        "release_id": evidence.get("release_id"),
+        "version": app.version,
+        "source_commit": app_info.get("source_commit"),
+        "deployment_id": app_info.get("deployment_id"),
+        "football_model_version": football.get("model_version"),
+        "football_model_sha256": football.get("artifact_sha256"),
+        "dataset_sha256": football.get("dataset_sha256"),
+        "artifact_integrity_ok": integrity.get("artifact_integrity_ok"),
+        "automatic_bet_placement": False,
+    }
+
+
 @app.get("/api/ready")
 def ready():
     issues = list(SETTINGS.readiness_issues())
@@ -948,6 +984,106 @@ def metrics() -> dict[str, Any]:
         "artifact_manifest": r["artifact_manifest"],
         "market_benchmark": benchmark_summary((latest_benchmark_run("soccer_epl") or {}).get("report")),
     }
+
+
+def _system_status_payload() -> dict[str, Any]:
+    evidence = build_release_evidence(ROOT, version=app.version)
+    db = database_summary()
+    models = list_models()
+    current_resource = resources()
+    football_model_version = current_resource["football_model_version"]
+    football_registered = next(
+        (
+            model for model in models
+            if model.get("sport") == "football" and model.get("version") == football_model_version
+        ),
+        None,
+    )
+    integrity = evidence.get("integrity") or {}
+    issues: list[str] = []
+    if not integrity.get("artifact_integrity_ok"):
+        issues.append("artifact integrity mismatch")
+    if not db.get("connected"):
+        issues.append("database unavailable")
+    if football_registered is None:
+        issues.append("running football model is not registered")
+    if (evidence.get("app") or {}).get("source_commit") == "unknown":
+        issues.append("running source commit is unknown")
+    latest_cycle = latest_shadow_cycle()
+    latest_release = (list_releases(limit=1) or [None])[0]
+    return {
+        "status": "verified" if not issues else "degraded",
+        "issues": issues,
+        "release": evidence,
+        "registered_release": latest_release,
+        "deployment_contract": {
+            "api_version_matches_manifest": (evidence.get("app") or {}).get("version") == app.version,
+            "running_commit_known": (evidence.get("app") or {}).get("source_commit") != "unknown",
+            "artifact_integrity_verified": bool(integrity.get("artifact_integrity_ok")),
+            "running_model_registered": football_registered is not None,
+        },
+        "models": models,
+        "model_status_history": model_status_history(limit=20),
+        "database": db,
+        "shadow": {
+            "latest_cycle": latest_cycle,
+            "summary": shadow_summary(sport_key="soccer_epl"),
+        },
+        "benchmark": benchmark_summary((latest_benchmark_run("soccer_epl") or {}).get("report")),
+        "continuity": {
+            "command": "python -m scripts.export_handoff",
+            "files": [
+                "START_HERE_NEXT_CHAT.md",
+                "handoff/HANDOFF_CURRENT.md",
+                "handoff/HANDOFF_CURRENT.json",
+            ],
+            "secrets_exported": False,
+        },
+    }
+
+
+@app.get("/api/system/status")
+def system_status() -> dict[str, Any]:
+    return _system_status_payload()
+
+
+@app.get("/api/system/releases")
+def system_releases(limit: int = 20) -> dict[str, Any]:
+    return {"releases": list_releases(limit=limit)}
+
+
+@app.get("/api/system/handoff")
+def system_handoff() -> dict[str, Any]:
+    status = _system_status_payload()
+    release = status.get("release") or {}
+    return {
+        "schema_version": "1.0",
+        "generated_at": datetime.now(ZoneInfo("UTC")).isoformat(),
+        "verified": status.get("status") == "verified",
+        "app": release.get("app"),
+        "football_model": release.get("football_model"),
+        "deployment_contract": status.get("deployment_contract"),
+        "database": status.get("database"),
+        "shadow": status.get("shadow"),
+        "benchmark": status.get("benchmark"),
+        "issues": status.get("issues"),
+        "secrets_exported": False,
+    }
+
+
+@app.post("/api/admin/models/status")
+def update_model_status(request: ModelStatusRequest) -> dict[str, Any]:
+    try:
+        transition = set_model_status(
+            model_id=request.model_id,
+            version=request.version,
+            new_status=request.new_status,
+            reason=request.reason,
+            actor=request.actor,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"status": "ok", "transition": transition, "models": list_models()}
 
 
 @app.get("/api/history/predictions")

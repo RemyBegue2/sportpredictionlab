@@ -1,0 +1,33 @@
+{
+  "version": "3.5.0",
+  "generated_at_utc": "2026-08-02T19:53:41.576901+00:00",
+  "tests": {
+    "passed": 91,
+    "failed": 0
+  },
+  "coverage_percent": 84.2954804405621,
+  "checks": {
+    "python_compile": true,
+    "javascript_syntax": true,
+    "pytest": true,
+    "release_manifest": true,
+    "system_status_endpoint": true,
+    "public_release_proof": true,
+    "model_lifecycle": true,
+    "snapshot_rollback": true,
+    "portable_backup_restore_sqlite": true,
+    "yaml_toml_parse": true,
+    "secret_pattern_scan": true
+  },
+  "not_executed": [
+    "Railway deployment of V3.5",
+    "Post-deploy verification against the production URL",
+    "Restore into a Railway PostgreSQL test instance",
+    "Real The Odds API request",
+    "Browser rendering: local URLs are blocked by the execution environment policy"
+  ],
+  "verdict": {
+    "technical": "GO for private controlled deployment",
+    "statistical": "NO-GO for profitability claims"
+  }
+}

@@ -12,3 +12,5 @@ data/odds_api/backfill/state.json
 data/odds_api/backfill/historical_odds_long.csv
 data/benchmark/*.csv
 artifacts/market_benchmark_v3_3.json
+artifacts/releases/
+backups/

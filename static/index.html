@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V3.4 Fresh Data Rebuild</title>
+  <title>Sports Prediction Lab V3.5 Operational Evidence</title>
   <meta name="description" content="Application cloud privée avec prédictions pré-match immuables, règlement automatique des résultats et validation en shadow mode.">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -19,7 +19,7 @@
   <main>
     <section id="overview" class="hero">
       <div>
-        <p class="eyebrow">VERSION 3.4.4 · FRESH DATA REBUILD · EXPLAINABLE SHADOW</p>
+        <p class="eyebrow">VERSION 3.5.0 · OPERATIONAL EVIDENCE · MODEL REGISTRY</p>
         <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
         <p class="lede">Une application privée qui fige automatiquement les prédictions avant match, récupère les résultats et mesure sa qualité sans placer le moindre pari.</p>
         <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
@@ -77,6 +77,14 @@
         <article class="cloud-card"><small>Authentification</small><h3 id="cloudAuth">—</h3><p>Session privée et protection CSRF pour les actions d’écriture.</p></article>
         <article class="cloud-card"><small>Base de données</small><h3 id="cloudDatabase">—</h3><p id="cloudLastSync">Dernière synchronisation inconnue.</p></article>
         <article class="cloud-card"><small>Readiness</small><h3 id="cloudReady">—</h3><p id="cloudIssues">Contrôle en cours.</p></article>
+        <article class="cloud-card"><small>Release active</small><h3 id="systemRelease">—</h3><p id="systemCommit">Commit inconnu.</p></article>
+        <article class="cloud-card"><small>Modèle football</small><h3 id="systemModel">—</h3><p id="systemDataset">Dataset inconnu.</p></article>
+        <article class="cloud-card"><small>Contrat de déploiement</small><h3 id="systemIntegrity">—</h3><p id="systemContract">Vérification en cours.</p></article>
+      </div>
+      <div class="history-panel system-panel">
+        <div class="history-heading"><div><small>PREUVE OPÉRATIONNELLE</small><h3>Version, commit et artefacts</h3></div><button id="refreshSystem" class="button ghost" type="button">Vérifier</button></div>
+        <div id="systemIssues" class="policy-note">Contrôle du déploiement en cours.</div>
+        <div id="systemModels" class="history-list"><p>Chargement du registre des modèles…</p></div>
       </div>
       <div class="history-panel">
         <div class="history-heading"><div><small>JOURNAL D’AUDIT</small><h3>Dernières prédictions</h3></div><button id="refreshHistory" class="button ghost" type="button">Actualiser</button></div>
@@ -156,7 +164,7 @@
     </section>
 
     <section id="audit" class="audit-section">
-      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.4</h2></div>
+      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.5</h2></div>
       <div class="role-grid">
         <article><span>01</span><h3>Quant marchés</h3><p>Le shadow mode sépare la qualité du modèle, le prix Winamax et le consensus sans confondre signal et résultat financier.</p></article>
         <article><span>02</span><h3>Statisticien</h3><p>Chaque prédiction est figée avant match et l’échantillon est classé anecdotique, exploratoire ou évaluable.</p></article>
@@ -166,15 +174,15 @@
         <article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
       </div>
       <div class="audit-callout">
-        <div><b>Verdict</b><p>V3.4 = cycles explicables et pipeline de reconstruction fraîche. Aucun modèle n’est promu sans tests chronologiques et validation face au marché.</p></div>
+        <div><b>Verdict</b><p>V3.5 = chaque déploiement relie version, commit, modèle, dataset et métriques. Aucun workflow vert ne vaut preuve sans contrôle post-déploiement.</p></div>
         <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
       </div>
       <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V3.4 Fresh Data Rebuild</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V3.5 Operational Evidence</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/app.js?v=3.4.4"></script>
+  <script src="/static/app.js?v=3.5.0"></script>
 </body>
 </html>

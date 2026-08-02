@@ -1,32 +1,28 @@
-# Architecture cloud V3.3
+# Architecture cloud V3.5
 
 ```text
-Navigateur authentifié
-        |
-        v
-Service web FastAPI
-        |
-        +---- PostgreSQL <---- shadow-cron toutes les 15 min
-        |                           |
-        |                           +---- The Odds API
-        |
-        +---- artefacts modèles vérifiés
+GitHub Actions
+├── rebuild football
+├── tests
+├── release_manifest.json
+├── handoff export
+├── commit des artefacts générés
+├── railway up
+└── /api/release post-deploy verification
 
-Worker historique manuel ---- The Odds API historical
+Railway
+├── sportpredictionlab
+│   ├── FastAPI
+│   ├── interface privée
+│   ├── /api/release public minimal
+│   └── /api/system/status privé
+├── shadow-cron
+│   └── cotes → prédictions figées → résultats → règlement
+└── PostgreSQL
+    ├── prédictions et snapshots
+    ├── model_registry
+    ├── model_status_transitions
+    └── release_registry
 ```
 
-## Service web
-
-Interface, prédictions interactives, lecture des journaux, santé et readiness.
-
-## Shadow cron
-
-Processus fini : cotes actuelles, prédictions immuables, résultats dus, règlement, journal du cycle.
-
-## Worker historique
-
-Backfills coûteux avec plan et plafond. Il ne tourne pas automatiquement.
-
-## Base
-
-Événements, snapshots, prédictions interactives, résultats, shadow, modèles et benchmarks.
+La release, le modèle et le dataset sont reliés par hashes. Le déploiement n’est considéré prouvé qu’après interrogation du conteneur public.

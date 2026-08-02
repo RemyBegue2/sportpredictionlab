@@ -72,7 +72,7 @@ class AuthenticationGateMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, settings: CloudSettings) -> None:
         super().__init__(app)
         self.settings = settings
-        self.public_exact = {"/login", "/api/health", "/api/auth/login"}
+        self.public_exact = {"/login", "/api/health", "/api/release", "/api/auth/login"}
         self.public_prefixes = ("/static/",)
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
