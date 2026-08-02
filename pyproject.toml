@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sports-prediction-v3-1"
-version = "0.3.1.1"
+version = "0.3.1.2"
 description = "Authenticated cloud sports prediction research app with PostgreSQL, scheduled odds sync and market benchmarking"
 requires-python = ">=3.10"
 dependencies = [

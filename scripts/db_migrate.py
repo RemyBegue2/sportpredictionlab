@@ -4,6 +4,9 @@ from pathlib import Path
 import os
 import sys
 
+
+# V3.1.2 deployment guard: this script must remain executable even when
+# Railway starts it outside the repository working directory.
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))

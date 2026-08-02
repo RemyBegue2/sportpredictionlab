@@ -88,3 +88,30 @@ def test_db_migrate_cloud_requires_postgres_and_secrets(tmp_path: Path) -> None:
     assert "DATABASE_URL must reference a PostgreSQL service" in result.stdout
     assert "APP_PASSWORD is missing" in result.stdout
     assert "APP_SESSION_SECRET must contain at least 32 characters" in result.stdout
+
+
+def test_db_migrate_direct_script_from_foreign_workdir(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/db_migrate.py")],
+        cwd=tmp_path,
+        env=_env(tmp_path),
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "'status': 'ok'" in result.stdout
+
+
+def test_docker_runtime_installs_package_and_sets_pythonpath() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    assert "PYTHONPATH=/app" in dockerfile
+    assert "sports_prediction_lab.pth" in dockerfile
+    assert "from sports_predictor.cloud_config import CloudSettings" in dockerfile
+
+
+def test_railway_predeploy_uses_absolute_runtime_context() -> None:
+    config = (ROOT / "railway.toml").read_text(encoding="utf-8")
+    assert "cd /app" in config
+    assert "PYTHONPATH=/app" in config
+    assert "python -m scripts.db_migrate" in config

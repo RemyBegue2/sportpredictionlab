@@ -1,3 +1,11 @@
+
+## 0.3.1.2
+
+- Installe le paquet `sports_predictor` dans l'image Docker.
+- Définit `PYTHONPATH=/app` pour tous les processus Railway.
+- Rend la migration indépendante du répertoire courant.
+- Ajoute un test de migration depuis un répertoire extérieur.
+
 # Changelog
 
 ## 3.1.1 — Correctif déploiement Railway
