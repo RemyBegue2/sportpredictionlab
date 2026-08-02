@@ -1,35 +1,38 @@
-# START HERE — Sports Prediction Lab V3.6
+# START HERE — Sports Prediction Lab V3.7
 
-## État confirmé
+## État de référence
 
-- Version applicative : **3.6.0**
-- Railway : service web, `shadow-cron`, PostgreSQL, worker historique manuel
-- Modèle football frais existant conservé depuis la V3.4/V3.5
-- Déploiement et intégrité déjà traçables via `/api/release`
-- Décision champion–challenger disponible via `/api/model-decision`
-- Promotion et paris automatiques désactivés
+- Version : **3.7.0 Cloud Control Center**
+- Hébergement : Railway
+- Automatisation : GitHub Actions
+- Exploitation locale : **aucun Python requis**
+- Modèle football : champion/challengers en shadow avec preuves V3.6
+- Paris automatiques : désactivés
+- Promotion automatique : désactivée
 
-## Travail V3.6 livré
+## Nouveautés V3.7
 
-- champion, Winamax, consensus et blend 50/50 enregistrés séparément en shadow ;
-- benchmark multi-contenders ;
-- portes de promotion déterministes ;
-- backfill historique immuable et limité par défaut à 30 événements ;
-- approbation exacte du plan pour un backfill complet ;
-- handoff enrichi.
+- `/api/control-center` ;
+- page Pilotage ;
+- déploiement vérifié version/commit/hash ;
+- smoke test Chromium authentifié ;
+- benchmark historique plafonné depuis GitHub ;
+- sauvegarde restaurée automatiquement avant publication ;
+- rollback depuis un commit Git connu, protégé par confirmation ;
+- ZIP de reprise généré par GitHub Actions.
+
+## Prochaine action
+
+Ouvrir **Actions → Historical validation sample → plan_only**, choisir une courte période EPL et télécharger l’artefact. Ne passer à `execute_sample` qu’après lecture des plafonds.
 
 ## Vérité statistique
 
-Aucun benchmark historique réel n’a encore été exécuté dans le paquet. Ne pas annoncer de rentabilité.
+Aucune preuve suffisante ne permet encore d’affirmer que le modèle bat Winamax ou le consensus.
 
-## Prochaine action prioritaire
-
-Créer puis examiner un plan historique de 30 événements EPL à T−1 h, avec un plafond de crédits explicite. Exécuter le benchmark `model` contre `blend50`, Winamax et consensus seulement après validation de la collecte.
-
-## Fichiers à lire
+## Fichiers prioritaires
 
 1. `handoff/HANDOFF_CURRENT.md`
 2. `handoff/HANDOFF_CURRENT.json`
 3. `handoff/NEXT_ACTIONS.md`
-4. `AUDIT_MULTI_ROLES_V3_6.md`
-5. `RESULTATS_V3_6.md`
+4. `AUDIT_MULTI_ROLES_V3_7.md`
+5. `RESULTATS_V3_7.md`

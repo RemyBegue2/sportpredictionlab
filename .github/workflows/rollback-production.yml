@@ -1,0 +1,154 @@
+name: Rollback model release
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Commit Git connu contenant le modèle à restaurer
+        required: true
+        type: string
+      confirmation:
+        description: Type ROLLBACK
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-rollback
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
+      RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
+      RAILWAY_CRON_SERVICE: ${{ vars.RAILWAY_CRON_SERVICE || 'shadow-cron' }}
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate explicit confirmation and configuration
+        env:
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ '${{ inputs.confirmation }}' = 'ROLLBACK' ] || { echo 'Confirmation must equal ROLLBACK'; exit 2; }
+          [ -n "${RAILWAY_TOKEN:-}" ] || { echo 'RAILWAY_TOKEN is missing'; exit 2; }
+          [ -n "${RAILWAY_PROJECT_ID:-}" ] || { echo 'RAILWAY_PROJECT_ID is missing'; exit 2; }
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL is missing'; exit 2; }
+          [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing; the post-rollback browser test is mandatory'; exit 2; }
+          git rev-parse --verify '${{ inputs.source_commit }}^{commit}' >/dev/null
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Restore model evidence from selected commit
+        id: restore
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE='${{ inputs.source_commit }}'
+          required=(
+            artifacts/football_model.joblib
+            artifacts/metrics.json
+            artifacts/artifact_manifest.json
+            data/real/football_active.csv
+          )
+          optional=(
+            artifacts/tennis_model.joblib
+            artifacts/fresh_rebuild_report.json
+          )
+          for path in "${required[@]}"; do
+            git cat-file -e "$SOURCE:$path" || { echo "Required rollback file missing at $SOURCE: $path"; exit 3; }
+            git checkout "$SOURCE" -- "$path"
+          done
+          for path in "${optional[@]}"; do
+            if git cat-file -e "$SOURCE:$path" 2>/dev/null; then
+              git checkout "$SOURCE" -- "$path"
+            fi
+          done
+          echo "source_sha=$(git rev-parse "$SOURCE")" >> "$GITHUB_OUTPUT"
+
+      - name: Run complete test suite
+        run: pytest -q
+
+      - name: Commit restored model and active dataset
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'sports-prediction-rollback-bot'
+          git config user.email 'sports-prediction-rollback-bot@users.noreply.github.com'
+          git add artifacts/football_model.joblib artifacts/metrics.json artifacts/artifact_manifest.json data/real/football_active.csv
+          git add -f artifacts/tennis_model.joblib artifacts/fresh_rebuild_report.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo 'Selected commit contains the same active model; no rollback commit was created.'
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m 'rollback: restore model from ${{ inputs.source_commit }}'
+            git push
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate restored release proof
+        env:
+          SOURCE_COMMIT: ${{ steps.commit.outputs.sha }}
+        run: |
+          python -m scripts.generate_release_manifest
+          python -m scripts.build_handoff_bundle --output dist/sports-prediction-handoff-v3.7.zip
+
+      - name: Install Railway CLI
+        run: npm install --global @railway/cli
+
+      - name: Deploy restored release
+        run: |
+          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_WEB_SERVICE" --message 'Rollback ${{ inputs.source_commit }}'
+          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE" --message 'Rollback ${{ inputs.source_commit }}'
+
+      - name: Verify restored production proof
+        shell: bash
+        run: |
+          MODEL_SHA=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('artifacts/release_manifest.json').read_text(encoding='utf-8'))
+          print(p['football_model']['artifact_sha256'] or '')
+          PY
+          )
+          python -m scripts.post_deploy_verify --base-url "$APP_PUBLIC_URL" --expected-version '3.7.0' --expected-commit '${{ steps.commit.outputs.sha }}' --expected-model-sha256 "$MODEL_SHA" --attempts 30 --delay-seconds 10
+
+      - name: Install Chromium smoke-test dependencies
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Verify restored private interface
+        env:
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        run: python -m scripts.browser_smoke_test --base-url "$APP_PUBLIC_URL" --expected-version '3.7.0'
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '### Model rollback'
+            echo
+            echo "- Source commit: \`${{ steps.restore.outputs.source_sha }}\`"
+            echo "- New production commit: \`${{ steps.commit.outputs.sha }}\`"
+            echo '- Restored scope: active football model, model manifest, metrics and active football dataset'
+            echo '- Browser verification: mandatory'
+          } >> "$GITHUB_STEP_SUMMARY"

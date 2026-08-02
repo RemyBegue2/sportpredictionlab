@@ -1,142 +1,104 @@
-# Sports Prediction Lab V3.6
+# Sports Prediction Lab V3.7 — Cloud Control Center
 
-Application privée de recherche football/tennis avec FastAPI, PostgreSQL, The Odds API, shadow mode pré-match, preuve de déploiement et moteur **champion–challenger**.
+Application privée de recherche football/tennis avec FastAPI, PostgreSQL, The Odds API, shadow mode pré-match et moteur champion–challenger.
 
-## Ce que V3.6 ajoute
+La V3.7 rend l’exploitation **100 % navigateur** : GitHub Actions exécute les scripts et Railway héberge les services. Aucun Python n’est requis sur l’ordinateur de l’utilisateur.
 
-- endpoint privé `/api/model-decision` avec verdict déterministe et portes de promotion explicites ;
-- collecte shadow simultanée du champion, de Winamax, du consensus dévigé et d’un blend 50/50 ;
-- benchmark multi-contenders sur les mêmes lignes, les mêmes folds chronologiques et les mêmes contrôles temporels ;
-- challenger historique `blend50` généré dans le dataset de benchmark ;
-- plan de backfill immuable avec SHA-256, plafond de crédits et validation limitée par défaut à 30 événements ;
-- approbation exacte du `plan_id` obligatoire pour un backfill complet ;
-- checkpoints reprenables, hash des chunks et journalisation des erreurs de collecte ;
-- registre PostgreSQL des décisions de modèle ;
-- page « Décision modèle » dans l’interface ;
-- handoff enrichi avec modèle actif, dernier benchmark et prochaines actions.
+## Nouveautés V3.7
 
-## Ce que V3.6 ne prétend pas
+- page **Centre de contrôle** et endpoint privé `/api/control-center` ;
+- statuts déterministes : opérationnel, en attente, action nécessaire ou bloqué ;
+- prochaines actions reliées au workflow GitHub exact à lancer ;
+- workflow **Deploy production** : tests, déploiement Railway, preuve `/api/release`, puis test Chromium authentifié ;
+- workflow **Verify production** sans redéploiement ;
+- workflow **Historical validation sample** avec mode zéro crédit et exécution plafonnée à 30 événements ;
+- workflow **Backup and verify database** avec restauration de contrôle ;
+- workflow **Rollback model release** restaurant les artefacts depuis un commit Git connu et protégé par confirmation explicite ;
+- workflow **Generate handoff package** produisant un ZIP directement joignable dans une nouvelle conversation ;
+- commit embarqué dans le manifeste de release, même lors d’un déploiement `railway up` sans dossier `.git` ;
+- résumés lisibles dans `GITHUB_STEP_SUMMARY` pour chaque opération.
 
-- aucun benchmark historique réel n’a été exécuté dans le paquet livré ;
-- aucun crédit The Odds API historique n’a été consommé ;
-- aucune supériorité face à Winamax ou au consensus n’est démontrée ;
-- aucune promotion de modèle n’est automatique ;
-- aucun pari, aucune taille de mise et aucune connexion à un compte Winamax.
+## Opérations courantes
 
-## Mise à niveau depuis V3.5
-
-Le paquet d’upgrade omet volontairement les modèles et données actives. Ne remplacez pas :
+Dans GitHub :
 
 ```text
-artifacts/football_model.joblib
-artifacts/tennis_model.joblib
-artifacts/metrics.json
-artifacts/artifact_manifest.json
-artifacts/fresh_rebuild_report.json
-data/real/
+Actions
+→ choisir le workflow
+→ Run workflow
+→ remplir les paramètres
+→ lire le résumé du run
 ```
 
-Décompressez l’upgrade à la racine du dépôt :
-
-```bash
-git add -A
-git commit -m "Upgrade to V3.6 evidence engine"
-git push
-```
-
-Sur Railway, définissez sur `sportpredictionlab` et `shadow-cron` :
+Workflows disponibles :
 
 ```text
-MODEL_VERSION=3.6.0
+Deploy production
+Verify production
+Rebuild fresh football model
+Historical validation sample
+Backup and verify database
+Rollback model release
+Generate handoff package
 ```
 
-Puis déployez le dernier commit sur les deux services.
+## Configuration GitHub nécessaire
 
-## Vérification
+### Secrets
 
 ```text
-GET /api/health
-GET /api/release
-GET /api/model-decision
+RAILWAY_TOKEN
+RAILWAY_PROJECT_ID
+APP_PASSWORD              test navigateur privé
+THE_ODDS_API_KEY          collecte historique
+DATABASE_URL              benchmark et sauvegarde PostgreSQL
+BACKUP_ENCRYPTION_PASSPHRASE  chiffrement de la sauvegarde (20 caractères minimum)
 ```
 
-Le résultat attendu au premier démarrage est généralement `not_evaluable`, car aucun benchmark réel suffisant n’existe encore. C’est le comportement correct.
-
-## Premier benchmark réel recommandé
-
-1. Préparer un échantillon de 30 événements :
-
-```bash
-python -m scripts.plan_historical_backfill \
-  --events-csv data/benchmark/events.csv \
-  --max-credits 200 \
-  --sample-events 30
-```
-
-2. Vérifier `data/odds_api/backfill/plan.json`.
-3. Faire un dry-run :
-
-```bash
-python -m scripts.run_historical_backfill \
-  --plan-dir data/odds_api/backfill \
-  --max-credits 200
-```
-
-4. Exécuter seulement après validation :
-
-```bash
-python -m scripts.run_historical_backfill \
-  --plan-dir data/odds_api/backfill \
-  --max-credits 200 \
-  --execute
-```
-
-5. Préparer puis comparer les contenders :
-
-```bash
-python -m scripts.prepare_market_benchmark \
-  --results-csv data/real/football_active.csv \
-  --events-csv data/benchmark/events.csv \
-  --odds-csv data/odds_api/backfill/historical_odds_long.csv \
-  --stage t-1h
-
-python -m scripts.run_champion_challenger \
-  --input data/benchmark/evaluation_t-1h.csv \
-  --contenders model blend50 \
-  --champion model \
-  --persist
-```
-
-Un plan complet de plus de 30 événements exige en plus :
+### Variables
 
 ```text
---approve-plan <PLAN_ID exact>
+APP_PUBLIC_URL
+RAILWAY_ENVIRONMENT       production par défaut
+RAILWAY_WEB_SERVICE       sportpredictionlab par défaut
+RAILWAY_CRON_SERVICE      shadow-cron par défaut
 ```
 
-## Handoff pour une nouvelle conversation
+Les workflows expliquent précisément la configuration manquante lorsqu’une opération est bloquée.
 
-```bash
-python -m scripts.generate_release_manifest
-python -m scripts.export_handoff
-```
+## Déploiement après l’upgrade
 
-Joindre ensuite :
+1. Remplacer les fichiers du dépôt par le contenu de l’archive V3.7, sans écraser les modèles ni les données actives.
+2. Créer un commit dans GitHub.
+3. Ouvrir **Actions → Deploy production → Run workflow**.
+4. Garder `deploy_web`, `deploy_cron` et `verify_browser` activés.
+5. Le run est considéré réussi seulement après vérification de la version, du commit, du hash du modèle et, par défaut, de l’interface privée dans Chromium.
+
+## Premier benchmark historique
+
+1. Ouvrir **Actions → Historical validation sample**.
+2. Choisir `plan_only` : aucun crédit API n’est consommé.
+3. Télécharger et lire l’artefact de planification.
+4. Relancer avec `execute_sample`, un maximum de 30 événements et la confirmation `EXECUTE_SAMPLE`.
+5. Ne jamais lancer une période ou un plafond plus large avant examen du premier lot.
+
+## Reprise dans une autre conversation
 
 ```text
-START_HERE_NEXT_CHAT.md
-handoff/HANDOFF_CURRENT.md
-handoff/HANDOFF_CURRENT.json
-handoff/LAST_BENCHMARK_SUMMARY.json
-handoff/ACTIVE_MODEL_CARD.md
-handoff/NEXT_ACTIONS.md
-artifacts/release_manifest.json
+Actions
+→ Generate handoff package
+→ Run workflow
+→ télécharger sports-prediction-handoff-v3.7
+→ joindre le ZIP dans la nouvelle conversation
 ```
 
-## Validation locale de cette livraison
+Le ZIP exclut les variables d’environnement, clés, tokens, mots de passe, cookies et URL de base de données.
 
-- 99 tests réussis ;
-- couverture globale : 85 % ;
-- compilation de 82 fichiers Python réussie ;
-- syntaxe JavaScript valide ;
-- YAML et TOML valides ;
-- scan de secrets : aucun secret réel détecté.
+## Limites inchangées
+
+- aucune rentabilité démontrée ;
+- aucune promotion automatique de challenger ;
+- aucune taille de mise ;
+- aucune connexion à un compte Winamax ;
+- aucun pari automatique ;
+- le tennis reste expérimental et non calibré.

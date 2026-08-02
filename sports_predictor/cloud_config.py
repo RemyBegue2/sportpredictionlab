@@ -74,7 +74,7 @@ class CloudSettings:
             database_url=raw_db,
             odds_sync_sports=_csv(os.getenv("ODDS_SYNC_SPORTS"), ("soccer_epl",)),
             odds_stale_minutes=stale,
-            model_version=os.getenv("MODEL_VERSION", "3.6.0"),
+            model_version=os.getenv("MODEL_VERSION", "3.7.0"),
             shadow_enabled=_truthy(os.getenv("SHADOW_MODE_ENABLED"), default=True),
             shadow_max_events=shadow_max_events,
             shadow_quota_floor=shadow_quota_floor,

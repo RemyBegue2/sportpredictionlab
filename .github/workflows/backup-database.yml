@@ -1,0 +1,65 @@
+name: Backup and verify database
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Validate backup secrets
+        run: |
+          [ -n "${DATABASE_URL:-}" ] || { echo 'DATABASE_URL GitHub secret is missing'; exit 2; }
+          [ -n "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ] || { echo 'BACKUP_ENCRYPTION_PASSPHRASE GitHub secret is missing'; exit 2; }
+          [ "${#BACKUP_ENCRYPTION_PASSPHRASE}" -ge 20 ] || { echo 'BACKUP_ENCRYPTION_PASSPHRASE must contain at least 20 characters'; exit 2; }
+
+      - name: Create portable backup
+        run: python -m scripts.portable_db_backup --backup --file backups/production.json.gz
+
+      - name: Verify restore into temporary database
+        run: |
+          python -m scripts.portable_db_backup --restore \
+            --file backups/production.json.gz \
+            --database-url sqlite:///backups/restore-check.db \
+            --execute
+
+      - name: Encrypt verified backup and remove plaintext
+        run: |
+          gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+            --passphrase "$BACKUP_ENCRYPTION_PASSPHRASE" \
+            --output backups/production.json.gz.gpg backups/production.json.gz
+          rm -f backups/production.json.gz backups/restore-check.db
+
+      - name: Upload encrypted verified backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-database-backup-${{ github.run_id }}
+          path: backups/production.json.gz.gpg
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Summary
+        run: |
+          echo '### Database backup verified' >> "$GITHUB_STEP_SUMMARY"
+          echo 'The production data was exported, restored into a temporary database, encrypted with AES-256 and only then published as an artifact.' >> "$GITHUB_STEP_SUMMARY"

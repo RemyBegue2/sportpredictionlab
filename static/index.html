@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V3.6 Evidence Engine</title>
+  <title>Sports Prediction Lab V3.7 Cloud Control Center</title>
   <meta name="description" content="Application cloud privée avec prédictions pré-match immuables, règlement automatique des résultats et validation en shadow mode.">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -11,7 +11,7 @@
   <header class="topbar">
     <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
     <nav>
-      <a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
+      <a href="#control">Pilotage</a><a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
     </nav>
     <div class="top-actions"><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
   </header>
@@ -19,9 +19,9 @@
   <main>
     <section id="overview" class="hero">
       <div>
-        <p class="eyebrow">VERSION 3.6.0 · EVIDENCE ENGINE · CHAMPION–CHALLENGER</p>
+        <p class="eyebrow">VERSION 3.7.0 · CLOUD CONTROL CENTER · ZÉRO PYTHON LOCAL</p>
         <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
-        <p class="lede">Une application privée qui fige automatiquement les prédictions avant match, récupère les résultats et mesure sa qualité sans placer le moindre pari.</p>
+        <p class="lede">Une application privée pilotée depuis GitHub Actions et Railway : déploiement vérifié, tâches historiques plafonnées et pack de reprise téléchargeable sans Python sur votre ordinateur.</p>
         <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
       </div>
       <aside class="trust-card">
@@ -42,6 +42,20 @@
       <article><span id="dailyCandidates">—</span><small>candidats recherche aujourd’hui</small></article>
       <article><span id="oddsApiState">—</span><small>connexion The Odds API</small></article><article><span id="dbSnapshots">—</span><small>snapshots persistés</small></article>
       <article><span id="shadowState">—</span><small>prédictions shadow réglées</small></article>
+    </section>
+
+    <section id="control" class="workbench control-section">
+      <div class="section-heading"><p class="eyebrow">PILOTAGE CLOUD</p><h2>Centre de contrôle</h2><p>Cette vue transforme l’état technique en actions concrètes. Toutes les opérations sont prévues pour GitHub Actions et Railway ; aucun Python local n’est requis.</p></div>
+      <div class="control-overview">
+        <article class="control-hero-card"><small>ÉTAT GLOBAL</small><h3 id="controlOverall">—</h3><p id="controlSummary">Chargement des contrôles…</p><button id="refreshControl" class="button ghost" type="button">Actualiser</button></article>
+        <div id="controlNextActions" class="control-actions"><p>Chargement des prochaines actions…</p></div>
+      </div>
+      <div id="controlChecks" class="control-check-grid"><p>Chargement des vérifications…</p></div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>BOUTONS GITHUB ACTIONS</small><h3>Opérations disponibles</h3><p>Ouvrez l’onglet Actions du dépôt, choisissez le workflow indiqué et cliquez sur Run workflow.</p></div></div>
+        <div id="controlWorkflows" class="workflow-grid"><p>Chargement du catalogue des workflows…</p></div>
+      </div>
+      <div class="policy-note"><b>Garde-fous :</b> aucune promotion automatique de modèle, aucune mise conseillée et aucun pari transmis à Winamax.</div>
     </section>
 
     <section id="bets" class="workbench bets-section">
@@ -183,7 +197,7 @@
     </section>
 
     <section id="audit" class="audit-section">
-      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.6</h2></div>
+      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.7</h2></div>
       <div class="role-grid">
         <article><span>01</span><h3>Quant marchés</h3><p>Le shadow mode sépare la qualité du modèle, le prix Winamax et le consensus sans confondre signal et résultat financier.</p></article>
         <article><span>02</span><h3>Statisticien</h3><p>Chaque prédiction est figée avant match et l’échantillon est classé anecdotique, exploratoire ou évaluable.</p></article>
@@ -193,15 +207,15 @@
         <article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
       </div>
       <div class="audit-callout">
-        <div><b>Verdict</b><p>V3.6 = champion, challengers et marchés sont évalués sur les mêmes lignes, les mêmes folds et les mêmes horizons. Une promotion exige des preuves historiques, live et temporelles concordantes.</p></div>
+        <div><b>Verdict</b><p>V3.7 = les opérations courantes sont déclenchées depuis GitHub Actions, vérifiées sur Railway et résumées par des actions compréhensibles. Les règles statistiques de la V3.6 restent inchangées.</p></div>
         <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
       </div>
       <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V3.6 Evidence Engine</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V3.7 Cloud Control Center</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/app.js?v=3.6.0"></script>
+  <script src="/static/app.js?v=3.7.0"></script>
 </body>
 </html>

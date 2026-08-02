@@ -61,7 +61,7 @@ def main() -> int:
     plan.requests.to_csv(output / "requests.csv", index=False)
     plan.targets.to_csv(output / "targets.csv", index=False)
     summary = {
-        "version": "3.6.0",
+        "version": "3.7.0",
         "sport_keys": sorted(plan.requests["sport_key"].astype(str).unique().tolist()),
         "available_event_count": int(available_events),
         "event_count": int(events["event_id"].nunique()),

@@ -1,10 +1,3 @@
-# Handoff V3.6
+# Dossier handoff
 
-Exécuter dans le vrai dépôt après chaque commit ou déploiement :
-
-```bash
-python -m scripts.generate_release_manifest
-python -m scripts.export_handoff
-```
-
-Les fichiers générés localement dans le paquet ont un commit `unknown`. Ils servent de structure de reprise, pas de preuve du dépôt GitHub/Railway de l’utilisateur. Le vrai dépôt doit les régénérer.
+Les fichiers de ce dossier sont régénérés par le workflow GitHub **Generate handoff package**. L’utilisateur télécharge ensuite le ZIP dans la section Artifacts. Aucun Python local n’est requis et aucun secret n’est exporté.

@@ -97,6 +97,24 @@ async function refreshSystem(){
   catch(error){ toast(`Preuve opérationnelle indisponible : ${error.message}`); }
 }
 
+function renderControlCenter(data){
+  const labels={ok:'Opérationnel',pending:'En attente de preuves',attention:'Action nécessaire',blocked:'Bloqué'};
+  const overall=data.overall_status||'pending';
+  $('#controlOverall').textContent=labels[overall]||overall;
+  $('#controlOverall').className=`control-status ${esc(overall)}`;
+  const summary=data.summary||{};
+  $('#controlSummary').textContent=`${summary.ok||0} OK · ${summary.pending||0} en attente · ${summary.attention||0} attention · ${summary.blocked||0} bloqué`;
+  $('#controlChecks').innerHTML=(data.checks||[]).map(check=>`<article class="control-check ${esc(check.status)}"><div><small>${esc(labels[check.status]||check.status)}</small><h3>${esc(check.label)}</h3></div><p>${esc(check.detail)}</p><footer><b>Action :</b> ${esc(check.action)}${check.workflow?`<code>${esc(check.workflow)}</code>`:''}</footer></article>`).join('')||'<p>Aucun contrôle disponible.</p>';
+  $('#controlNextActions').innerHTML=(data.next_actions||[]).map(item=>`<article><span>${item.priority}</span><div><b>${esc(item.label)}</b><p>${esc(item.action)}</p>${item.workflow?`<code>Actions → ${esc(item.workflow)}</code>`:''}</div></article>`).join('')||'<article><span>✓</span><div><b>Aucune action urgente</b><p>Les contrôles cloud sont cohérents.</p></div></article>';
+  const riskLabels={read_only:'Lecture seule',controlled:'Contrôlé',consumes_api_credits:'Consomme des crédits API',read_only_production:'Lecture production',destructive:'Destructif'};
+  $('#controlWorkflows').innerHTML=(data.workflows||[]).map(flow=>`<article class="workflow-card"><div><small>${esc(riskLabels[flow.risk]||flow.risk)}</small><h3>${esc(flow.name)}</h3></div><p>${esc(flow.purpose)}</p><code>${esc(flow.file)}</code>${flow.confirmation?`<span>Confirmation : ${esc(flow.confirmation)}</span>`:''}</article>`).join('')||'<p>Aucun workflow déclaré.</p>';
+}
+
+async function refreshControl(){
+  try{ renderControlCenter(await jsonFetch('/api/control-center')); }
+  catch(error){ toast(`Centre de contrôle indisponible : ${error.message}`); }
+}
+
 function renderHistory(data){
   const rows=data.predictions||[];
   $('#predictionHistory').innerHTML=rows.map(row=>{
@@ -277,6 +295,7 @@ async function init(){
       shadow:jsonFetch('/api/shadow/summary'),
       shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
       system:jsonFetch('/api/system/status'),
+      control:jsonFetch('/api/control-center'),
     };
     const keys=Object.keys(requests);
     const settled=await Promise.allSettled(Object.values(requests));
@@ -293,6 +312,7 @@ async function init(){
     if(loaded.decision) renderDecision(loaded.decision);
     if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
     if(loaded.system) renderSystem(loaded.system);
+    if(loaded.control) renderControlCenter(loaded.control);
     if(loaded.provider?.configured){ try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); } }
   }catch(e){
     toast(`Interface partiellement chargée : ${e.message}`);
@@ -356,6 +376,7 @@ $('#loadTennisOdds').addEventListener('click',async()=>{
 $('#refreshHistory').addEventListener('click',refreshHistory);
 $('#refreshShadow').addEventListener('click',refreshShadow);
 $('#refreshSystem').addEventListener('click',refreshSystem);
+$('#refreshControl').addEventListener('click',refreshControl);
 $('#refreshDecision').addEventListener('click',refreshDecision);
 $('#logoutButton').addEventListener('click',async()=>{
   try{ await jsonFetch('/api/auth/logout',{method:'POST'}); window.location.assign('/login'); }catch(error){ toast(error.message); }

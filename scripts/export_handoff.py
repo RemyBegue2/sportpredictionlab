@@ -34,8 +34,8 @@ def build_handoff() -> dict[str, Any]:
     report = read_json("artifacts/fresh_rebuild_report.json")
     artifact_manifest = read_json("artifacts/artifact_manifest.json")
     release_manifest = read_json("artifacts/release_manifest.json")
-    integration_status = read_json("artifacts/integration_status_v3_6.json") or read_json("artifacts/integration_status_v3_5.json")
-    security_scan = read_json("artifacts/security_scan_v3_6.json") or read_json("artifacts/security_scan_v3_5.json")
+    integration_status = read_json("artifacts/integration_status_v3_7.json") or read_json("artifacts/integration_status_v3_6.json") or read_json("artifacts/integration_status_v3_5.json")
+    security_scan = read_json("artifacts/security_scan_v3_7.json") or read_json("artifacts/security_scan_v3_6.json") or read_json("artifacts/security_scan_v3_5.json")
     evidence_bundle = read_json("artifacts/champion_challenger_v3_6.json")
     return {
         "schema_version": "1.0",
@@ -57,16 +57,18 @@ def build_handoff() -> dict[str, Any]:
         "model_decision": (evidence_bundle or {}).get("decision") if evidence_bundle else None,
         "deployment": {
             "platform": "Railway",
-            "services": ["sportpredictionlab", "shadow-cron", "historical-worker", "Postgres"],
+            "services": ["sportpredictionlab", "shadow-cron", "Postgres"],
+            "reserved_services": ["historical-worker"],
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Run the immutable 30-event historical validation plan, then evaluate champion and challengers on identical temporal folds.",
+        "next_priority": "Use GitHub Actions → Historical validation sample. Start with plan_only, then execute_sample only after reviewing the caps.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
             "Tennis remains experimental and uncalibrated.",
             "A green workflow is insufficient without /api/release post-deployment verification.",
-            "Managed PostgreSQL backup restoration remains to be verified on the real Railway project.",
+            "The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.",
+            "Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.",
             "A full historical backfill requires exact plan-id approval and a reviewed credit cap.",
             "No model promotion is automatic, even when all evidence gates pass.",
         ],
@@ -109,17 +111,17 @@ Generated: `{payload['generated_at_utc']}`
 Railway
 ├── sportpredictionlab  FastAPI + private web UI
 ├── shadow-cron         champion + market baselines + blend → results → settlement
-├── historical-worker   immutable budget-capped historical backfill
+├── historical-worker   reserved for future long-running backfills
 └── Postgres            audit records, model/release registry, metrics and decisions
 
 GitHub Actions
-└── rebuild-fresh-football.yml
-    ├── rebuild candidate
-    ├── tests
-    ├── release manifest + handoff export
-    ├── commit generated evidence
-    ├── Railway deploy when credentials exist
-    └── post-deploy proof when APP_PUBLIC_URL is configured
+├── deploy-production.yml       tests → Railway deploy → API proof → Chromium smoke
+├── verify-production.yml       read-only production proof
+├── rebuild-fresh-football.yml  rebuild → tests → deploy → proof
+├── historical-validation.yml   zero-credit plan or capped sample execution
+├── backup-database.yml         backup → temporary restore verification
+├── rollback-production.yml     restore from known Git commit → tests → deploy → proof
+└── generate-handoff.yml        downloadable secret-free conversation bundle
 ```
 
 ## Non-negotiable rules
@@ -135,7 +137,9 @@ GitHub Actions
 ## Evidence engine
 
 - Champion–challenger artifact: `artifacts/champion_challenger_v3_6.json`
-- Public deterministic verdict: `/api/model-decision`
+- Cloud control endpoint: `/api/control-center`
+- Local Python required for operations: **no**
+- Authenticated deterministic verdict: `/api/model-decision`
 - Validation backfill default: at most 30 events
 - Full backfill: exact `plan_id` approval required
 - Automatic model promotion: **disabled**
@@ -175,13 +179,13 @@ def active_model_card(payload: dict[str, Any]) -> str:
 
 def next_actions(payload: dict[str, Any]) -> str:
     decision = payload.get("model_decision") or {}
-    action = decision.get("next_action") or "Create and review a 30-event validation backfill plan before consuming historical credits."
+    action = decision.get("next_action") or "Open GitHub Actions → Historical validation sample → plan_only, review the artifact, then use execute_sample with explicit caps."
     return f"""# NEXT ACTIONS
 
 1. {action}
-2. Verify `/api/release` and `/api/model-decision` after deployment.
+2. Use GitHub Actions → Verify production after every deploy.
 3. Keep every contender in shadow until historical and live sample gates are satisfied.
-4. Attach this file, `HANDOFF_CURRENT.md`, and `HANDOFF_CURRENT.json` in the next conversation.
+4. Use GitHub Actions → Generate handoff package, then attach the downloaded ZIP in the next conversation.
 
 No secret is exported.
 """

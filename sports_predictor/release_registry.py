@@ -11,7 +11,7 @@ import subprocess
 
 from .artifacts import sha256_file, verify_artifact_manifest
 
-APP_VERSION = "3.6.0"
+APP_VERSION = "3.7.0"
 RELEASE_SCHEMA_VERSION = "1.0"
 SENSITIVE_MARKERS = (
     "password",
@@ -33,7 +33,7 @@ def _read_json(path: Path) -> dict[str, Any] | None:
 
 
 def _git_commit(root: Path) -> str:
-    for name in ("RAILWAY_GIT_COMMIT_SHA", "GITHUB_SHA", "SOURCE_COMMIT"):
+    for name in ("SOURCE_COMMIT", "RAILWAY_GIT_COMMIT_SHA", "GITHUB_SHA"):
         value = (os.getenv(name) or "").strip()
         if value:
             return value
@@ -133,9 +133,13 @@ def build_release_evidence(root: str | Path, *, version: str = APP_VERSION) -> d
         "static/index.html",
         "static/app.js",
         "sports_predictor/release_registry.py",
+        "sports_predictor/control_center.py",
         "sports_predictor/database.py",
         "sports_predictor/fresh_rebuild.py",
         ".github/workflows/rebuild-fresh-football.yml",
+        ".github/workflows/deploy-production.yml",
+        ".github/workflows/verify-production.yml",
+        ".github/workflows/generate-handoff.yml",
         "Dockerfile",
         "railway.toml",
         "railway.cron.toml",
@@ -145,6 +149,11 @@ def build_release_evidence(root: str | Path, *, version: str = APP_VERSION) -> d
             code_files[relative] = {"sha256": sha256_file(path), "bytes": path.stat().st_size}
 
     source_commit = _git_commit(root_path)
+    if source_commit == "unknown":
+        packaged_manifest = _read_json(artifact_dir / "release_manifest.json") or {}
+        packaged_commit = str(((packaged_manifest.get("app") or {}).get("source_commit") or "")).strip()
+        if packaged_commit and packaged_commit != "unknown":
+            source_commit = packaged_commit
     football_hash = (artifacts.get("football_model.joblib") or {}).get("sha256")
     dataset = fresh_report.get("dataset") if isinstance(fresh_report.get("dataset"), dict) else {}
     model_report = fresh_report.get("model") if isinstance(fresh_report.get("model"), dict) else {}

@@ -1,0 +1,48 @@
+{
+  "version": "3.7.0",
+  "status": "source_validated_not_deployed",
+  "tests": {
+    "passed": 108,
+    "failed": 0,
+    "warnings": 5
+  },
+  "coverage_percent": 82.34,
+  "static_checks": {
+    "python_compile": true,
+    "javascript_syntax": true,
+    "yaml_workflows": 7,
+    "toml": true
+  },
+  "workflows": [
+    "backup-database.yml",
+    "deploy-production.yml",
+    "generate-handoff.yml",
+    "historical-validation.yml",
+    "rebuild-fresh-football.yml",
+    "rollback-production.yml",
+    "verify-production.yml"
+  ],
+  "contracts": {
+    "public_release_proof": true,
+    "authenticated_control_center": true,
+    "post_deploy_version_commit_model_hash": true,
+    "mandatory_browser_check_by_default": true,
+    "rollback_from_known_git_commit": true,
+    "historical_hard_caps": {
+      "events": 30,
+      "discovery_calls": 31,
+      "odds_credits": 200
+    },
+    "secret_free_handoff": true
+  },
+  "external_validation": {
+    "railway_deployment_executed": false,
+    "production_chromium_smoke_executed": false,
+    "the_odds_api_credits_consumed": 0
+  },
+  "known_debt": [
+    "Five ResourceWarning messages from legacy SQLite test connections.",
+    "Historical long-running Railway worker remains reserved, not validated.",
+    "Logical backup restore tested in code; real GitHub-to-production run still required."
+  ]
+}

@@ -1,12 +1,14 @@
 # Journal des décisions
 
-## V3.6
+## V3.7
 
-1. La priorité passe de la traçabilité du déploiement à la preuve comparative du modèle.
-2. Winamax et consensus deviennent des baselines shadow immuables.
-3. Un blend 50/50 est ajouté comme premier challenger simple et interprétable.
-4. Tous les contenders sont évalués sur des folds et lignes temporelles identiques.
-5. La validation historique commence par 30 événements maximum.
-6. Un backfill complet exige l’approbation exacte du `plan_id`.
-7. Une décision favorable ne déclenche jamais une promotion automatique.
-8. Aucun résultat synthétique n’est publié comme preuve réelle.
+1. L’exploitation normale ne dépend plus de Python installé sur le PC.
+2. GitHub Actions est l’interface d’exécution ; Railway est la plateforme d’hébergement.
+3. Un déploiement n’est réussi qu’après preuve version + commit + hash du modèle.
+4. Le test navigateur est obligatoire par défaut ; si `verify_browser=true`, l’absence de `APP_PASSWORD` bloque le workflow.
+5. Le benchmark historique initial reste limité à 30 événements.
+6. `plan_only` précède toujours `execute_sample`.
+7. Une sauvegarde doit être restaurée avant d’être publiée comme artefact valide.
+8. Les rollbacks exigent un commit Git source connu et la confirmation exacte `ROLLBACK`.
+9. Les critères champion–challenger V3.6 ne sont pas assouplis.
+10. Aucun pari ou staking automatique n’est ajouté.

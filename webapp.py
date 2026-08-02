@@ -64,6 +64,7 @@ from sports_predictor.identity import football_model_name, normalize_identity
 from sports_predictor.odds_data import bookmaker_h2h_markets, consensus_h2h, normalize_odds_payload
 from sports_predictor.market_benchmark import benchmark_summary
 from sports_predictor.champion_challenger import build_model_decision
+from sports_predictor.control_center import build_control_center
 from sports_predictor.shadow_mode import shadow_horizon
 
 ROOT = Path(__file__).resolve().parent
@@ -159,9 +160,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V3.6 Evidence Engine",
+    title="Sports Prediction Lab V3.7 Cloud Control Center",
     version=APP_VERSION,
-    description="Authenticated edition with champion–challenger evidence, explicit promotion gates, shadow validation and portable handoff exports.",
+    description="Cloud-first edition operated from GitHub Actions and Railway, with deployment proof, controlled historical jobs and secret-free handoff artifacts.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -314,7 +315,7 @@ def resources() -> dict[str, Any]:
     fresh_rebuild_path = artifact_dir / "fresh_rebuild_report.json"
     fresh_rebuild = json.loads(fresh_rebuild_path.read_text(encoding="utf-8")) if fresh_rebuild_path.exists() else None
     football_model_version = (
-        f"{fresh_rebuild.get('version', '3.6.0')}-fresh"
+        f"{fresh_rebuild.get('version', '3.7.0')}-fresh"
         if fresh_rebuild and fresh_rebuild.get("promoted")
         else "3.3.0-snapshot"
     )
@@ -999,6 +1000,8 @@ def release_proof() -> dict[str, Any]:
         "football_model_sha256": football.get("artifact_sha256"),
         "dataset_sha256": football.get("dataset_sha256"),
         "artifact_integrity_ok": integrity.get("artifact_integrity_ok"),
+        "automatic_model_promotion": False,
+        "profitability_claim": False,
         "automatic_bet_placement": False,
     }
 
@@ -1112,7 +1115,10 @@ def _system_status_payload() -> dict[str, Any]:
         "benchmark": benchmark_summary((latest_benchmark_run("soccer_epl") or {}).get("report")),
         "model_decision": _model_decision_payload("soccer_epl"),
         "continuity": {
-            "command": "python -m scripts.export_handoff",
+            "operation": "GitHub Actions → Generate handoff package → Run workflow",
+            "workflow": "generate-handoff.yml",
+            "artifact": "sports-prediction-handoff-v3.7",
+            "local_python_required": False,
             "files": [
                 "START_HERE_NEXT_CHAT.md",
                 "handoff/HANDOFF_CURRENT.md",
@@ -1155,6 +1161,20 @@ def model_decision(sport_key: str = "soccer_epl") -> dict[str, Any]:
 @app.get("/api/system/status")
 def system_status() -> dict[str, Any]:
     return _system_status_payload()
+
+
+@app.get("/api/control-center")
+def control_center() -> dict[str, Any]:
+    status = _system_status_payload()
+    return build_control_center(
+        release=status.get("release") or {},
+        database=status.get("database") or {},
+        models=status.get("models") or [],
+        shadow_cycle=((status.get("shadow") or {}).get("latest_cycle")),
+        benchmark=status.get("benchmark") or {},
+        model_decision=status.get("model_decision") or {},
+        backfills=recent_backfill_jobs(limit=10),
+    )
 
 
 @app.get("/api/system/releases")

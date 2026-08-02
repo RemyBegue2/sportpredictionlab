@@ -1,0 +1,18 @@
+{
+  "version": "3.7.0",
+  "generated_at": "2026-08-02T23:54:00+02:00",
+  "status": "pass",
+  "probable_secret_findings": [],
+  "checks": {
+    "private_key_material_absent": true,
+    "hardcoded_sensitive_assignments_absent": true,
+    "automatic_bet_placement_disabled": true,
+    "automatic_model_promotion_disabled": true,
+    "handoff_secret_filter_tested": true,
+    "backup_artifact_encrypted": true,
+    "destructive_rollback_confirmation_required": true
+  },
+  "limitations": [
+    "Heuristic source scan only; GitHub secret values and Railway runtime variables were not accessible."
+  ]
+}

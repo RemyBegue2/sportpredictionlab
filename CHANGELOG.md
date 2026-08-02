@@ -48,3 +48,13 @@
 - décisions de modèle persistées ;
 - handoff enrichi ;
 - 99 tests, 85 % de couverture.
+
+## 3.7.0 — Cloud Control Center
+
+- exploitation GitHub Actions + Railway sans Python local ;
+- endpoint et page `/api/control-center` ;
+- workflows de déploiement, vérification, handoff, historique, sauvegarde et rollback ;
+- preuve du commit embarqué pour les déploiements CLI Railway ;
+- test Chromium authentifié ;
+- résumés d’actions lisibles ;
+- pack de continuité téléchargeable.

@@ -1,0 +1,96 @@
+name: Verify production
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_version:
+        description: Version expected in production
+        required: true
+        default: '3.7.0'
+        type: string
+      expected_commit:
+        description: Expected commit SHA (leave blank to use the selected branch HEAD)
+        required: false
+        type: string
+      verify_browser:
+        description: Open the private UI in Chromium
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Resolve expected proof
+        id: proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL repository variable is missing'; exit 2; }
+          COMMIT='${{ inputs.expected_commit }}'
+          [ -n "$COMMIT" ] || COMMIT=$(git rev-parse HEAD)
+          python -m scripts.generate_release_manifest
+          MODEL_SHA=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('artifacts/release_manifest.json').read_text(encoding='utf-8'))
+          print(p['football_model']['artifact_sha256'] or '')
+          PY
+          )
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "model_sha=$MODEL_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Verify API release proof
+        run: |
+          python -m scripts.post_deploy_verify \
+            --base-url "$APP_PUBLIC_URL" \
+            --expected-version '${{ inputs.expected_version }}' \
+            --expected-commit '${{ steps.proof.outputs.commit }}' \
+            --expected-model-sha256 '${{ steps.proof.outputs.model_sha }}'
+
+      - name: Validate browser credentials
+        if: ${{ inputs.verify_browser }}
+        env:
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        shell: bash
+        run: |
+          [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing; disable verify_browser explicitly or configure the secret'; exit 2; }
+
+      - name: Install Chromium
+        if: ${{ inputs.verify_browser }}
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Verify browser interface
+        if: ${{ inputs.verify_browser }}
+        env:
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        run: python -m scripts.browser_smoke_test --base-url "$APP_PUBLIC_URL" --expected-version '${{ inputs.expected_version }}'
+
+      - name: Summary
+        if: always()
+        run: |
+          echo '### Production verification' >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: \`${APP_PUBLIC_URL}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Expected version: \`${{ inputs.expected_version }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Expected commit: \`${{ steps.proof.outputs.commit }}\`" >> "$GITHUB_STEP_SUMMARY"

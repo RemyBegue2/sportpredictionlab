@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Sports Prediction Lab V3.6 Evidence Engine</title>
-<meta content="Application cloud privée avec prédictions pré-match immuables, règlement automatique des résultats et validation en shadow mode." name="description"/>
-<style>:root{--ink:#101820;--muted:#64707a;--paper:#f4f1ea;--card:#fff;--accent:#bbff36;--line:#d7d5cf;--deep:#172b25;--danger:#c53d2f;--shadow:0 22px 70px rgba(16,24,32,.10)}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sports Prediction Lab V3.7 Cloud Control Center</title>
+  <meta name="description" content="Application cloud privée avec prédictions pré-match immuables, règlement automatique des résultats et validation en shadow mode.">
+  <style>
+:root{--ink:#101820;--muted:#64707a;--paper:#f4f1ea;--card:#fff;--accent:#bbff36;--line:#d7d5cf;--deep:#172b25;--danger:#c53d2f;--shadow:0 22px 70px rgba(16,24,32,.10)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.topbar{position:sticky;top:0;z-index:20;height:72px;padding:0 max(24px,calc((100vw - 1240px)/2));display:flex;align-items:center;gap:32px;border-bottom:1px solid rgba(16,24,32,.12);background:rgba(244,241,234,.92);backdrop-filter:blur(16px)}.brand{display:flex;align-items:center;gap:11px;font-weight:800;color:var(--ink);text-decoration:none}.logo{display:grid;place-items:center;width:38px;height:38px;background:var(--ink);color:var(--accent);border-radius:10px;font-size:13px;letter-spacing:.08em}.topbar nav{display:flex;gap:24px;margin-left:auto}.topbar nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:700}.topbar nav a:hover{color:var(--ink)}.pill{padding:7px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;font-weight:800}.pill.ok{color:#1f6b46;border-color:#98c6ac;background:#eaf7ef}.pill.error{color:var(--danger);border-color:#e1aaa5;background:#fff0ee}main{overflow:hidden}.hero{max-width:1240px;margin:0 auto;min-height:650px;padding:96px 24px 72px;display:grid;grid-template-columns:1.35fr .65fr;gap:70px;align-items:center}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.18em;color:#61705c;margin:0 0 14px}.hero h1,.section-heading h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.045em}.hero h1{font-size:clamp(56px,7vw,96px);line-height:.92;margin:0 0 28px}.hero h1 span{color:#58725f}.lede{max-width:720px;font-size:20px;color:var(--muted)}.actions{display:flex;gap:12px;margin-top:34px}.button{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:13px 18px;border:1px solid var(--ink);font-weight:800;font-size:14px;text-decoration:none;cursor:pointer;transition:.18s ease}.button:hover{transform:translateY(-1px)}.button.primary{background:var(--ink);color:#fff}.button.primary:hover{background:var(--deep)}.button.ghost{background:transparent;color:var(--ink)}.button.full{width:100%}.trust-card{background:var(--deep);color:#fff;border-radius:22px;padding:28px;box-shadow:var(--shadow);transform:rotate(1.1deg)}.trust-title{text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:900;color:var(--accent);margin-bottom:18px}.trust-card ol{list-style:none;padding:0;margin:0;counter-reset:item}.trust-card li{padding:16px 0;border-top:1px solid rgba(255,255,255,.15);display:grid;grid-template-columns:1fr auto;gap:10px}.trust-card li b{font-size:15px}.trust-card li span{font-size:12px;color:#b9c6c1}.stats{max-width:1240px;margin:0 auto 70px;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}.stats article{background:var(--card);padding:26px}.stats span{display:block;font-family:Georgia,serif;font-size:42px}.stats small{color:var(--muted)}.workbench{padding:100px max(24px,calc((100vw - 1240px)/2));background:#fff;border-top:1px solid var(--line)}.workbench.alt{background:#e9eee8}.section-heading{max-width:760px;margin-bottom:45px}.section-heading h2{font-size:58px;margin:0 0 10px}.section-heading>p:last-child{color:var(--muted);font-size:18px}.panel-grid{display:grid;grid-template-columns:380px 1fr;gap:28px}.control-panel,.result-panel{border:1px solid var(--line);border-radius:18px;background:var(--card);padding:28px;box-shadow:0 12px 40px rgba(16,24,32,.05)}.control-panel{display:grid;gap:18px}.control-panel label{font-size:13px;font-weight:800;display:grid;gap:8px}.control-panel select,.control-panel input{width:100%;padding:12px 13px;border:1px solid #c9cbc5;border-radius:9px;background:#fff;color:var(--ink);font:inherit}.fineprint{font-size:12px;color:var(--muted);margin:0}.result-panel{min-height:360px}.result-panel.empty{display:grid;place-items:center;color:var(--muted);border-style:dashed}.result-panel h3{margin:0 0 4px;font-size:22px}.result-subtitle{color:var(--muted);margin:0 0 26px}.prob-row{display:grid;grid-template-columns:150px 1fr 64px;gap:14px;align-items:center;margin:16px 0}.prob-label{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar-track{height:18px;background:#eef0eb;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:var(--deep);border-radius:inherit;transition:width .55s ease}.prob-value{text-align:right;font-variant-numeric:tabular-nums;font-weight:900}.result-meta{display:flex;gap:24px;padding-top:22px;margin-top:24px;border-top:1px solid var(--line)}.result-meta div{flex:1}.result-meta small{display:block;color:var(--muted)}.result-meta b{font-size:24px}.score-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}.score-table th,.score-table td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}.warning{margin-top:18px;padding:12px 14px;border-left:4px solid #d3a517;background:#fff9dc;color:#62531b;font-size:12px}.audit-section{padding:100px max(24px,calc((100vw - 1240px)/2));background:var(--ink);color:#fff}.audit-section .eyebrow{color:var(--accent)}.audit-section .section-heading>p:last-child{color:#b6c0c5}.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#334048;border:1px solid #334048}.role-grid article{background:var(--ink);padding:28px;min-height:205px}.role-grid article span{color:var(--accent);font-size:12px;font-weight:900}.role-grid h3{font-size:20px;margin:24px 0 8px}.role-grid p{color:#afbac0;font-size:14px}.audit-callout{display:flex;justify-content:space-between;align-items:center;gap:20px;border:1px solid #445058;border-radius:14px;padding:22px;margin-top:30px}.audit-callout p{margin:5px 0 0;color:#b7c0c5}.audit-callout .button{border-color:#fff;color:#fff}details{margin-top:24px;border-top:1px solid #445058;padding-top:20px}summary{cursor:pointer;font-weight:800}pre{white-space:pre-wrap;word-break:break-word;color:#b9c6c1;font-size:12px;background:#0a1015;padding:18px;border-radius:12px;max-height:460px;overflow:auto}footer{display:flex;justify-content:space-between;padding:28px max(24px,calc((100vw - 1240px)/2));font-size:12px;color:var(--muted);background:#fff;border-top:1px solid var(--line)}#toast{position:fixed;right:24px;bottom:24px;max-width:380px;padding:14px 16px;border-radius:10px;background:var(--danger);color:#fff;font-weight:700;box-shadow:var(--shadow);opacity:0;pointer-events:none;transform:translateY(12px);transition:.2s}#toast.show{opacity:1;transform:none}.loader{display:flex;gap:8px;align-items:center;justify-content:center;height:100%}.loader:before{content:"";width:18px;height:18px;border:3px solid #ccd1ca;border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:900px){.topbar nav{display:none}.hero{grid-template-columns:1fr;padding-top:70px}.trust-card{transform:none}.stats{grid-template-columns:1fr 1fr}.panel-grid{grid-template-columns:1fr}.role-grid{grid-template-columns:1fr 1fr}.hero h1{font-size:58px}}@media(max-width:600px){.topbar{height:64px}.pill{display:none}.hero{min-height:auto;padding:60px 18px}.hero h1{font-size:47px}.lede{font-size:17px}.stats{margin:0 18px 50px;padding:0;grid-template-columns:1fr}.workbench,.audit-section{padding:72px 18px}.section-heading h2{font-size:46px}.role-grid{grid-template-columns:1fr}.prob-row{grid-template-columns:100px 1fr 54px}.audit-callout,footer{align-items:flex-start;flex-direction:column}}
 .bets-section{background:#f7f9f4}.daily-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.slate-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 10px 34px rgba(16,24,32,.05)}.slate-card h3{margin:15px 0 5px;font-size:21px}.slate-card p{margin:0;color:var(--muted)}.slate-card ul{padding-left:19px;color:#59646c;font-size:13px}.slate-card small{color:var(--muted)}.slate-top{display:flex;align-items:center;justify-content:space-between;gap:12px;text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:900;color:#61705c}.decision{padding:6px 9px;border-radius:999px;background:#fff0df;color:#835117}.decision.abstention{background:#f2ece8;color:#765948}.policy-note{margin-top:20px;padding:17px 19px;border:1px solid #b8c4b5;background:#eef5ec;border-radius:12px;font-size:13px;color:#405044}.odds-fieldset{border:1px solid var(--line);border-radius:12px;padding:15px;margin:0;display:grid;gap:13px}.odds-fieldset legend{padding:0 7px;font-size:12px;font-weight:900;color:#4f5f54}.odds-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.odds-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.market-box{margin-top:26px;border-top:1px solid var(--line);padding-top:22px}.market-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:13px}.market-heading small{display:block;color:var(--muted)}.market-heading b{font-size:19px}.market-margin{font-size:12px;font-weight:800;color:#526159;background:#eef2ec;padding:7px 9px;border-radius:999px}.table-scroll{overflow:auto}.market-table{width:100%;border-collapse:collapse;font-size:12px;min-width:650px}.market-table th,.market-table td{text-align:right;padding:9px;border-bottom:1px solid var(--line);white-space:nowrap}.market-table th:first-child,.market-table td:first-child{text-align:left}.market-table td small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em}.loading-card{color:var(--muted)}
@@ -31,170 +31,272 @@
 .funnel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:.65rem}
 .funnel-item{padding:.75rem;border:1px solid var(--border);border-radius:.75rem;background:rgba(0,0,0,.12)}
 .funnel-item b{display:block;font-size:1.35rem}.funnel-item small{display:block;margin-top:.25rem;letter-spacing:0;line-height:1.35}
+.decision-section{background:#f7f3ea}.decision-table{overflow:auto}.decision-score-table{min-width:820px}.gate-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.gate-card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff}.gate-card small{font-weight:900;letter-spacing:.1em}.gate-card h3{font-size:17px;margin:9px 0;text-transform:capitalize}.gate-card p{font-size:11px;color:var(--muted);word-break:break-word}.gate-card.passed{border-top:4px solid #2f7d4a}.gate-card.passed small{color:#2f7d4a}.gate-card.blocked{border-top:4px solid var(--danger)}.gate-card.blocked small{color:var(--danger)}
+@media(max-width:900px){.gate-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.gate-grid{grid-template-columns:1fr}}
+
+/* V3.7 Cloud Control Center */
+.control-section{background:linear-gradient(180deg,rgba(18,28,46,.98),rgba(13,20,34,.98));}
+.control-overview{display:grid;grid-template-columns:minmax(240px,.85fr) minmax(320px,1.65fr);gap:1rem;margin-bottom:1rem;}
+.control-hero-card,.control-actions,.control-check,.workflow-card{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);border-radius:18px;padding:1.1rem;}
+.control-hero-card{display:flex;flex-direction:column;align-items:flex-start;gap:.55rem;}
+.control-hero-card h3{font-size:1.65rem;margin:0;}
+.control-status.ok{color:#91f2bd}.control-status.pending{color:#d7dce8}.control-status.attention{color:#ffd285}.control-status.blocked{color:#ff9999}
+.control-actions{display:grid;gap:.7rem;}
+.control-actions article{display:grid;grid-template-columns:2rem 1fr;gap:.75rem;align-items:start;padding:.7rem;border-radius:12px;background:rgba(0,0,0,.13);}
+.control-actions span{display:grid;place-items:center;width:2rem;height:2rem;border-radius:999px;background:rgba(255,255,255,.1);font-weight:800;}
+.control-actions p{margin:.2rem 0;color:var(--muted);}.control-actions code{display:inline-block;margin-top:.25rem;}
+.control-check-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-bottom:1rem;}
+.control-check{display:flex;flex-direction:column;gap:.7rem;border-top:3px solid rgba(255,255,255,.16);}
+.control-check.ok{border-top-color:#5fd399}.control-check.pending{border-top-color:#8f9bb2}.control-check.attention{border-top-color:#f4bf62}.control-check.blocked{border-top-color:#ef7070}
+.control-check h3,.workflow-card h3{margin:.2rem 0}.control-check p,.workflow-card p{color:var(--muted);margin:0;}
+.control-check footer{margin-top:auto;font-size:.9rem}.control-check footer code{display:block;margin-top:.55rem;}
+.workflow-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem;}
+.workflow-card{display:flex;flex-direction:column;gap:.55rem}.workflow-card code{margin-top:auto}.workflow-card span{font-size:.8rem;color:#ffd285;}
+@media(max-width:980px){.control-overview{grid-template-columns:1fr}.control-check-grid,.workflow-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:640px){.control-check-grid,.workflow-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
-<header class="topbar">
-<a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
-<nav>
-<a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
-</nav>
-<div class="top-actions"><span class="pill" id="health">API ok · v3.6.0</span><button class="logout-button" hidden="" id="logoutButton" type="button">Déconnexion</button></div>
-</header>
-<main>
-<section class="hero" id="overview">
-<div>
-<p class="eyebrow">VERSION 3.6.0 · EVIDENCE ENGINE · CHAMPION–CHALLENGER</p>
-<h1>Des probabilités sportives,<br/><span>pas des certitudes vendues.</span></h1>
-<p class="lede">Une application privée qui fige automatiquement les prédictions avant match, récupère les résultats et mesure sa qualité sans placer le moindre pari.</p>
-<div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
-</div>
-<aside class="trust-card">
-<div class="trust-title">Chaîne de décision</div>
-<ol>
-<li><b>Probabilité modèle</b><span>Pré-match uniquement</span></li>
-<li><b>Cote horodatée</b><span>Winamax via API ou saisie</span></li>
-<li><b>Consensus</b><span>Marchés dévigés</span></li>
-<li><b>Closing line</b><span>Contrôle hors temps</span></li>
-<li><b>Abstention possible</b><span>Aucun pari forcé</span></li>
-</ol>
-</aside>
-</section>
-<section aria-label="Résumé des données" class="stats">
-<article><span id="footballRows">1900</span><small>matchs football embarqués</small></article>
-<article><span id="tennisRows">32</span><small>matchs tennis embarqués</small></article>
-<article><span id="dailyCandidates">0</span><small>candidats recherche aujourd’hui</small></article>
-<article><span id="oddsApiState">prête</span><small>connexion The Odds API</small></article><article><span id="dbSnapshots">1240</span><small>snapshots persistés</small></article>
-<article><span id="shadowState">18</span><small>prédictions shadow réglées</small></article>
-</section>
-<section class="workbench bets-section" id="bets">
-<div class="section-heading"><p class="eyebrow">SHORTLIST QUOTIDIENNE</p><h2>Paris du jour</h2><p>La liste distingue les événements à examiner des paris réellement validés par le protocole. Une cote absente, trop ancienne ou un modèle non calibré déclenchent une abstention.</p></div>
-<div class="daily-grid" id="dailySlate"><div class="slate-card"><div class="slate-top"><span>Premier League</span><b class="decision abstention">abstention</b></div><h3>Aucune sélection validée</h3><p>Le protocole accepte une shortlist vide.</p><ul><li>Échantillon shadow encore insuffisant.</li><li>Vérification directe des cotes toujours requise.</li></ul></div></div>
-<div class="policy-note"><b>Mode Winamax :</b> aucune connexion au compte, aucun scraping authentifié et aucune prise de pari automatique. Recopiez les cotes décimales dans les formulaires ci-dessous pour obtenir l’edge, l’EV et le verdict.</div>
-</section>
-<section class="workbench odds-api-section" id="odds-api">
-<div class="section-heading"><p class="eyebrow">WINAMAX + CONSENSUS</p><h2>Flux de cotes</h2><p>La clé reste exclusivement sur le serveur. Un appel charge le 1N2 Winamax France et un consensus de bookmakers pour les rencontres EPL disponibles, puis applique le même protocole d’abstention.</p></div>
-<div class="provider-grid">
-<article class="provider-card"><small>État du connecteur</small><h3 id="providerStatus">Clé configurée côté serveur</h3><p id="providerQuota">Quota restant : 8 420 · dernier coût : 1</p><code>THE_ODDS_API_KEY</code></article>
-<div class="provider-control">
-<label>Football<select id="oddsSport"><option value="soccer_epl">Premier League · soccer_epl</option></select></label>
-<button class="button primary full" id="loadLiveOdds" type="button">Charger le football</button>
-<p class="fineprint">Modèle embarqué : EPL. Coût attendu : 1 crédit pour h2h et jusqu’à 10 bookmakers.</p>
-</div>
-<div class="provider-control">
-<label>Tournoi tennis actif<select id="oddsTennisSport"><option value="">Clé chargée depuis le fournisseur</option></select></label>
-<label>Surface<select id="oddsTennisSurface"><option value="hard">Dur</option><option value="clay">Terre battue</option><option value="grass">Gazon</option></select></label>
-<button class="button ghost full" id="loadTennisOdds" type="button">Charger le tennis</button>
-<p class="fineprint">Les tournois sont découverts dynamiquement. Le modèle snapshot reste non calibré et doit normalement s’abstenir.</p>
-</div>
-</div>
-<div class="daily-grid provider-results" id="liveOddsResult"><div class="slate-card"><h3>Connecteur prêt</h3><p>Chargement manuel désactivé dans cet aperçu statique.</p></div></div>
-<div class="policy-note"><b>Secret :</b> ne collez pas la clé dans cette page. Définissez-la dans l’environnement du serveur. L’application ne place aucun pari et exige toujours une vérification directe de la cote chez Winamax.</div>
-</section>
-<section class="workbench cloud-section" id="cloud">
-<div class="section-heading"><p class="eyebrow">CLOUD &amp; TRAÇABILITÉ</p><h2>État de la plateforme</h2><p>La version cloud sépare liveness, readiness, stockage et historique. Une prédiction n’est considérée exploitable que si les modèles sont chargés et si son journal peut être écrit en base.</p></div>
-<div class="cloud-grid">
-<article class="cloud-card"><small>Authentification</small><h3 id="cloudAuth">Accès privé</h3><p>Session privée et protection CSRF pour les actions d’écriture.</p></article>
-<article class="cloud-card"><small>Base de données</small><h3 id="cloudDatabase">Connectée</h3><p id="cloudLastSync">Dernière synchronisation inconnue.</p></article>
-<article class="cloud-card"><small>Readiness</small><h3 id="cloudReady">Prête</h3><p id="cloudIssues">Modèles, intégrité et stockage validés.</p></article>
-<article class="cloud-card"><small>Release active</small><h3 id="systemRelease">v3.6.0 · 7e13c921b4af</h3><p id="systemCommit">Commit 9f1c4b72a3d1 · déploiement vérifié</p></article>
-<article class="cloud-card"><small>Modèle football</small><h3 id="systemModel">3.6.0-fresh</h3><p id="systemDataset">Données jusqu’au 24/05/2026 · 1 900 matchs</p></article>
-<article class="cloud-card"><small>Contrat de déploiement</small><h3 id="systemIntegrity">Vérifié</h3><p id="systemContract">4/4 contrôles réussis · artefact 6a1fd33b2e91</p></article>
-</div>
-<div class="history-panel system-panel">
-<div class="history-heading"><div><small>PREUVE OPÉRATIONNELLE</small><h3>Version, commit et artefacts</h3></div><button class="button ghost" id="refreshSystem" type="button">Vérifier</button></div>
-<div class="policy-note" id="systemIssues">Contrat vérifié : version API, commit, registre et intégrité des artefacts sont cohérents.</div>
-<div class="history-list" id="systemModels"><div class="history-row"><div><b>football</b><small>football-1n2-shadow</small></div><div><b>v3.6.0-fresh</b><small>entraîné jusqu’au 24/05/2026</small></div><span class="history-decision">shadow</span><time class="history-time">6a1fd33b2e91</time></div></div>
-</div>
-<div class="history-panel">
-<div class="history-heading"><div><small>JOURNAL D’AUDIT</small><h3>Dernières prédictions</h3></div><button class="button ghost" id="refreshHistory" type="button">Actualiser</button></div>
-<div class="history-list" id="predictionHistory"><div class="history-row"><div><b>football</b><small>v3.6.0-fresh</small></div><div><b>Arsenal — Man City</b><small>observation shadow</small></div><span class="history-decision">abstention</span><time class="history-time">02/08/2026</time></div></div>
-</div>
-</section>
-<section class="workbench shadow-section" id="shadow">
-<div class="section-heading"><p class="eyebrow">OBSERVATION EN CONDITIONS RÉELLES</p><h2>Shadow mode</h2><p>Le cron fige les probabilités, l'heure de la cote et la version du modèle avant le coup d’envoi. Les résultats sont ensuite rapprochés automatiquement. Aucune mise n’est proposée ni transmise à Winamax.</p></div>
-<div class="benchmark-grid">
-<article class="benchmark-card"><small>Prédictions figées</small><h3 id="shadowTotal">24</h3><p>Enregistrements immuables et dédupliqués par empreinte SHA-256.</p></article>
-<article class="benchmark-card"><small>Résultats évalués</small><h3 id="shadowSettled">18</h3><p id="shadowMaturity">Échantillon anecdotique.</p></article>
-<article class="benchmark-card"><small>Log-loss observée</small><h3 id="shadowLogLoss">1.0412</h3><p>Score probabiliste principal, plus fiable qu’un ROI isolé.</p></article>
-<article class="benchmark-card"><small>Résultat fictif normalisé</small><h3 id="shadowReturn">−0.80 u</h3><p>Une unité théorique par candidat, sans conseil de mise.</p></article>
-</div>
-<div class="policy-note" id="shadowModelWarning"><b>Modèle football :</b> contrôle de fraîcheur en cours.</div>
-<div class="history-panel">
-<div class="history-heading"><div><small>CYCLE AUTOMATIQUE</small><h3 id="shadowLastCycle">success · 02/08/2026 21:15:00</h3><p id="shadowCycleMeta">Durée 4,8 s · quota 8421 → 8420 · verrou acquis</p></div><button class="button ghost" id="refreshShadow" type="button">Actualiser</button></div>
-<div class="zero-explainer">
-<div><small>POURQUOI ZÉRO ?</small><h3 id="shadowZeroReason">Aucune rencontre au jalon requis</h3></div>
-<div class="funnel-grid" id="shadowFunnel"><div class="funnel-item"><b>12</b><small>Événements fournisseur</small></div><div class="funnel-item"><b>10</b><small>Hors jalons</small></div><div class="funnel-item"><b>2</b><small>Winamax absent</small></div><div class="funnel-item"><b>0</b><small>Prédictions créées</small></div></div>
-</div>
-<div class="history-list" id="shadowHistory"><div class="history-row"><div><b>settled</b><small>football-1n2-shadow · t-1h</small></div><div><b>Liverpool — Arsenal</b><small>01/08/2026</small></div><span class="history-decision">abstention</span><time class="history-time">1-1</time></div></div>
-</div>
-<div class="policy-note"><b>Veto statistique :</b> moins de 100 résultats reste anecdotique. Le mode shadow valide la collecte et la discipline temporelle ; il ne démontre pas encore un avantage rentable.</div>
-</section>
-<section class="workbench benchmark-section" id="benchmark">
-<div class="section-heading"><p class="eyebrow">PREUVE HORS ÉCHANTILLON</p><h2>Validation marché</h2><p>Le benchmark compare séparément le modèle, Winamax, le consensus dévigé et une combinaison apprise uniquement sur les périodes antérieures. Les lignes temporellement invalides sont rejetées, jamais réparées silencieusement.</p></div>
-<div class="benchmark-grid">
-<article class="benchmark-card"><small>Verdict actuel</small><h3 id="benchmarkVerdict">Non évaluable</h3><p id="benchmarkReason">Le cloud fonctionne, mais aucun historique réel suffisant n’a encore été évalué.</p></article>
-<article class="benchmark-card"><small>Échantillon évalué</small><h3 id="benchmarkRows">18</h3><p>Promotion analytique seulement après un nombre suffisant de prédictions hors échantillon.</p></article>
-<article class="benchmark-card"><small>Modèle − Winamax</small><h3 id="benchmarkDelta">—</h3><p id="benchmarkCi">Échantillon insuffisant.</p></article>
-<article class="benchmark-card"><small>Closing line value</small><h3 id="benchmarkClv">—</h3><p>Indicateur secondaire : une CLV positive ne garantit pas un bénéfice futur.</p></article>
-</div>
-<div class="policy-note"><b>Règle de promotion :</b> le ROI seul ne suffit pas. La décision exige des scores probabilistes, des folds chronologiques, un intervalle bootstrap par blocs, une identité d’événement fiable et une absence de fuite temporelle.</div>
-</section>
-<section class="workbench alt" id="football">
-<div class="section-heading"><p class="eyebrow">MODÈLE 1N2 + COTES</p><h2>Football</h2><p>Poisson, correction Dixon–Coles et Elo. Les trois cotes Winamax sont facultatives, mais doivent être saisies ensemble pour calculer la marge et comparer le marché complet.</p></div>
-<div class="panel-grid">
-<form class="control-panel" id="footballForm">
-<label>Équipe à domicile<select id="homeTeam" required=""></select></label>
-<label>Équipe à l’extérieur<select id="awayTeam" required=""></select></label>
-<label>Date du match<input id="footballDate" type="date"/></label>
-<fieldset class="odds-fieldset">
-<legend>Cotes Winamax facultatives</legend>
-<div class="odds-grid three"><label>1<input id="footballHomeOdds" max="1000" min="1.01" placeholder="1,80" step="0.01" type="number"/></label><label>N<input id="footballDrawOdds" max="1000" min="1.01" placeholder="3,60" step="0.01" type="number"/></label><label>2<input id="footballAwayOdds" max="1000" min="1.01" placeholder="4,20" step="0.01" type="number"/></label></div>
-<label>Heure relevée<input id="footballOddsTime" type="datetime-local"/></label>
-</fieldset>
-<button class="button primary full" type="submit">Calculer probabilités et valeur</button>
-<p class="fineprint">Le snapshot embarqué sert à tester le produit. Un statut « candidat recherche » n’est pas une consigne de mise.</p>
-</form>
-<div class="result-panel empty" id="footballResult"><p>Sélectionnez deux équipes et, éventuellement, les trois cotes Winamax.</p></div>
-</div>
-</section>
-<section class="workbench" id="tennis">
-<div class="section-heading"><p class="eyebrow">ELO GLOBAL + SURFACE</p><h2>Tennis</h2><p>Orientation symétrique et Elo par surface. Le snapshot ATP embarqué reste non calibré : même avec des cotes, le comparateur doit conclure à l’abstention.</p></div>
-<div class="panel-grid">
-<form class="control-panel" id="tennisForm">
-<label>Joueur 1<select id="player1" required=""></select></label>
-<label>Joueur 2<select id="player2" required=""></select></label>
-<label>Surface<select id="surface"><option value="hard">Dur</option><option value="clay">Terre battue</option><option value="grass">Gazon</option><option value="carpet">Moquette</option></select></label>
-<fieldset class="odds-fieldset">
-<legend>Cotes Winamax facultatives</legend>
-<div class="odds-grid"><label>Joueur 1<input id="tennisP1Odds" max="1000" min="1.01" placeholder="1,65" step="0.01" type="number"/></label><label>Joueur 2<input id="tennisP2Odds" max="1000" min="1.01" placeholder="2,25" step="0.01" type="number"/></label></div>
-<label>Heure relevée<input id="tennisOddsTime" type="datetime-local"/></label>
-</fieldset>
-<button class="button primary full" type="submit">Calculer probabilités et valeur</button>
-<p class="fineprint">Les walkovers et abandons sont exclus. Blessures, fatigue tardive et informations de dernière minute restent hors modèle.</p>
-</form>
-<div class="result-panel empty" id="tennisResult"><p>Sélectionnez deux joueurs et, éventuellement, les deux cotes Winamax.</p></div>
-</div>
-</section>
-<section class="audit-section" id="audit">
-<div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.6</h2></div>
-<div class="role-grid">
-<article><span>01</span><h3>Quant marchés</h3><p>Le shadow mode sépare la qualité du modèle, le prix Winamax et le consensus sans confondre signal et résultat financier.</p></article>
-<article><span>02</span><h3>Statisticien</h3><p>Chaque prédiction est figée avant match et l’échantillon est classé anecdotique, exploratoire ou évaluable.</p></article>
-<article><span>03</span><h3>Data engineer</h3><p>Empreintes, timestamps UTC, déduplication, rapprochement des résultats et journal append-only.</p></article>
-<article><span>04</span><h3>FinOps API</h3><p>Le cron s’arrête sous un plancher de quota et regroupe les bookmakers dans une seule requête h2h.</p></article>
-<article><span>05</span><h3>Sécurité</h3><p>Clé côté serveur, endpoints privés, CSP stricte et aucune donnée secrète dans les journaux shadow.</p></article>
-<article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
-</div>
-<div class="audit-callout">
-<div><b>Verdict</b><p>V3.6 = chaque déploiement relie version, commit, modèle, dataset et métriques. Aucun workflow vert ne vaut preuve sans contrôle post-déploiement.</p></div>
-<a class="button ghost" href="/docs" rel="noreferrer" target="_blank">API interactive</a>
-</div>
-<details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
-</section>
-</main>
-<footer><span>Sports Prediction Lab V3.6 Evidence Engine</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
-<div aria-live="polite" id="toast" role="status"></div>
+  <header class="topbar">
+    <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
+    <nav>
+      <a href="#control">Pilotage</a><a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
+    </nav>
+    <div class="top-actions"><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
+  </header>
+
+  <main>
+    <section id="overview" class="hero">
+      <div>
+        <p class="eyebrow">VERSION 3.7.0 · CLOUD CONTROL CENTER · ZÉRO PYTHON LOCAL</p>
+        <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
+        <p class="lede">Une application privée pilotée depuis GitHub Actions et Railway : déploiement vérifié, tâches historiques plafonnées et pack de reprise téléchargeable sans Python sur votre ordinateur.</p>
+        <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
+      </div>
+      <aside class="trust-card">
+        <div class="trust-title">Chaîne de décision</div>
+        <ol>
+          <li><b>Probabilité modèle</b><span>Pré-match uniquement</span></li>
+          <li><b>Cote horodatée</b><span>Winamax via API ou saisie</span></li>
+          <li><b>Consensus</b><span>Marchés dévigés</span></li>
+          <li><b>Closing line</b><span>Contrôle hors temps</span></li>
+          <li><b>Abstention possible</b><span>Aucun pari forcé</span></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="stats" aria-label="Résumé des données">
+      <article><span id="footballRows">—</span><small>matchs football embarqués</small></article>
+      <article><span id="tennisRows">—</span><small>matchs tennis embarqués</small></article>
+      <article><span id="dailyCandidates">—</span><small>candidats recherche aujourd’hui</small></article>
+      <article><span id="oddsApiState">—</span><small>connexion The Odds API</small></article><article><span id="dbSnapshots">—</span><small>snapshots persistés</small></article>
+      <article><span id="shadowState">—</span><small>prédictions shadow réglées</small></article>
+    </section>
+
+    <section id="control" class="workbench control-section">
+      <div class="section-heading"><p class="eyebrow">PILOTAGE CLOUD</p><h2>Centre de contrôle</h2><p>Cette vue transforme l’état technique en actions concrètes. Toutes les opérations sont prévues pour GitHub Actions et Railway ; aucun Python local n’est requis.</p></div>
+      <div class="control-overview">
+        <article class="control-hero-card"><small>ÉTAT GLOBAL</small><h3 id="controlOverall">—</h3><p id="controlSummary">Chargement des contrôles…</p><button id="refreshControl" class="button ghost" type="button">Actualiser</button></article>
+        <div id="controlNextActions" class="control-actions"><p>Chargement des prochaines actions…</p></div>
+      </div>
+      <div id="controlChecks" class="control-check-grid"><p>Chargement des vérifications…</p></div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>BOUTONS GITHUB ACTIONS</small><h3>Opérations disponibles</h3><p>Ouvrez l’onglet Actions du dépôt, choisissez le workflow indiqué et cliquez sur Run workflow.</p></div></div>
+        <div id="controlWorkflows" class="workflow-grid"><p>Chargement du catalogue des workflows…</p></div>
+      </div>
+      <div class="policy-note"><b>Garde-fous :</b> aucune promotion automatique de modèle, aucune mise conseillée et aucun pari transmis à Winamax.</div>
+    </section>
+
+    <section id="bets" class="workbench bets-section">
+      <div class="section-heading"><p class="eyebrow">SHORTLIST QUOTIDIENNE</p><h2>Paris du jour</h2><p>La liste distingue les événements à examiner des paris réellement validés par le protocole. Une cote absente, trop ancienne ou un modèle non calibré déclenchent une abstention.</p></div>
+      <div id="dailySlate" class="daily-grid"><div class="slate-card loading-card">Chargement de la revue du jour…</div></div>
+      <div class="policy-note"><b>Mode Winamax :</b> aucune connexion au compte, aucun scraping authentifié et aucune prise de pari automatique. Recopiez les cotes décimales dans les formulaires ci-dessous pour obtenir l’edge, l’EV et le verdict.</div>
+    </section>
+
+    <section id="odds-api" class="workbench odds-api-section">
+      <div class="section-heading"><p class="eyebrow">WINAMAX + CONSENSUS</p><h2>Flux de cotes</h2><p>La clé reste exclusivement sur le serveur. Un appel charge le 1N2 Winamax France et un consensus de bookmakers pour les rencontres EPL disponibles, puis applique le même protocole d’abstention.</p></div>
+      <div class="provider-grid">
+        <article class="provider-card"><small>État du connecteur</small><h3 id="providerStatus">Chargement…</h3><p id="providerQuota">Quota inconnu</p><code>THE_ODDS_API_KEY</code></article>
+        <div class="provider-control">
+          <label>Football<select id="oddsSport"><option value="soccer_epl">Premier League · soccer_epl</option></select></label>
+          <button id="loadLiveOdds" class="button primary full" type="button">Charger le football</button>
+          <p class="fineprint">Modèle embarqué : EPL. Coût attendu : 1 crédit pour h2h et jusqu’à 10 bookmakers.</p>
+        </div>
+        <div class="provider-control">
+          <label>Tournoi tennis actif<select id="oddsTennisSport"><option value="">Clé chargée depuis le fournisseur</option></select></label>
+          <label>Surface<select id="oddsTennisSurface"><option value="hard">Dur</option><option value="clay">Terre battue</option><option value="grass">Gazon</option></select></label>
+          <button id="loadTennisOdds" class="button ghost full" type="button">Charger le tennis</button>
+          <p class="fineprint">Les tournois sont découverts dynamiquement. Le modèle snapshot reste non calibré et doit normalement s’abstenir.</p>
+        </div>
+      </div>
+      <div id="liveOddsResult" class="daily-grid provider-results"><div class="slate-card loading-card">Connecteur en attente.</div></div>
+      <div class="policy-note"><b>Secret :</b> ne collez pas la clé dans cette page. Définissez-la dans l’environnement du serveur. L’application ne place aucun pari et exige toujours une vérification directe de la cote chez Winamax.</div>
+    </section>
+
+
+    <section id="cloud" class="workbench cloud-section">
+      <div class="section-heading"><p class="eyebrow">CLOUD & TRAÇABILITÉ</p><h2>État de la plateforme</h2><p>La version cloud sépare liveness, readiness, stockage et historique. Une prédiction n’est considérée exploitable que si les modèles sont chargés et si son journal peut être écrit en base.</p></div>
+      <div class="cloud-grid">
+        <article class="cloud-card"><small>Authentification</small><h3 id="cloudAuth">—</h3><p>Session privée et protection CSRF pour les actions d’écriture.</p></article>
+        <article class="cloud-card"><small>Base de données</small><h3 id="cloudDatabase">—</h3><p id="cloudLastSync">Dernière synchronisation inconnue.</p></article>
+        <article class="cloud-card"><small>Readiness</small><h3 id="cloudReady">—</h3><p id="cloudIssues">Contrôle en cours.</p></article>
+        <article class="cloud-card"><small>Release active</small><h3 id="systemRelease">—</h3><p id="systemCommit">Commit inconnu.</p></article>
+        <article class="cloud-card"><small>Modèle football</small><h3 id="systemModel">—</h3><p id="systemDataset">Dataset inconnu.</p></article>
+        <article class="cloud-card"><small>Contrat de déploiement</small><h3 id="systemIntegrity">—</h3><p id="systemContract">Vérification en cours.</p></article>
+      </div>
+      <div class="history-panel system-panel">
+        <div class="history-heading"><div><small>PREUVE OPÉRATIONNELLE</small><h3>Version, commit et artefacts</h3></div><button id="refreshSystem" class="button ghost" type="button">Vérifier</button></div>
+        <div id="systemIssues" class="policy-note">Contrôle du déploiement en cours.</div>
+        <div id="systemModels" class="history-list"><p>Chargement du registre des modèles…</p></div>
+      </div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>JOURNAL D’AUDIT</small><h3>Dernières prédictions</h3></div><button id="refreshHistory" class="button ghost" type="button">Actualiser</button></div>
+        <div id="predictionHistory" class="history-list"><p>Chargement du journal…</p></div>
+      </div>
+    </section>
+
+
+    <section id="shadow" class="workbench shadow-section">
+      <div class="section-heading"><p class="eyebrow">OBSERVATION EN CONDITIONS RÉELLES</p><h2>Shadow mode</h2><p>Le cron fige les probabilités, l'heure de la cote et la version du modèle avant le coup d’envoi. Les résultats sont ensuite rapprochés automatiquement. Aucune mise n’est proposée ni transmise à Winamax.</p></div>
+      <div class="benchmark-grid">
+        <article class="benchmark-card"><small>Prédictions figées</small><h3 id="shadowTotal">0</h3><p>Enregistrements immuables et dédupliqués par empreinte SHA-256.</p></article>
+        <article class="benchmark-card"><small>Résultats évalués</small><h3 id="shadowSettled">0</h3><p id="shadowMaturity">Échantillon anecdotique.</p></article>
+        <article class="benchmark-card"><small>Log-loss observée</small><h3 id="shadowLogLoss">—</h3><p>Score probabiliste principal, plus fiable qu’un ROI isolé.</p></article>
+        <article class="benchmark-card"><small>Résultat fictif normalisé</small><h3 id="shadowReturn">—</h3><p>Une unité théorique par candidat, sans conseil de mise.</p></article>
+      </div>
+      <div id="shadowModelWarning" class="policy-note"><b>Modèle football :</b> contrôle de fraîcheur en cours.</div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>CYCLE AUTOMATIQUE</small><h3 id="shadowLastCycle">Aucun cycle enregistré</h3><p id="shadowCycleMeta">Durée et quota indisponibles.</p></div><button id="refreshShadow" class="button ghost" type="button">Actualiser</button></div>
+        <div class="zero-explainer">
+          <div><small>POURQUOI ZÉRO ?</small><h3 id="shadowZeroReason">Diagnostic en attente</h3></div>
+          <div id="shadowFunnel" class="funnel-grid"><p>Aucun compteur disponible.</p></div>
+        </div>
+        <div id="shadowHistory" class="history-list"><p>Chargement du journal shadow…</p></div>
+      </div>
+      <div class="policy-note"><b>Veto statistique :</b> moins de 100 résultats reste anecdotique. Le mode shadow valide la collecte et la discipline temporelle ; il ne démontre pas encore un avantage rentable.</div>
+    </section>
+
+
+    <section id="benchmark" class="workbench benchmark-section">
+      <div class="section-heading"><p class="eyebrow">PREUVE HORS ÉCHANTILLON</p><h2>Validation marché</h2><p>Le benchmark compare séparément le modèle, Winamax, le consensus dévigé et une combinaison apprise uniquement sur les périodes antérieures. Les lignes temporellement invalides sont rejetées, jamais réparées silencieusement.</p></div>
+      <div class="benchmark-grid">
+        <article class="benchmark-card"><small>Verdict actuel</small><h3 id="benchmarkVerdict">Non exécuté</h3><p id="benchmarkReason">Le cloud fonctionne, mais aucun historique réel suffisant n’a encore été évalué.</p></article>
+        <article class="benchmark-card"><small>Échantillon évalué</small><h3 id="benchmarkRows">0</h3><p>Promotion analytique seulement après un nombre suffisant de prédictions hors échantillon.</p></article>
+        <article class="benchmark-card"><small>Modèle − Winamax</small><h3 id="benchmarkDelta">—</h3><p id="benchmarkCi">Intervalle de confiance indisponible.</p></article>
+        <article class="benchmark-card"><small>Closing line value</small><h3 id="benchmarkClv">—</h3><p>Indicateur secondaire : une CLV positive ne garantit pas un bénéfice futur.</p></article>
+      </div>
+      <div class="policy-note"><b>Règle de promotion :</b> le ROI seul ne suffit pas. La décision exige des scores probabilistes, des folds chronologiques, un intervalle bootstrap par blocs, une identité d’événement fiable et une absence de fuite temporelle.</div>
+    </section>
+
+    <section id="decision" class="workbench decision-section">
+      <div class="section-heading"><p class="eyebrow">CHAMPION–CHALLENGER</p><h2>Décision modèle</h2><p>Le verdict est produit par des règles déterministes. Aucun challenger n’est promu automatiquement et aucune performance passée n’est présentée comme une garantie de rentabilité.</p></div>
+      <div class="benchmark-grid">
+        <article class="benchmark-card"><small>Verdict</small><h3 id="decisionStatus">Non évaluable</h3><p id="decisionReason">Aucun benchmark champion–challenger complet.</p></article>
+        <article class="benchmark-card"><small>Champion évalué</small><h3 id="decisionChampion">—</h3><p>Le champion reste inchangé tant qu’une revue humaine n’a pas approuvé sa transition.</p></article>
+        <article class="benchmark-card"><small>Historique hors échantillon</small><h3 id="decisionHistorical">0</h3><p>Seuil cible : 1 000 prédictions temporellement valides.</p></article>
+        <article class="benchmark-card"><small>Live shadow réglé</small><h3 id="decisionLive">0</h3><p>Seuil cible : 200 observations au même horizon.</p></article>
+      </div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>CLASSEMENT DES CONTENDERS</small><h3>Scores probabilistes comparables</h3></div><button id="refreshDecision" class="button ghost" type="button">Actualiser</button></div>
+        <div id="decisionLeaderboard" class="decision-table"><p>Aucune évaluation disponible.</p></div>
+      </div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>PORTES DE PROMOTION</small><h3>Pourquoi le modèle reste ou change de statut</h3></div></div>
+        <div id="decisionGates" class="gate-grid"><p>Aucune porte évaluée.</p></div>
+      </div>
+      <div class="policy-note"><b>Règle ferme :</b> un statut « promotion_review » déclenche uniquement une revue humaine. Il ne change jamais automatiquement le modèle actif et ne produit aucune taille de mise.</div>
+    </section>
+
+    <section id="football" class="workbench alt">
+      <div class="section-heading"><p class="eyebrow">MODÈLE 1N2 + COTES</p><h2>Football</h2><p>Poisson, correction Dixon–Coles et Elo. Les trois cotes Winamax sont facultatives, mais doivent être saisies ensemble pour calculer la marge et comparer le marché complet.</p></div>
+      <div class="panel-grid">
+        <form id="footballForm" class="control-panel">
+          <label>Équipe à domicile<select id="homeTeam" required></select></label>
+          <label>Équipe à l’extérieur<select id="awayTeam" required></select></label>
+          <label>Date du match<input id="footballDate" type="date"></label>
+          <fieldset class="odds-fieldset">
+            <legend>Cotes Winamax facultatives</legend>
+            <div class="odds-grid three"><label>1<input id="footballHomeOdds" type="number" min="1.01" max="1000" step="0.01" placeholder="1,80"></label><label>N<input id="footballDrawOdds" type="number" min="1.01" max="1000" step="0.01" placeholder="3,60"></label><label>2<input id="footballAwayOdds" type="number" min="1.01" max="1000" step="0.01" placeholder="4,20"></label></div>
+            <label>Heure relevée<input id="footballOddsTime" type="datetime-local"></label>
+          </fieldset>
+          <button class="button primary full" type="submit">Calculer probabilités et valeur</button>
+          <p class="fineprint">Le snapshot embarqué sert à tester le produit. Un statut « candidat recherche » n’est pas une consigne de mise.</p>
+        </form>
+        <div id="footballResult" class="result-panel empty"><p>Sélectionnez deux équipes et, éventuellement, les trois cotes Winamax.</p></div>
+      </div>
+    </section>
+
+    <section id="tennis" class="workbench">
+      <div class="section-heading"><p class="eyebrow">ELO GLOBAL + SURFACE</p><h2>Tennis</h2><p>Orientation symétrique et Elo par surface. Le snapshot ATP embarqué reste non calibré : même avec des cotes, le comparateur doit conclure à l’abstention.</p></div>
+      <div class="panel-grid">
+        <form id="tennisForm" class="control-panel">
+          <label>Joueur 1<select id="player1" required></select></label>
+          <label>Joueur 2<select id="player2" required></select></label>
+          <label>Surface<select id="surface"><option value="hard">Dur</option><option value="clay">Terre battue</option><option value="grass">Gazon</option><option value="carpet">Moquette</option></select></label>
+          <fieldset class="odds-fieldset">
+            <legend>Cotes Winamax facultatives</legend>
+            <div class="odds-grid"><label>Joueur 1<input id="tennisP1Odds" type="number" min="1.01" max="1000" step="0.01" placeholder="1,65"></label><label>Joueur 2<input id="tennisP2Odds" type="number" min="1.01" max="1000" step="0.01" placeholder="2,25"></label></div>
+            <label>Heure relevée<input id="tennisOddsTime" type="datetime-local"></label>
+          </fieldset>
+          <button class="button primary full" type="submit">Calculer probabilités et valeur</button>
+          <p class="fineprint">Les walkovers et abandons sont exclus. Blessures, fatigue tardive et informations de dernière minute restent hors modèle.</p>
+        </form>
+        <div id="tennisResult" class="result-panel empty"><p>Sélectionnez deux joueurs et, éventuellement, les deux cotes Winamax.</p></div>
+      </div>
+    </section>
+
+    <section id="audit" class="audit-section">
+      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.7</h2></div>
+      <div class="role-grid">
+        <article><span>01</span><h3>Quant marchés</h3><p>Le shadow mode sépare la qualité du modèle, le prix Winamax et le consensus sans confondre signal et résultat financier.</p></article>
+        <article><span>02</span><h3>Statisticien</h3><p>Chaque prédiction est figée avant match et l’échantillon est classé anecdotique, exploratoire ou évaluable.</p></article>
+        <article><span>03</span><h3>Data engineer</h3><p>Empreintes, timestamps UTC, déduplication, rapprochement des résultats et journal append-only.</p></article>
+        <article><span>04</span><h3>FinOps API</h3><p>Le cron s’arrête sous un plancher de quota et regroupe les bookmakers dans une seule requête h2h.</p></article>
+        <article><span>05</span><h3>Sécurité</h3><p>Clé côté serveur, endpoints privés, CSP stricte et aucune donnée secrète dans les journaux shadow.</p></article>
+        <article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
+      </div>
+      <div class="audit-callout">
+        <div><b>Verdict</b><p>V3.7 = les opérations courantes sont déclenchées depuis GitHub Actions, vérifiées sur Railway et résumées par des actions compréhensibles. Les règles statistiques de la V3.6 restent inchangées.</p></div>
+        <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
+      </div>
+      <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
+    </section>
+  </main>
+
+  <footer><span>Sports Prediction Lab V3.7 Cloud Control Center</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <div id="toast" role="status" aria-live="polite"></div>
+  
+
+<script>
+const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+setText('health','API ok · v3.7.0'); document.getElementById('health')?.classList.add('ok');
+setText('footballRows','1 828'); setText('tennisRows','3 600'); setText('dailyCandidates','0');
+setText('oddsApiState','configuré'); setText('dbSnapshots','128'); setText('shadowState','84');
+setText('controlOverall','ACTION NÉCESSAIRE');
+setText('controlSummary','3 contrôles opérationnels · 2 en attente · 1 action à examiner · 0 blocage');
+const checks=[
+ ['Production','ok','Version 3.7.0 · commit et modèle vérifiés'],
+ ['Base PostgreSQL','ok','Connectée · journal des prédictions disponible'],
+ ['Registre des modèles','attention','Champion absent : modèles conservés en shadow'],
+ ['Cycle shadow','ok','Dernier cycle terminé il y a 3,0 h'],
+ ['Preuve statistique','pending','Verdict non évaluable · petit lot historique requis'],
+ ['Collecte historique','pending','Aucun lot historique réel enregistré']
+];
+const cc=document.getElementById('controlChecks'); if(cc)cc.innerHTML=checks.map(([l,s,d])=>`<article class="control-check ${s}"><div><small>${s.toUpperCase()}</small><h3>${l}</h3></div><p>${d}</p></article>`).join('');
+const na=document.getElementById('controlNextActions'); if(na)na.innerHTML='<article><small>PRIORITÉ 1</small><b>Lancer Historical validation sample en mode plan_only</b><p>Aucun crédit API consommé.</p></article><article><small>PRIORITÉ 2</small><b>Continuer la collecte shadow</b><p>Aucune promotion automatique.</p></article>';
+const workflows=['Deploy production','Verify production','Generate handoff package','Historical validation sample','Backup and verify database','Rollback model release','Rebuild fresh football model'];
+const wf=document.getElementById('controlWorkflows'); if(wf)wf.innerHTML=workflows.map(x=>`<article class="workflow-card"><small>GITHUB ACTIONS</small><h3>${x}</h3><p>Actions → ${x} → Run workflow</p></article>`).join('');
+setText('providerStatus','Configuré'); setText('providerQuota','Quota disponible : exemple de prévisualisation');
+setText('cloudAuth','Privée'); setText('cloudDatabase','PostgreSQL connecté'); setText('cloudReady','Prêt');
+setText('systemRelease','3.7.0'); setText('systemCommit','Commit vérifié : a12bc34'); setText('systemModel','football-fresh');
+setText('systemDataset','Dataset et hash vérifiés'); setText('systemIntegrity','OK'); setText('systemContract','Version, commit et artefacts cohérents');
+setText('shadowLastCycle','success · 02/08/2026 21:15'); setText('shadowCycleMeta','Durée 4,8 s · verrou acquis');
+setText('benchmarkVerdict','Non évaluable'); setText('benchmarkReason','Échantillon réel encore insuffisant.'); setText('benchmarkRows','0');
+setText('decisionStatus','Continuer le shadow'); setText('decisionReason','Seuils historiques et live non atteints.'); setText('decisionChampion','football-1n2-shadow');
+setText('decisionHistorical','0 / 1 000'); setText('decisionLive','84 / 200');
+setText('metrics',JSON.stringify({version:'3.7.0',local_python_required:false,automatic_bet_placement:false,automatic_model_promotion:false},null,2));
+</script>
 
 </body>
 </html>

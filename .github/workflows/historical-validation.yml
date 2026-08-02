@@ -1,0 +1,155 @@
+name: Historical validation sample
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Plan only consumes no API credits; execute_sample performs capped discovery and odds calls
+        required: true
+        type: choice
+        options:
+          - plan_only
+          - execute_sample
+        default: plan_only
+      start_date:
+        description: Start date YYYY-MM-DD
+        required: true
+        type: string
+      end_date:
+        description: End date YYYY-MM-DD
+        required: true
+        type: string
+      sample_events:
+        description: Maximum events, hard capped at 30
+        required: true
+        type: number
+        default: 30
+      max_discovery_calls:
+        description: Maximum historical event-discovery API calls
+        required: true
+        type: number
+        default: 14
+      max_odds_credits:
+        description: Maximum credits for historical odds snapshots
+        required: true
+        type: number
+        default: 150
+      confirmation:
+        description: Type EXECUTE_SAMPLE only when mode is execute_sample
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: historical-validation
+  cancel-in-progress: false
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Validate safe inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ inputs.sample_events }}' -gt 30 ] || [ '${{ inputs.sample_events }}' -lt 1 ]; then
+            echo 'sample_events must be between 1 and 30'; exit 2
+          fi
+          if [ '${{ inputs.max_discovery_calls }}' -gt 31 ] || [ '${{ inputs.max_discovery_calls }}' -lt 1 ]; then
+            echo 'max_discovery_calls must be between 1 and 31'; exit 2
+          fi
+          if [ '${{ inputs.max_odds_credits }}' -gt 200 ] || [ '${{ inputs.max_odds_credits }}' -lt 1 ]; then
+            echo 'max_odds_credits must be between 1 and 200'; exit 2
+          fi
+          if [ '${{ inputs.mode }}' = 'execute_sample' ]; then
+            [ '${{ inputs.confirmation }}' = 'EXECUTE_SAMPLE' ] || { echo 'Confirmation must equal EXECUTE_SAMPLE'; exit 2; }
+            [ -n "${THE_ODDS_API_KEY:-}" ] || { echo 'THE_ODDS_API_KEY GitHub secret is missing'; exit 2; }
+            [ -n "${DATABASE_URL:-}" ] || { echo 'DATABASE_URL GitHub secret is missing'; exit 2; }
+          fi
+
+      - name: Build zero-credit discovery plan
+        run: |
+          python -m scripts.discover_historical_events \
+            --sport-key soccer_epl \
+            --start '${{ inputs.start_date }}' \
+            --end '${{ inputs.end_date }}' \
+            --max-calls '${{ inputs.max_discovery_calls }}' \
+            --output data/odds_api/historical/events.csv
+
+      - name: Execute capped discovery
+        if: ${{ inputs.mode == 'execute_sample' }}
+        run: |
+          python -m scripts.discover_historical_events \
+            --sport-key soccer_epl \
+            --start '${{ inputs.start_date }}' \
+            --end '${{ inputs.end_date }}' \
+            --max-calls '${{ inputs.max_discovery_calls }}' \
+            --output data/odds_api/historical/events.csv \
+            --execute
+
+      - name: Build immutable sample plan
+        if: ${{ inputs.mode == 'execute_sample' }}
+        run: |
+          python -m scripts.plan_historical_backfill \
+            --events-csv data/odds_api/historical/events.csv \
+            --max-credits '${{ inputs.max_odds_credits }}' \
+            --sample-events '${{ inputs.sample_events }}' \
+            --output-dir data/odds_api/backfill \
+            --register-job
+
+      - name: Execute immutable sample plan
+        if: ${{ inputs.mode == 'execute_sample' }}
+        run: |
+          python -m scripts.run_historical_backfill \
+            --plan-dir data/odds_api/backfill \
+            --max-credits '${{ inputs.max_odds_credits }}' \
+            --execute
+
+      - name: Upload validation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-validation-${{ github.run_id }}
+          path: |
+            data/odds_api/historical/event_discovery_plan.json
+            data/odds_api/historical/events.csv
+            data/odds_api/backfill/plan.json
+            data/odds_api/backfill/state.json
+            data/odds_api/backfill/requests.csv
+            data/odds_api/backfill/targets.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '### Historical validation'
+            echo
+            echo "- Mode: \`${{ inputs.mode }}\`"
+            echo "- Date range: \`${{ inputs.start_date }} → ${{ inputs.end_date }}\`"
+            echo "- Event cap: \`${{ inputs.sample_events }}\`"
+            echo "- Discovery-call cap: \`${{ inputs.max_discovery_calls }}\`"
+            echo "- Historical-odds credit cap: \`${{ inputs.max_odds_credits }}\`"
+            if [ '${{ inputs.mode }}' = 'plan_only' ]; then
+              echo '- API credits consumed by this run: **0**'
+              echo '- Next action: review the discovery plan artifact, then launch execute_sample with the exact confirmation.'
+            else
+              echo '- Execution was explicitly confirmed with `EXECUTE_SAMPLE`.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

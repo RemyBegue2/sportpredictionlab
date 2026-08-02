@@ -1,20 +1,11 @@
-# Reprendre le projet dans une autre conversation
+# Handoff cloud
 
-À la racine du dépôt :
+Aucune commande locale n’est nécessaire.
 
-```bash
-python -m scripts.generate_release_manifest
-python -m scripts.export_handoff
+Dans GitHub :
+
+```text
+Actions → Generate handoff package → Run workflow
 ```
 
-Joindre ensuite :
-
-1. `START_HERE_NEXT_CHAT.md`
-2. `handoff/HANDOFF_CURRENT.md`
-3. `handoff/HANDOFF_CURRENT.json`
-4. `artifacts/release_manifest.json`
-5. le dernier log ou screenshot pertinent
-
-Puis coller `NEXT_CHAT_PROMPT.txt`.
-
-Le handoff ne contient aucun secret. La prochaine conversation doit néanmoins vérifier l’état réel via `/api/release` au lieu de supposer que le fichier local correspond au déploiement Railway.
+Télécharger l’artefact `sports-prediction-handoff-v3.7` et le joindre à la nouvelle conversation.

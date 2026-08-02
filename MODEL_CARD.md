@@ -1,4 +1,4 @@
-# Model Card — V3.6
+# Model Card — V3.7
 
 ## Usage prévu
 
@@ -6,7 +6,7 @@ Recherche privée sur probabilités pré-match football 1N2. Le modèle champion
 
 ## Statut
 
-Le statut opérationnel est conservé dans le registre PostgreSQL. La V3.6 n’effectue aucune promotion automatique. Un verdict `promotion_review` demande une validation humaine.
+Le statut opérationnel est conservé dans le registre PostgreSQL. La V3.7 n’effectue aucune promotion automatique. Un verdict `promotion_review` demande une validation humaine.
 
 ## Évaluation
 
@@ -24,4 +24,4 @@ Métriques principales : log-loss, Brier, RPS, ECE, stabilité par folds chronol
 
 ## Limites
 
-Aucun benchmark historique réel n’a été exécuté dans le paquet V3.6 livré. Les seuils sont des portes de gouvernance, pas une garantie de performance future.
+Aucun benchmark historique réel n’a été exécuté dans le paquet V3.7 livré. Les seuils sont des portes de gouvernance, pas une garantie de performance future.

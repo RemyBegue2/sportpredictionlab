@@ -3,7 +3,7 @@ name: Rebuild fresh football model
 on:
   workflow_dispatch:
   schedule:
-    - cron: "35 4 * * 1"
+    - cron: '35 4 * * 1'
 
 permissions:
   contents: write
@@ -15,7 +15,15 @@ concurrency:
 jobs:
   rebuild:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
+      RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
+      RAILWAY_CRON_SERVICE: ${{ vars.RAILWAY_CRON_SERVICE || 'shadow-cron' }}
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      EXPECTED_VERSION: '3.7.0'
 
     steps:
       - name: Checkout repository
@@ -26,7 +34,7 @@ jobs:
       - name: Configure Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.12'
           cache: pip
 
       - name: Install dependencies
@@ -35,89 +43,108 @@ jobs:
       - name: Download, train and conditionally promote
         run: python -m scripts.rebuild_fresh_football --download --promote
 
-      - name: Run tests
+      - name: Run complete test suite
         run: pytest -q
-
-      - name: Generate release evidence and handoff
-        run: |
-          python -m scripts.generate_release_manifest
-          python -m scripts.export_handoff
 
       - name: Commit generated model and reports
         id: generated_commit
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "sports-prediction-bot"
-          git config user.email "sports-prediction-bot@users.noreply.github.com"
-          git add -A artifacts/ data/real/ handoff/
+          git config user.name 'sports-prediction-bot'
+          git config user.email 'sports-prediction-bot@users.noreply.github.com'
+          git add -A artifacts/ data/real/
           if git diff --cached --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No generated changes"
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            echo 'No generated changes'
           else
-            git commit -m "chore: refresh Premier League model candidate"
+            git commit -m 'chore: refresh Premier League model candidate'
             git push
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
           fi
           echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Check Railway deployment credentials
+      - name: Generate deployable release proof and handoff
+        env:
+          SOURCE_COMMIT: ${{ steps.generated_commit.outputs.head_sha }}
+        run: |
+          python -m scripts.generate_release_manifest
+          python -m scripts.build_handoff_bundle --output dist/sports-prediction-handoff-v3.7.zip
+
+      - name: Upload handoff artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sports-prediction-handoff-v3.7-${{ github.run_id }}
+          path: dist/sports-prediction-handoff-v3.7.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Check Railway deployment configuration
         id: railway_deploy
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
         shell: bash
         run: |
-          if [ -n "${RAILWAY_TOKEN:-}" ] && [ -n "${RAILWAY_PROJECT_ID:-}" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          if [ -n "${RAILWAY_TOKEN:-}" ] && [ -n "${RAILWAY_PROJECT_ID:-}" ] && [ -n "${APP_PUBLIC_URL:-}" ] && [ -n "${APP_PASSWORD:-}" ]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
           else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Railway auto-deploy is not configured. Tests and model rebuild succeeded; use Railway > Deploy Latest Commit."
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+            echo '::warning::Rebuild and tests succeeded, but Railway deployment/browser-verification configuration is incomplete.'
           fi
 
       - name: Install Railway CLI
-        if: steps.railway_deploy.outputs.enabled == 'true'
+        if: ${{ steps.railway_deploy.outputs.enabled == 'true' }}
         run: npm install --global @railway/cli
 
       - name: Deploy current code and model to Railway
-        if: steps.railway_deploy.outputs.enabled == 'true'
+        if: ${{ steps.railway_deploy.outputs.enabled == 'true' }}
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
-          RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
-          RAILWAY_CRON_SERVICE: ${{ vars.RAILWAY_CRON_SERVICE || 'shadow-cron' }}
+          DEPLOY_COMMIT: ${{ steps.generated_commit.outputs.head_sha }}
         shell: bash
         run: |
           set -euo pipefail
-          railway up \
-            --project "$RAILWAY_PROJECT_ID" \
-            --environment "$RAILWAY_ENVIRONMENT" \
-            --service "$RAILWAY_WEB_SERVICE" \
-            --detach \
-            --message "Sports Prediction Lab ${{ steps.generated_commit.outputs.head_sha }}"
+          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_WEB_SERVICE" --message "Fresh model ${{ steps.generated_commit.outputs.head_sha }}"
+          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE" --message "Fresh model ${{ steps.generated_commit.outputs.head_sha }}"
 
-          railway up \
-            --project "$RAILWAY_PROJECT_ID" \
-            --environment "$RAILWAY_ENVIRONMENT" \
-            --service "$RAILWAY_CRON_SERVICE" \
-            --detach \
-            --message "Sports Prediction Lab ${{ steps.generated_commit.outputs.head_sha }}"
-
-      - name: Verify deployed release evidence
-        if: steps.railway_deploy.outputs.enabled == 'true' && vars.APP_PUBLIC_URL != ''
-        env:
-          APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-          EXPECTED_COMMIT: ${{ steps.generated_commit.outputs.head_sha }}
+      - name: Verify deployed release
+        if: ${{ steps.railway_deploy.outputs.enabled == 'true' }}
         shell: bash
         run: |
-          set -euo pipefail
-          MODEL_SHA=$(python - <<'PYCODE'
+          MODEL_SHA=$(python - <<'PY'
           import json
           from pathlib import Path
-          payload=json.loads(Path('artifacts/release_manifest.json').read_text())
-          print(payload['football_model']['artifact_sha256'] or '')
-          PYCODE
+          p=json.loads(Path('artifacts/release_manifest.json').read_text(encoding='utf-8'))
+          print(p['football_model']['artifact_sha256'] or '')
+          PY
           )
-          python -m scripts.post_deploy_verify             --base-url "$APP_PUBLIC_URL"             --expected-version "3.6.0"             --expected-commit "$EXPECTED_COMMIT"             --expected-model-sha256 "$MODEL_SHA"
+          python -m scripts.post_deploy_verify \
+            --base-url "$APP_PUBLIC_URL" \
+            --expected-version "$EXPECTED_VERSION" \
+            --expected-commit '${{ steps.generated_commit.outputs.head_sha }}' \
+            --expected-model-sha256 "$MODEL_SHA" \
+            --attempts 30 --delay-seconds 10
 
+      - name: Install Chromium smoke-test dependencies
+        if: ${{ steps.railway_deploy.outputs.enabled == 'true' }}
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Verify deployed private interface
+        if: ${{ steps.railway_deploy.outputs.enabled == 'true' }}
+        env:
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        run: python -m scripts.browser_smoke_test --base-url "$APP_PUBLIC_URL" --expected-version "$EXPECTED_VERSION"
+
+      - name: Workflow summary
+        if: always()
+        run: |
+          {
+            echo '### Fresh football rebuild'
+            echo
+            echo "- Generated changes committed: \`${{ steps.generated_commit.outputs.changed }}\`"
+            echo "- Deployable commit: \`${{ steps.generated_commit.outputs.head_sha }}\`"
+            echo "- Railway deployment enabled: \`${{ steps.railway_deploy.outputs.enabled }}\`"
+            echo '- Automatic betting: `false`'
+            echo '- Automatic model promotion outside conservative rebuild rules: `false`'
+          } >> "$GITHUB_STEP_SUMMARY"

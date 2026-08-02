@@ -1,58 +1,39 @@
-# Déployer V3.6 sur Railway
+# Déploiement Railway V3.7 depuis GitHub
 
-## Mise à niveau sûre
+## Configuration unique
 
-Utiliser le paquet `sports_prediction_v3_5_upgrade.zip`. Il ne contient pas les modèles ni `data/real/`, afin de préserver les artefacts frais créés par GitHub Actions.
-
-Après le push, mettre sur le web et le cron :
-
-```text
-MODEL_VERSION=3.6.0
-```
-
-Puis déployer le dernier commit.
-
-## Vérification
-
-```text
-GET /api/health
-GET /api/release
-```
-
-Contrôler :
-
-```text
-version = 3.6.0
-source_commit = commit déployé
-artifact_integrity_ok = true
-football_model_sha256 = hash attendu
-```
-
-## Post-déploiement GitHub Actions
-
-Secrets :
+Dans GitHub Actions, créer les secrets :
 
 ```text
 RAILWAY_TOKEN
 RAILWAY_PROJECT_ID
+APP_PASSWORD
+BACKUP_ENCRYPTION_PASSPHRASE
 ```
 
-Variables :
+Créer les variables :
 
 ```text
+APP_PUBLIC_URL=https://votre-domaine.up.railway.app
 RAILWAY_ENVIRONMENT=production
 RAILWAY_WEB_SERVICE=sportpredictionlab
 RAILWAY_CRON_SERVICE=shadow-cron
-APP_PUBLIC_URL=https://votre-domaine.up.railway.app
 ```
 
-`APP_PUBLIC_URL` active la preuve post-déploiement. Sans elle, le workflow peut déployer mais ne peut pas confirmer que l’URL publique sert la bonne release.
+`RAILWAY_TOKEN` est un Project Token Railway limité à l’environnement de production. Il autorise le workflow à envoyer le code aux services Railway.
 
-## Base de données
+## Déployer
 
-Le pre-deploy `python -m scripts.db_migrate` crée les tables :
+```text
+GitHub → Actions → Deploy production → Run workflow
+```
 
-- `release_registry` ;
-- `model_status_transitions`.
+Le workflow :
 
-Aucune table existante n’est supprimée.
+1. exécute tous les tests ;
+2. génère la preuve du commit ;
+3. déploie le web et le cron avec Railway CLI ;
+4. attend que `/api/release` corresponde ;
+5. ouvre l’interface dans Chromium et échoue sur une erreur JavaScript.
+
+Aucun terminal et aucun Python local ne sont nécessaires.

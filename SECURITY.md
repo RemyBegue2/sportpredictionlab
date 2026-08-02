@@ -1,4 +1,4 @@
-# Sécurité V3.6
+# Sécurité V3.7
 
 - Secrets uniquement dans les variables d’environnement Railway/GitHub.
 - Aucun secret dans `/api/release`, `/api/model-decision` ou le handoff.
