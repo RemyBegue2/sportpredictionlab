@@ -67,6 +67,7 @@ def test_db_migrate_cloud_requires_postgres_and_secrets(tmp_path: Path) -> None:
     env.update(
         {
             "RAILWAY_ENVIRONMENT": "production",
+            "RAILWAY_SERVICE_ID": "railway-runtime-test",
             "APP_ENV": "production",
             "APP_AUTH_REQUIRED": "true",
             "APP_COOKIE_SECURE": "true",
@@ -89,6 +90,27 @@ def test_db_migrate_cloud_requires_postgres_and_secrets(tmp_path: Path) -> None:
     assert "APP_PASSWORD is missing" in result.stdout
     assert "APP_SESSION_SECRET must contain at least 32 characters" in result.stdout
 
+
+
+def test_db_migrate_ignores_remote_target_environment_in_ci(tmp_path: Path) -> None:
+    env = _env(tmp_path)
+    # GitHub Actions uses this variable to target Railway remotely. It does not
+    # mean the migration process itself is running inside a Railway service.
+    env["RAILWAY_ENVIRONMENT"] = "production"
+    env.pop("RAILWAY_SERVICE_ID", None)
+    env.pop("RAILWAY_ENVIRONMENT_ID", None)
+
+    result = subprocess.run(
+        [sys.executable, "-m", "scripts.db_migrate"],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "'status': 'ok'" in result.stdout
 
 def test_db_migrate_direct_script_from_foreign_workdir(tmp_path: Path) -> None:
     result = subprocess.run(

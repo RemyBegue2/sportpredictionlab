@@ -11,14 +11,14 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from sports_predictor.cloud_config import CloudSettings
+from sports_predictor.cloud_config import CloudSettings, cloud_runtime_detected
 from sports_predictor.database import database_summary, init_database
 
 
 
 def main() -> int:
     settings = CloudSettings.from_env(ROOT)
-    cloud_detected = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RENDER"))
+    cloud_detected = cloud_runtime_detected()
     issues = settings.readiness_issues()
     if cloud_detected and settings.database_url.startswith("sqlite"):
         issues.append("DATABASE_URL must reference a PostgreSQL service in cloud deployment")
