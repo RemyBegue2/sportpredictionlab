@@ -187,7 +187,7 @@ def write_json(path: str | Path, payload: dict) -> None:
 
 def validate_date_order(df: pd.DataFrame, date_col: str = "date") -> pd.DataFrame:
     out = df.copy()
-    out[date_col] = pd.to_datetime(out[date_col], utc=True, errors="raise")
+    out[date_col] = pd.to_datetime(out[date_col], utc=True, errors="raise",format="mixed",)
     return out.sort_values(date_col, kind="stable").reset_index(drop=True)
 
 
