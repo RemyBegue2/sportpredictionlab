@@ -15,29 +15,85 @@ concurrency:
 jobs:
   rebuild:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+
+      - name: Configure Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
+
       - name: Install dependencies
         run: pip install -r requirements.txt
+
       - name: Download, train and conditionally promote
         run: python -m scripts.rebuild_fresh_football --download --promote
-      - name: Test
+
+      - name: Run tests
         run: pytest -q
-      - name: Commit generated candidate and reports
+
+      - name: Commit generated model and reports
+        id: generated_commit
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name "sports-prediction-bot"
           git config user.email "sports-prediction-bot@users.noreply.github.com"
           git add -A artifacts/ data/real/
           if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No generated changes"
           else
             git commit -m "chore: refresh Premier League model candidate"
             git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Check Railway deployment credentials
+        id: railway_deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+        shell: bash
+        run: |
+          if [ -n "${RAILWAY_TOKEN:-}" ] && [ -n "${RAILWAY_PROJECT_ID:-}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Railway auto-deploy is not configured. Tests and model rebuild succeeded; use Railway > Deploy Latest Commit."
+          fi
+
+      - name: Install Railway CLI
+        if: steps.railway_deploy.outputs.enabled == 'true'
+        run: npm install --global @railway/cli
+
+      - name: Deploy current code and model to Railway
+        if: steps.railway_deploy.outputs.enabled == 'true'
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
+          RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
+          RAILWAY_CRON_SERVICE: ${{ vars.RAILWAY_CRON_SERVICE || 'shadow-cron' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          railway up \
+            --project "$RAILWAY_PROJECT_ID" \
+            --environment "$RAILWAY_ENVIRONMENT" \
+            --service "$RAILWAY_WEB_SERVICE" \
+            --detach \
+            --message "Sports Prediction Lab ${GITHUB_SHA}"
+
+          railway up \
+            --project "$RAILWAY_PROJECT_ID" \
+            --environment "$RAILWAY_ENVIRONMENT" \
+            --service "$RAILWAY_CRON_SERVICE" \
+            --detach \
+            --message "Sports Prediction Lab ${GITHUB_SHA}"

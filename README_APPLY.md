@@ -1,17 +1,7 @@
-# Application du hotfix V3.4.3
+# Application du hotfix V3.4.4
 
-Copier le contenu de ce dossier à la racine du dépôt en conservant les chemins.
-Ne pas supprimer `artifacts/` ni `data/real/` : ils contiennent le modèle frais produit par le workflow.
+Copier le contenu de cette archive à la racine du dépôt GitHub en remplaçant les fichiers existants.
 
-Fichiers remplacés :
+Ne supprimer ni `artifacts/` ni `data/real/`: ils contiennent le modèle frais produit par le workflow.
 
-- `.github/workflows/rebuild-fresh-football.yml`
-- `static/app.js`
-- `static/index.html`
-- `webapp.py`
-- `sports_predictor/fresh_rebuild.py`
-- `tests/test_v33_shadow_mode.py`
-
-Fichier ajouté :
-
-- `tests/test_frontend_contract_v343.py`
+Puis commit/push et déployer le dernier commit dans Railway pour `sportpredictionlab` et `shadow-cron`.

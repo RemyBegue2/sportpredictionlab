@@ -1,4 +1,25 @@
-const $ = (s) => document.querySelector(s);
+const NULL_ELEMENTS = new Map();
+function nullElement(selector){
+  if(NULL_ELEMENTS.has(selector)) return NULL_ELEMENTS.get(selector);
+  const noop=()=>{};
+  const stub=new Proxy({
+    classList:{add:noop,remove:noop,toggle:noop,contains:()=>false},
+    options:[],
+    value:'',
+    hidden:false,
+    disabled:false,
+    addEventListener:noop,
+    removeEventListener:noop,
+    focus:noop,
+  },{
+    get(target,property){ return property in target ? target[property] : undefined; },
+    set(){ return true; },
+  });
+  console.warn(`Élément d’interface absent: ${selector}`);
+  NULL_ELEMENTS.set(selector,stub);
+  return stub;
+}
+const $ = (s) => document.querySelector(s) || nullElement(s);
 let CSRF_TOKEN = null;
 const fmt = (p) => `${(100*p).toFixed(1)}%`;
 const signed = (p) => `${p >= 0 ? '+' : ''}${(100*p).toFixed(1)}%`;
@@ -69,7 +90,6 @@ function renderBenchmark(data){
   const status=summary.status||'not_run';
   const labels={not_run:'Non exécuté',not_evaluable:'Non évaluable',exploratory:'Exploratoire',preliminary_go:'Signal préliminaire',no_go:'Aucun avantage robuste',unknown:'Inconnu'};
   $('#benchmarkVerdict').textContent=labels[status]||status;
-  $('#benchmarkState').textContent=labels[status]||status;
   $('#benchmarkReason').textContent=summary.reason||data.required_next_step||'Aucun benchmark historique réel disponible.';
   $('#benchmarkRows').textContent=summary.evaluated_rows ?? 0;
   const delta=summary.model_vs_winamax_log_loss_delta;

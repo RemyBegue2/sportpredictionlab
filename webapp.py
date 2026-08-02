@@ -134,7 +134,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title="Sports Prediction Lab V3.4 Fresh Data Rebuild",
-    version="3.4.0",
+    version="3.4.4",
     description="Authenticated edition with explainable shadow diagnostics, reproducible fresh-data rebuilds and PostgreSQL validation.",
     lifespan=lifespan,
 )
