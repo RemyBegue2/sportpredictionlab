@@ -28,7 +28,7 @@ jobs:
       RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
-      RAILWAY_CRON_SERVICE: ${{ vars.RAILWAY_CRON_SERVICE || 'shadow-cron' }}
+      RAILWAY_CRON_SERVICE_ID: ${{ vars.RAILWAY_CRON_SERVICE_ID }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
 
     steps:
@@ -45,6 +45,7 @@ jobs:
           [ '${{ inputs.confirmation }}' = 'ROLLBACK' ] || { echo 'Confirmation must equal ROLLBACK'; exit 2; }
           [ -n "${RAILWAY_TOKEN:-}" ] || { echo 'RAILWAY_TOKEN is missing'; exit 2; }
           [ -n "${RAILWAY_PROJECT_ID:-}" ] || { echo 'RAILWAY_PROJECT_ID is missing'; exit 2; }
+          [ -n "${RAILWAY_CRON_SERVICE_ID:-}" ] || { echo 'RAILWAY_CRON_SERVICE_ID is missing'; exit 2; }
           [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL is missing'; exit 2; }
           [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing; the post-rollback browser test is mandatory'; exit 2; }
           git rev-parse --verify '${{ inputs.source_commit }}^{commit}' >/dev/null
@@ -117,7 +118,7 @@ jobs:
       - name: Deploy restored release
         run: |
           railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_WEB_SERVICE" --message 'Rollback ${{ inputs.source_commit }}'
-          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE" --message 'Rollback ${{ inputs.source_commit }}'
+          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE_ID" --message 'Rollback ${{ inputs.source_commit }}'
 
       - name: Verify restored production proof
         shell: bash

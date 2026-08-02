@@ -21,7 +21,7 @@ jobs:
       RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
-      RAILWAY_CRON_SERVICE: ${{ vars.RAILWAY_CRON_SERVICE || 'shadow-cron' }}
+      RAILWAY_CRON_SERVICE_ID: ${{ vars.RAILWAY_CRON_SERVICE_ID }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
       EXPECTED_VERSION: '3.7.0'
 
@@ -85,11 +85,11 @@ jobs:
           APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
         shell: bash
         run: |
-          if [ -n "${RAILWAY_TOKEN:-}" ] && [ -n "${RAILWAY_PROJECT_ID:-}" ] && [ -n "${APP_PUBLIC_URL:-}" ] && [ -n "${APP_PASSWORD:-}" ]; then
+          if [ -n "${RAILWAY_TOKEN:-}" ] && [ -n "${RAILWAY_PROJECT_ID:-}" ] && [ -n "${RAILWAY_CRON_SERVICE_ID:-}" ] && [ -n "${APP_PUBLIC_URL:-}" ] && [ -n "${APP_PASSWORD:-}" ]; then
             echo 'enabled=true' >> "$GITHUB_OUTPUT"
           else
             echo 'enabled=false' >> "$GITHUB_OUTPUT"
-            echo '::warning::Rebuild and tests succeeded, but Railway deployment/browser-verification configuration is incomplete.'
+            echo '::warning::Rebuild and tests succeeded, but Railway deployment/browser-verification configuration is incomplete. Required: RAILWAY_TOKEN, RAILWAY_PROJECT_ID, RAILWAY_CRON_SERVICE_ID, APP_PUBLIC_URL and APP_PASSWORD.'
           fi
 
       - name: Install Railway CLI
@@ -104,7 +104,7 @@ jobs:
         run: |
           set -euo pipefail
           railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_WEB_SERVICE" --message "Fresh model ${{ steps.generated_commit.outputs.head_sha }}"
-          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE" --message "Fresh model ${{ steps.generated_commit.outputs.head_sha }}"
+          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE_ID" --message "Fresh model ${{ steps.generated_commit.outputs.head_sha }}"
 
       - name: Verify deployed release
         if: ${{ steps.railway_deploy.outputs.enabled == 'true' }}

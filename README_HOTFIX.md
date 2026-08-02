@@ -1,25 +1,29 @@
-# Hotfix CI V3.7
+# Hotfix V3.7.2 — Railway shadow service ID
 
-## Problème corrigé
+## Cause
 
-Le workflow GitHub définit `RAILWAY_ENVIRONMENT=production` pour cibler Railway.
-Les tests de migration copiaient cette variable dans leurs sous-processus et le code
-les prenait à tort pour des processus exécutés *dans* Railway. Une base SQLite de test
-était alors rejetée.
+The web deployment succeeds, then the shadow deployment fails with `Service not found`.
+The project, token and environment are accepted; the cron service target is not.
 
-## Correctif
+This hotfix stops relying on the display name `shadow-cron` and requires the exact
+Railway service ID through the GitHub repository variable:
 
-- distingue une cible Railway distante d'un vrai runtime Railway ;
-- utilise `RAILWAY_SERVICE_ID` / `RAILWAY_ENVIRONMENT_ID` comme marqueurs de runtime ;
-- conserve le refus de SQLite dans un vrai service cloud ;
-- ajoute un test de non-régression pour GitHub Actions.
+`RAILWAY_CRON_SERVICE_ID`
 
-## Installation sans Python local
+## Browser-only setup
 
-Copier les trois dossiers de cette archive à la racine du dépôt GitHub et accepter le
-remplacement des fichiers. Créer un commit, puis lancer une nouvelle exécution de
-`Deploy production` depuis l'onglet Actions.
+1. Open the Railway project.
+2. Select the service that runs the shadow cron.
+3. Press `Ctrl + K`.
+4. Choose `Copy Service ID`.
+5. In GitHub open:
+   `Settings > Secrets and variables > Actions > Variables`.
+6. Create the repository variable:
+   - Name: `RAILWAY_CRON_SERVICE_ID`
+   - Value: the copied Railway service ID.
+7. Replace the three workflow files from this archive.
+8. Commit with:
+   `Fix Railway shadow service targeting v3.7.2`
+9. Start a new `Deploy production` workflow run.
 
-## Validation
-
-Suite complète exécutée après application : `109 passed`.
+Do not modify `RAILWAY_TOKEN`, PostgreSQL, or application variables.
