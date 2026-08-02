@@ -1,4 +1,4 @@
-# Reconstruction football fraîche — V3.5
+# Reconstruction football fraîche — V3.6
 
 Le workflow `.github/workflows/rebuild-fresh-football.yml` télécharge les saisons configurées, entraîne un candidat, applique les portes chronologiques, exécute les tests, génère la preuve de release et exporte le handoff.
 

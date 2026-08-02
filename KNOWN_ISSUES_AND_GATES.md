@@ -1,31 +1,11 @@
-# Risques ouverts et portes de décision V3.5
+# Risques et portes V3.6
 
-## Risques ouverts
-
-- échantillon shadow potentiellement trop faible ;
-- disponibilité variable de Winamax ;
-- artefacts frais réels uniquement présents dans le dépôt utilisateur après workflow ;
-- restauration PostgreSQL Railway à tester sur une base de test ;
-- déploiement automatisé dépendant des secrets Railway et de `APP_PUBLIC_URL` ;
-- tennis non calibré ;
-- données publiques sans blessures/compositions horodatées garanties.
-
-## GO technique
-
-- interface privée ;
-- API ;
-- PostgreSQL ;
-- The Odds API ;
-- shadow-cron ;
-- preuve de release ;
-- registre de modèles/releases ;
-- handoff exportable ;
-- rollback d’artefacts vérifié localement.
-
-## NO-GO statistique
-
-- affirmation de rentabilité ;
-- affirmation que le modèle bat Winamax ;
-- tailles de mise ;
-- automatisation de pari ;
-- promotion du tennis.
+- [ ] Valider 30 événements historiques réels.
+- [ ] Vérifier le coût réel par requête.
+- [ ] Atteindre au moins 99 % de matching non ambigu sur le lot contrôlé.
+- [ ] Vérifier zéro violation temporelle acceptée.
+- [ ] Atteindre 1 000 prédictions historiques avant une analyse sérieuse.
+- [ ] Atteindre 200 prédictions live shadow au même horizon.
+- [ ] Tester la restauration PostgreSQL managée Railway.
+- [ ] Ne promouvoir aucun modèle automatiquement.
+- [ ] Ne communiquer aucune rentabilité avant franchissement de toutes les portes.

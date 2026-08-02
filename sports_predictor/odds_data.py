@@ -97,7 +97,7 @@ def normalize_odds_payload(payload: Any) -> pd.DataFrame:
     df = pd.DataFrame(rows)
     if not df.empty:
         for col in ("commence_time", "bookmaker_last_update", "market_last_update", "snapshot_time"):
-            df[col] = pd.to_datetime(df[col], utc=True, errors="coerce")
+            df[col] = pd.to_datetime(df[col], utc=True, errors="coerce", format="mixed")
         df["price"] = pd.to_numeric(df["price"], errors="coerce")
     return df
 
@@ -220,7 +220,7 @@ def normalize_scores_payload(payload: Any) -> pd.DataFrame:
     frame = pd.DataFrame(rows)
     if not frame.empty:
         for col in ("commence_time", "last_update"):
-            frame[col] = pd.to_datetime(frame[col], utc=True, errors="coerce")
+            frame[col] = pd.to_datetime(frame[col], utc=True, errors="coerce", format="mixed")
         for col in ("home_score", "away_score"):
             frame[col] = pd.to_numeric(frame[col], errors="coerce")
     return frame

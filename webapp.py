@@ -37,12 +37,14 @@ from sports_predictor.database import (
     recent_backfill_jobs,
     recent_data_quality_issues,
     latest_benchmark_run,
+    latest_model_decision,
     latest_shadow_cycle,
     list_models,
     list_releases,
     model_status_history,
     recent_shadow_predictions,
     record_prediction,
+    record_model_decision,
     record_shadow_prediction,
     register_model,
     register_release,
@@ -61,6 +63,7 @@ from sports_predictor.data_sources.the_odds_api import (
 from sports_predictor.identity import football_model_name, normalize_identity
 from sports_predictor.odds_data import bookmaker_h2h_markets, consensus_h2h, normalize_odds_payload
 from sports_predictor.market_benchmark import benchmark_summary
+from sports_predictor.champion_challenger import build_model_decision
 from sports_predictor.shadow_mode import shadow_horizon
 
 ROOT = Path(__file__).resolve().parent
@@ -125,6 +128,21 @@ def initialize_runtime() -> None:
             update_status=False,
         )
         register_model(
+            model_id="market-winamax-baseline", sport="football", version="market-v1", status="shadow",
+            trained_until=None, dataset_hash=None, metrics={"role": "bookmaker baseline", "betting_enabled": False},
+            update_status=False,
+        )
+        register_model(
+            model_id="market-consensus-baseline", sport="football", version="consensus-v1", status="shadow",
+            trained_until=None, dataset_hash=None, metrics={"role": "devigged consensus baseline", "betting_enabled": False},
+            update_status=False,
+        )
+        register_model(
+            model_id="football-consensus-blend", sport="football", version="blend-50-v1", status="shadow",
+            trained_until=football_cutoff, dataset_hash=((loaded.get("fresh_rebuild") or {}).get("dataset") or {}).get("sha256"),
+            metrics={"role": "fixed 50/50 challenger", "automatic_promotion": False}, update_status=False,
+        )
+        register_model(
             model_id="tennis-elo-experimental", sport="tennis", version=SETTINGS.model_version, status="experimental",
             trained_until=pd.to_datetime(loaded["tennis"]["date"], utc=True).max(),
             dataset_hash=manifest_files.get("tennis_model.joblib"), metrics=loaded["metrics"].get("tennis"),
@@ -141,9 +159,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V3.5 Operational Evidence",
+    title="Sports Prediction Lab V3.6 Evidence Engine",
     version=APP_VERSION,
-    description="Authenticated edition with release evidence, explicit model lifecycle, shadow validation and portable handoff exports.",
+    description="Authenticated edition with champion–challenger evidence, explicit promotion gates, shadow validation and portable handoff exports.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -296,7 +314,7 @@ def resources() -> dict[str, Any]:
     fresh_rebuild_path = artifact_dir / "fresh_rebuild_report.json"
     fresh_rebuild = json.loads(fresh_rebuild_path.read_text(encoding="utf-8")) if fresh_rebuild_path.exists() else None
     football_model_version = (
-        f"{fresh_rebuild.get('version', '3.5.0')}-fresh"
+        f"{fresh_rebuild.get('version', '3.6.0')}-fresh"
         if fresh_rebuild and fresh_rebuild.get("promoted")
         else "3.3.0-snapshot"
     )
@@ -378,6 +396,62 @@ def _record_shadow_payload(
     except Exception as exc:
         STARTUP_STATE["database_error"] = type(exc).__name__
         raise HTTPException(status_code=503, detail="Shadow prediction computed but immutable audit persistence failed") from exc
+
+
+def _contender_payload(base: dict[str, Any], *, probabilities: dict[str, float], model_version: str) -> dict[str, Any]:
+    payload = json.loads(json.dumps(base))
+    payload["probabilities"] = {
+        "home": float(probabilities["home"]),
+        "draw": float(probabilities["draw"]),
+        "away": float(probabilities["away"]),
+    }
+    payload["model_version"] = model_version
+    payload["market_analysis"] = None
+    payload["contender_only"] = True
+    return payload
+
+
+def _record_football_contenders(
+    *, prediction: dict[str, Any], event_id: str, sport_key: str, commence_time: Any,
+    observed_at: Any, data_cutoff: Any, api_home: str, api_away: str,
+    winamax: dict[str, Any], consensus: dict[str, Any] | None,
+) -> dict[str, Any]:
+    records: dict[str, Any] = {}
+    market_probabilities = {
+        "home": float(winamax["probabilities"][api_home]),
+        "draw": float(winamax["probabilities"]["Draw"]),
+        "away": float(winamax["probabilities"][api_away]),
+    }
+    records["winamax"] = _record_shadow_payload(
+        _contender_payload(prediction, probabilities=market_probabilities, model_version="market-v1"),
+        provider_event_id=event_id, sport_key=sport_key, commence_time=commence_time,
+        odds_observed_at=observed_at, decision="benchmark_only", source="the_odds_api_current",
+        model_id="market-winamax-baseline", data_cutoff=data_cutoff,
+    )
+    if consensus:
+        consensus_probabilities = {
+            "home": float(consensus["probabilities"][api_home]),
+            "draw": float(consensus["probabilities"]["Draw"]),
+            "away": float(consensus["probabilities"][api_away]),
+        }
+        records["consensus"] = _record_shadow_payload(
+            _contender_payload(prediction, probabilities=consensus_probabilities, model_version="consensus-v1"),
+            provider_event_id=event_id, sport_key=sport_key, commence_time=commence_time,
+            odds_observed_at=observed_at, decision="benchmark_only", source="the_odds_api_current",
+            model_id="market-consensus-baseline", data_cutoff=data_cutoff,
+        )
+        model = prediction["probabilities"]
+        blend_probabilities = {
+            key: 0.5 * float(model[key]) + 0.5 * float(consensus_probabilities[key])
+            for key in ("home", "draw", "away")
+        }
+        records["blend"] = _record_shadow_payload(
+            _contender_payload(prediction, probabilities=blend_probabilities, model_version="blend-50-v1"),
+            provider_event_id=event_id, sport_key=sport_key, commence_time=commence_time,
+            odds_observed_at=observed_at, decision="benchmark_only", source="the_odds_api_current",
+            model_id="football-consensus-blend", data_cutoff=data_cutoff,
+        )
+    return records
 
 
 def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = False) -> dict[str, Any]:
@@ -519,10 +593,16 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
             funnel["no_robust_edge"] += 1
             reasons = sorted({reason for selection in analysis["selections"] for reason in selection["reasons"]})
             base["reasons"].extend(reasons or ["aucun edge robuste"])
+        data_cutoff = pd.to_datetime(history["date"], utc=True).max()
         base["shadow_record"] = _record_shadow_payload(
             prediction, provider_event_id=event_id, sport_key=sport_key, commence_time=first["commence_time"],
             odds_observed_at=_iso(winamax["last_update"]), decision=base["decision"], source="the_odds_api_current",
-            model_id="football-1n2-shadow", data_cutoff=pd.to_datetime(history["date"], utc=True).max(),
+            model_id="football-1n2-shadow", data_cutoff=data_cutoff,
+        )
+        base["contender_records"] = _record_football_contenders(
+            prediction=prediction, event_id=event_id, sport_key=sport_key, commence_time=first["commence_time"],
+            observed_at=_iso(winamax["last_update"]), data_cutoff=data_cutoff, api_home=api_home, api_away=api_away,
+            winamax=winamax, consensus=consensus,
         )
         shadow_record = base.get("shadow_record") or {}
         if shadow_record.get("created"):
@@ -1030,6 +1110,7 @@ def _system_status_payload() -> dict[str, Any]:
             "summary": shadow_summary(sport_key="soccer_epl"),
         },
         "benchmark": benchmark_summary((latest_benchmark_run("soccer_epl") or {}).get("report")),
+        "model_decision": _model_decision_payload("soccer_epl"),
         "continuity": {
             "command": "python -m scripts.export_handoff",
             "files": [
@@ -1040,6 +1121,35 @@ def _system_status_payload() -> dict[str, Any]:
             "secrets_exported": False,
         },
     }
+
+
+def _model_decision_payload(sport_key: str = "soccer_epl") -> dict[str, Any]:
+    persisted = latest_model_decision(sport_key)
+    run = latest_benchmark_run(sport_key)
+    report = (run or {}).get("report")
+    summary = shadow_summary(sport_key=sport_key)
+    models = list_models()
+    champion_model = next((m for m in models if m.get("sport") == "football" and m.get("status") == "active"), None)
+    if champion_model is None:
+        champion_model = next((m for m in models if m.get("model_id") == "football-1n2-shadow"), None)
+    champion_key = None
+    if champion_model:
+        champion_key = f"{champion_model.get('model_id')}@{champion_model.get('version')}"
+    computed = build_model_decision(
+        report, shadow_summary=summary, champion="model", champion_model_key=champion_key,
+    )
+    return {
+        "source": "computed_from_latest_evidence",
+        "sport_key": sport_key,
+        "benchmark_run_id": (run or {}).get("id"),
+        "persisted": persisted,
+        "decision": computed,
+    }
+
+
+@app.get("/api/model-decision")
+def model_decision(sport_key: str = "soccer_epl") -> dict[str, Any]:
+    return _model_decision_payload(sport_key)
 
 
 @app.get("/api/system/status")
@@ -1066,6 +1176,7 @@ def system_handoff() -> dict[str, Any]:
         "database": status.get("database"),
         "shadow": status.get("shadow"),
         "benchmark": status.get("benchmark"),
+        "model_decision": status.get("model_decision"),
         "issues": status.get("issues"),
         "secrets_exported": False,
     }

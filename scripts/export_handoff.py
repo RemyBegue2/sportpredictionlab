@@ -34,8 +34,9 @@ def build_handoff() -> dict[str, Any]:
     report = read_json("artifacts/fresh_rebuild_report.json")
     artifact_manifest = read_json("artifacts/artifact_manifest.json")
     release_manifest = read_json("artifacts/release_manifest.json")
-    integration_status = read_json("artifacts/integration_status_v3_5.json")
-    security_scan = read_json("artifacts/security_scan_v3_5.json")
+    integration_status = read_json("artifacts/integration_status_v3_6.json") or read_json("artifacts/integration_status_v3_5.json")
+    security_scan = read_json("artifacts/security_scan_v3_6.json") or read_json("artifacts/security_scan_v3_5.json")
+    evidence_bundle = read_json("artifacts/champion_challenger_v3_6.json")
     return {
         "schema_version": "1.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -52,18 +53,22 @@ def build_handoff() -> dict[str, Any]:
         "release_manifest": release_manifest,
         "integration_status": integration_status,
         "security_scan": security_scan,
+        "champion_challenger": evidence_bundle,
+        "model_decision": (evidence_bundle or {}).get("decision") if evidence_bundle else None,
         "deployment": {
             "platform": "Railway",
-            "services": ["sportpredictionlab", "shadow-cron", "Postgres"],
+            "services": ["sportpredictionlab", "shadow-cron", "historical-worker", "Postgres"],
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Accumulate and evaluate shadow observations by model and horizon; do not claim market outperformance without evidence.",
+        "next_priority": "Run the immutable 30-event historical validation plan, then evaluate champion and challengers on identical temporal folds.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
             "Tennis remains experimental and uncalibrated.",
             "A green workflow is insufficient without /api/release post-deployment verification.",
             "Managed PostgreSQL backup restoration remains to be verified on the real Railway project.",
+            "A full historical backfill requires exact plan-id approval and a reviewed credit cap.",
+            "No model promotion is automatic, even when all evidence gates pass.",
         ],
         "safety": {
             "secrets_exported": False,
@@ -103,8 +108,9 @@ Generated: `{payload['generated_at_utc']}`
 ```text
 Railway
 ├── sportpredictionlab  FastAPI + private web UI
-├── shadow-cron         odds → frozen predictions → results → settlement
-└── Postgres            audit records, model/release registry, metrics
+├── shadow-cron         champion + market baselines + blend → results → settlement
+├── historical-worker   immutable budget-capped historical backfill
+└── Postgres            audit records, model/release registry, metrics and decisions
 
 GitHub Actions
 └── rebuild-fresh-football.yml
@@ -126,6 +132,14 @@ GitHub Actions
 - A blank shortlist is valid.
 - Closing prices are evaluation evidence, not past features.
 
+## Evidence engine
+
+- Champion–challenger artifact: `artifacts/champion_challenger_v3_6.json`
+- Public deterministic verdict: `/api/model-decision`
+- Validation backfill default: at most 30 events
+- Full backfill: exact `plan_id` approval required
+- Automatic model promotion: **disabled**
+
 ## Open gates
 
 {gates}
@@ -142,6 +156,37 @@ No secret, environment variable, database URL, cookie, API key or deployment tok
 """
 
 
+def active_model_card(payload: dict[str, Any]) -> str:
+    model = ((payload.get("release") or {}).get("football_model") or {})
+    decision = payload.get("model_decision") or {}
+    return f"""# ACTIVE MODEL CARD
+
+- App version: `{payload.get('current_version')}`
+- Model version: `{model.get('model_version')}`
+- Model SHA-256: `{model.get('artifact_sha256')}`
+- Dataset SHA-256: `{model.get('dataset_sha256')}`
+- Dataset cutoff: `{model.get('dataset_cutoff')}`
+- Evidence status: `{decision.get('status', 'not_evaluable')}`
+- Evidence reason: {decision.get('reason', 'No champion–challenger report has been generated.')}
+- Automatic promotion: **disabled**
+- Automatic bet placement: **disabled**
+"""
+
+
+def next_actions(payload: dict[str, Any]) -> str:
+    decision = payload.get("model_decision") or {}
+    action = decision.get("next_action") or "Create and review a 30-event validation backfill plan before consuming historical credits."
+    return f"""# NEXT ACTIONS
+
+1. {action}
+2. Verify `/api/release` and `/api/model-decision` after deployment.
+3. Keep every contender in shadow until historical and live sample gates are satisfied.
+4. Attach this file, `HANDOFF_CURRENT.md`, and `HANDOFF_CURRENT.json` in the next conversation.
+
+No secret is exported.
+"""
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Export a secret-free project handoff for another conversation.")
     parser.add_argument("--directory", default="handoff")
@@ -153,10 +198,19 @@ def main() -> None:
     md_path = target / "HANDOFF_CURRENT.md"
     json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
     md_path.write_text(markdown(payload), encoding="utf-8")
+    benchmark_path = target / "LAST_BENCHMARK_SUMMARY.json"
+    benchmark_path.write_text(json.dumps(payload.get("champion_challenger") or {"status": "not_run"}, ensure_ascii=False, indent=2), encoding="utf-8")
+    model_card_path = target / "ACTIVE_MODEL_CARD.md"
+    model_card_path.write_text(active_model_card(payload), encoding="utf-8")
+    actions_path = target / "NEXT_ACTIONS.md"
+    actions_path.write_text(next_actions(payload), encoding="utf-8")
     print(json.dumps({
         "status": "ok",
         "json": str(json_path.relative_to(ROOT)),
         "markdown": str(md_path.relative_to(ROOT)),
+        "benchmark": str(benchmark_path.relative_to(ROOT)),
+        "model_card": str(model_card_path.relative_to(ROOT)),
+        "next_actions": str(actions_path.relative_to(ROOT)),
         "secrets_exported": False,
     }, ensure_ascii=False))
 

@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from sports_predictor.release_registry import APP_VERSION
+
 
 def test_frontend_has_null_safe_dom_selector() -> None:
     source = Path("static/app.js").read_text(encoding="utf-8")
@@ -9,7 +11,7 @@ def test_frontend_has_null_safe_dom_selector() -> None:
 
 def test_frontend_cache_bust_matches_release() -> None:
     html = Path("static/index.html").read_text(encoding="utf-8")
-    assert "/static/app.js?v=3.5.0" in html
+    assert f"/static/app.js?v={APP_VERSION}" in html
 
 
 def test_workflow_deploys_code_even_when_generated_artifacts_are_unchanged() -> None:

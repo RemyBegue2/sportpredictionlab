@@ -1,46 +1,27 @@
-# Model Card V3.5
+# Model Card — V3.6
 
-## Football 1N2
+## Usage prévu
 
-Le modèle réellement chargé est identifié par :
+Recherche privée sur probabilités pré-match football 1N2. Le modèle champion est comparé à Winamax, au consensus et à un blend 50/50. Le système n’exécute aucun pari.
 
-- `model_id` ;
-- `model_version` ;
-- SHA-256 de l’artefact ;
-- SHA-256 du dataset ;
-- date limite d’entraînement ;
-- statut de cycle de vie ;
-- métriques hors échantillon disponibles.
+## Statut
 
-Ces éléments sont exposés dans `/api/system/status` et `artifacts/release_manifest.json`.
+Le statut opérationnel est conservé dans le registre PostgreSQL. La V3.6 n’effectue aucune promotion automatique. Un verdict `promotion_review` demande une validation humaine.
 
-## Cycle de vie
+## Évaluation
 
-```text
-candidate → shadow → active → degraded → retired
-```
+Métriques principales : log-loss, Brier, RPS, ECE, stabilité par folds chronologiques, différence appariée au consensus et CLV. Les résultats sont séparés par horizon.
 
-Les transitions sont enregistrées avec l’ancien statut, le nouveau statut, le motif, l’acteur et l’heure. Un redémarrage de l’application ne doit pas réinitialiser le statut.
+## Seuils par défaut
 
-## Critères de promotion
+- signal exploratoire : 200 observations historiques ;
+- revue sérieuse : 1 000 observations historiques ;
+- live shadow : 200 observations réglées au même horizon ;
+- intervalle à 95 % favorable face au consensus ;
+- majorité des folds favorable ;
+- calibration non dégradée ;
+- CLV médiane non négative.
 
-La fraîcheur et un workflow réussi ne suffisent pas. La promotion doit considérer :
+## Limites
 
-- validation chronologique ;
-- log-loss et calibration ;
-- baseline naïve ;
-- comparaison Winamax/consensus ;
-- stabilité sur plusieurs périodes ;
-- absence de fuite temporelle ;
-- taille d’échantillon.
-
-## Tennis
-
-Le tennis reste expérimental et non calibré. Aucun statut `active` ne doit lui être attribué dans l’état actuel.
-
-## Usages interdits
-
-- placement automatique ;
-- recommandation de mise ;
-- promesse de rendement ;
-- réécriture d’anciennes prédictions avec un modèle plus récent.
+Aucun benchmark historique réel n’a été exécuté dans le paquet V3.6 livré. Les seuils sont des portes de gouvernance, pas une garantie de performance future.

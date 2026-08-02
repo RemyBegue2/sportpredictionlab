@@ -247,6 +247,21 @@ def run_market_benchmark(frame: pd.DataFrame, *, policy: BenchmarkPolicy | None 
 def benchmark_summary(report: dict[str, Any] | None) -> dict[str, Any]:
     if not report:
         return {"status": "not_run", "evaluated_rows": 0, "message": "No real historical benchmark has been completed."}
+    if report.get("leaderboard") is not None and report.get("reports") is not None:
+        leaderboard = list(report.get("leaderboard") or [])
+        selected = next((row for row in leaderboard if row.get("contender") == "model"), None)
+        if selected is None and leaderboard:
+            selected = leaderboard[0]
+        contender_name = str((selected or {}).get("contender") or "model")
+        legacy = (report.get("reports") or {}).get(contender_name) or {}
+        summary = benchmark_summary(legacy)
+        summary.update({
+            "mode": "champion_challenger",
+            "selected_contender": contender_name,
+            "leaderboard": leaderboard,
+            "contender_count": len(leaderboard),
+        })
+        return summary
     verdict = report.get("verdict") or {}
     comparison = (report.get("comparisons") or {}).get("model_vs_winamax") or {}
     return {

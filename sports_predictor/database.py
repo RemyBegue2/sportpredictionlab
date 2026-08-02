@@ -101,6 +101,17 @@ class BenchmarkRunRecord(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class ModelDecisionRecord(Base):
+    __tablename__ = "model_decisions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    sport_key: Mapped[str] = mapped_column(String(100), index=True)
+    champion: Mapped[str] = mapped_column(String(120), index=True)
+    status: Mapped[str] = mapped_column(String(40), index=True)
+    benchmark_run_id: Mapped[int | None] = mapped_column(Integer, index=True)
+    decision: Mapped[dict[str, Any]] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 class DataQualityIssueRecord(Base):
     __tablename__ = "data_quality_issues"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -576,6 +587,39 @@ def record_benchmark_run(*, sport_key: str, model_version: str, status: str, con
         return int(record.id)
 
 
+def record_model_decision(*, sport_key: str, champion: str, decision: Mapping[str, Any], benchmark_run_id: int | None = None) -> int:
+    with session_scope() as session:
+        record = ModelDecisionRecord(
+            sport_key=str(sport_key),
+            champion=str(champion),
+            status=str(decision.get("status") or "unknown"),
+            benchmark_run_id=benchmark_run_id,
+            decision=_json_safe(dict(decision)),
+        )
+        session.add(record)
+        session.flush()
+        return int(record.id)
+
+
+def latest_model_decision(sport_key: str | None = None) -> dict[str, Any] | None:
+    with session_scope() as session:
+        statement = select(ModelDecisionRecord).order_by(ModelDecisionRecord.created_at.desc(), ModelDecisionRecord.id.desc())
+        if sport_key:
+            statement = statement.where(ModelDecisionRecord.sport_key == sport_key)
+        row = session.scalar(statement.limit(1))
+        if row is None:
+            return None
+        return {
+            "id": row.id,
+            "sport_key": row.sport_key,
+            "champion": row.champion,
+            "status": row.status,
+            "benchmark_run_id": row.benchmark_run_id,
+            "decision": row.decision,
+            "created_at": row.created_at.isoformat(),
+        }
+
+
 def latest_benchmark_run(sport_key: str | None = None) -> dict[str, Any] | None:
     with session_scope() as session:
         statement = select(BenchmarkRunRecord).order_by(BenchmarkRunRecord.started_at.desc())
@@ -630,7 +674,7 @@ def benchmark_source_rows(*, sport_key: str, bookmaker_key: str = "winamax_fr") 
 
 def database_summary() -> dict[str, Any]:
     if not ping_database():
-        return {"connected": False, "events": 0, "odds_snapshots": 0, "predictions": 0, "shadow_predictions": 0, "settled_shadow_predictions": 0, "event_results": 0, "benchmark_runs": 0, "open_data_quality_issues": 0, "last_snapshot_at": None, "last_sync_at": None, "last_shadow_prediction_at": None}
+        return {"connected": False, "events": 0, "odds_snapshots": 0, "predictions": 0, "shadow_predictions": 0, "settled_shadow_predictions": 0, "event_results": 0, "benchmark_runs": 0, "model_decisions": 0, "open_data_quality_issues": 0, "last_snapshot_at": None, "last_sync_at": None, "last_shadow_prediction_at": None}
     with session_scope() as session:
         event_count = int(session.scalar(select(func.count(EventRecord.id))) or 0)
         snapshot_count = int(session.scalar(select(func.count(OddsSnapshotRecord.id))) or 0)
@@ -639,6 +683,7 @@ def database_summary() -> dict[str, Any]:
         shadow_count = int(session.scalar(select(func.count(ShadowPredictionRecord.id))) or 0)
         settled_shadow_count = int(session.scalar(select(func.count(ShadowPredictionRecord.id)).where(ShadowPredictionRecord.status == "settled")) or 0)
         benchmark_count = int(session.scalar(select(func.count(BenchmarkRunRecord.id))) or 0)
+        model_decision_count = int(session.scalar(select(func.count(ModelDecisionRecord.id))) or 0)
         open_quality_issues = int(session.scalar(select(func.count(DataQualityIssueRecord.id)).where(DataQualityIssueRecord.status == "open")) or 0)
         last_snapshot = session.scalar(select(func.max(OddsSnapshotRecord.observed_at)))
         last_sync = session.scalar(select(func.max(SyncRunRecord.finished_at)))
@@ -652,6 +697,7 @@ def database_summary() -> dict[str, Any]:
             "settled_shadow_predictions": settled_shadow_count,
             "event_results": result_count,
             "benchmark_runs": benchmark_count,
+            "model_decisions": model_decision_count,
             "open_data_quality_issues": open_quality_issues,
             "last_snapshot_at": last_snapshot.isoformat() if last_snapshot else None,
             "last_sync_at": last_sync.isoformat() if last_sync else None,

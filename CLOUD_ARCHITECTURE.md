@@ -1,4 +1,4 @@
-# Architecture cloud V3.5
+# Architecture cloud V3.6
 
 ```text
 GitHub Actions

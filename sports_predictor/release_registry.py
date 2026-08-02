@@ -11,7 +11,7 @@ import subprocess
 
 from .artifacts import sha256_file, verify_artifact_manifest
 
-APP_VERSION = "3.5.0"
+APP_VERSION = "3.6.0"
 RELEASE_SCHEMA_VERSION = "1.0"
 SENSITIVE_MARKERS = (
     "password",

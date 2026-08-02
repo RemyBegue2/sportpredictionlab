@@ -1,0 +1,14 @@
+{
+  "version": "3.6.0",
+  "status": "clean_after_review",
+  "real_secrets_detected": 0,
+  "reviewed_false_positives": [
+    {
+      "file": "tests/test_cloud_v31.py",
+      "reason": "test assertion references the environment-variable name THE_ODDS_API_KEY but contains no key value"
+    }
+  ],
+  "automatic_bet_placement": false,
+  "staking_recommendations": false,
+  "secrets_exported": false
+}

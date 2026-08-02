@@ -21,6 +21,7 @@ from sports_predictor.database import (
     settle_shadow_predictions,
     shadow_summary,
 )
+from sports_predictor.release_registry import APP_VERSION
 from sports_predictor.shadow_mode import evaluate_football_shadow, sample_maturity, shadow_horizon, validate_temporal_order
 
 
@@ -254,7 +255,7 @@ def test_shadow_api_and_frontend_are_exposed() -> None:
     with TestClient(webapp.app) as client:
         health = client.get("/api/health")
         assert health.status_code == 200
-        assert health.json()["version"] == "3.5.0"
+        assert health.json()["version"] == APP_VERSION
         summary = client.get("/api/shadow/summary")
         assert summary.status_code == 200
         assert summary.json()["automatic_bet_placement"] is False
@@ -264,10 +265,10 @@ def test_shadow_api_and_frontend_are_exposed() -> None:
     root = Path(__file__).resolve().parents[1]
     html = (root / "static/index.html").read_text(encoding="utf-8")
     js = (root / "static/app.js").read_text(encoding="utf-8")
-    assert "VERSION 3.5" in html
+    assert f"VERSION {APP_VERSION.rsplit('.', 1)[0]}" in html
     assert 'id="shadow"' in html
     assert "renderShadow" in js
-    assert "app.js?v=3.5.0" in html
+    assert f"app.js?v={APP_VERSION}" in html
 
 
 def test_stale_football_model_vetoes_market_candidates(monkeypatch) -> None:

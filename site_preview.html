@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Sports Prediction Lab V3.5 Operational Evidence</title>
+<title>Sports Prediction Lab V3.6 Evidence Engine</title>
 <meta content="Application cloud privée avec prédictions pré-match immuables, règlement automatique des résultats et validation en shadow mode." name="description"/>
 <style>:root{--ink:#101820;--muted:#64707a;--paper:#f4f1ea;--card:#fff;--accent:#bbff36;--line:#d7d5cf;--deep:#172b25;--danger:#c53d2f;--shadow:0 22px 70px rgba(16,24,32,.10)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.topbar{position:sticky;top:0;z-index:20;height:72px;padding:0 max(24px,calc((100vw - 1240px)/2));display:flex;align-items:center;gap:32px;border-bottom:1px solid rgba(16,24,32,.12);background:rgba(244,241,234,.92);backdrop-filter:blur(16px)}.brand{display:flex;align-items:center;gap:11px;font-weight:800;color:var(--ink);text-decoration:none}.logo{display:grid;place-items:center;width:38px;height:38px;background:var(--ink);color:var(--accent);border-radius:10px;font-size:13px;letter-spacing:.08em}.topbar nav{display:flex;gap:24px;margin-left:auto}.topbar nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:700}.topbar nav a:hover{color:var(--ink)}.pill{padding:7px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;font-weight:800}.pill.ok{color:#1f6b46;border-color:#98c6ac;background:#eaf7ef}.pill.error{color:var(--danger);border-color:#e1aaa5;background:#fff0ee}main{overflow:hidden}.hero{max-width:1240px;margin:0 auto;min-height:650px;padding:96px 24px 72px;display:grid;grid-template-columns:1.35fr .65fr;gap:70px;align-items:center}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.18em;color:#61705c;margin:0 0 14px}.hero h1,.section-heading h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.045em}.hero h1{font-size:clamp(56px,7vw,96px);line-height:.92;margin:0 0 28px}.hero h1 span{color:#58725f}.lede{max-width:720px;font-size:20px;color:var(--muted)}.actions{display:flex;gap:12px;margin-top:34px}.button{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:13px 18px;border:1px solid var(--ink);font-weight:800;font-size:14px;text-decoration:none;cursor:pointer;transition:.18s ease}.button:hover{transform:translateY(-1px)}.button.primary{background:var(--ink);color:#fff}.button.primary:hover{background:var(--deep)}.button.ghost{background:transparent;color:var(--ink)}.button.full{width:100%}.trust-card{background:var(--deep);color:#fff;border-radius:22px;padding:28px;box-shadow:var(--shadow);transform:rotate(1.1deg)}.trust-title{text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:900;color:var(--accent);margin-bottom:18px}.trust-card ol{list-style:none;padding:0;margin:0;counter-reset:item}.trust-card li{padding:16px 0;border-top:1px solid rgba(255,255,255,.15);display:grid;grid-template-columns:1fr auto;gap:10px}.trust-card li b{font-size:15px}.trust-card li span{font-size:12px;color:#b9c6c1}.stats{max-width:1240px;margin:0 auto 70px;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}.stats article{background:var(--card);padding:26px}.stats span{display:block;font-family:Georgia,serif;font-size:42px}.stats small{color:var(--muted)}.workbench{padding:100px max(24px,calc((100vw - 1240px)/2));background:#fff;border-top:1px solid var(--line)}.workbench.alt{background:#e9eee8}.section-heading{max-width:760px;margin-bottom:45px}.section-heading h2{font-size:58px;margin:0 0 10px}.section-heading>p:last-child{color:var(--muted);font-size:18px}.panel-grid{display:grid;grid-template-columns:380px 1fr;gap:28px}.control-panel,.result-panel{border:1px solid var(--line);border-radius:18px;background:var(--card);padding:28px;box-shadow:0 12px 40px rgba(16,24,32,.05)}.control-panel{display:grid;gap:18px}.control-panel label{font-size:13px;font-weight:800;display:grid;gap:8px}.control-panel select,.control-panel input{width:100%;padding:12px 13px;border:1px solid #c9cbc5;border-radius:9px;background:#fff;color:var(--ink);font:inherit}.fineprint{font-size:12px;color:var(--muted);margin:0}.result-panel{min-height:360px}.result-panel.empty{display:grid;place-items:center;color:var(--muted);border-style:dashed}.result-panel h3{margin:0 0 4px;font-size:22px}.result-subtitle{color:var(--muted);margin:0 0 26px}.prob-row{display:grid;grid-template-columns:150px 1fr 64px;gap:14px;align-items:center;margin:16px 0}.prob-label{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar-track{height:18px;background:#eef0eb;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:var(--deep);border-radius:inherit;transition:width .55s ease}.prob-value{text-align:right;font-variant-numeric:tabular-nums;font-weight:900}.result-meta{display:flex;gap:24px;padding-top:22px;margin-top:24px;border-top:1px solid var(--line)}.result-meta div{flex:1}.result-meta small{display:block;color:var(--muted)}.result-meta b{font-size:24px}.score-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}.score-table th,.score-table td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}.warning{margin-top:18px;padding:12px 14px;border-left:4px solid #d3a517;background:#fff9dc;color:#62531b;font-size:12px}.audit-section{padding:100px max(24px,calc((100vw - 1240px)/2));background:var(--ink);color:#fff}.audit-section .eyebrow{color:var(--accent)}.audit-section .section-heading>p:last-child{color:#b6c0c5}.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#334048;border:1px solid #334048}.role-grid article{background:var(--ink);padding:28px;min-height:205px}.role-grid article span{color:var(--accent);font-size:12px;font-weight:900}.role-grid h3{font-size:20px;margin:24px 0 8px}.role-grid p{color:#afbac0;font-size:14px}.audit-callout{display:flex;justify-content:space-between;align-items:center;gap:20px;border:1px solid #445058;border-radius:14px;padding:22px;margin-top:30px}.audit-callout p{margin:5px 0 0;color:#b7c0c5}.audit-callout .button{border-color:#fff;color:#fff}details{margin-top:24px;border-top:1px solid #445058;padding-top:20px}summary{cursor:pointer;font-weight:800}pre{white-space:pre-wrap;word-break:break-word;color:#b9c6c1;font-size:12px;background:#0a1015;padding:18px;border-radius:12px;max-height:460px;overflow:auto}footer{display:flex;justify-content:space-between;padding:28px max(24px,calc((100vw - 1240px)/2));font-size:12px;color:var(--muted);background:#fff;border-top:1px solid var(--line)}#toast{position:fixed;right:24px;bottom:24px;max-width:380px;padding:14px 16px;border-radius:10px;background:var(--danger);color:#fff;font-weight:700;box-shadow:var(--shadow);opacity:0;pointer-events:none;transform:translateY(12px);transition:.2s}#toast.show{opacity:1;transform:none}.loader{display:flex;gap:8px;align-items:center;justify-content:center;height:100%}.loader:before{content:"";width:18px;height:18px;border:3px solid #ccd1ca;border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
@@ -39,12 +39,12 @@
 <nav>
 <a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
 </nav>
-<div class="top-actions"><span class="pill" id="health">API ok · v3.5.0</span><button class="logout-button" hidden="" id="logoutButton" type="button">Déconnexion</button></div>
+<div class="top-actions"><span class="pill" id="health">API ok · v3.6.0</span><button class="logout-button" hidden="" id="logoutButton" type="button">Déconnexion</button></div>
 </header>
 <main>
 <section class="hero" id="overview">
 <div>
-<p class="eyebrow">VERSION 3.5.0 · OPERATIONAL EVIDENCE · MODEL REGISTRY</p>
+<p class="eyebrow">VERSION 3.6.0 · EVIDENCE ENGINE · CHAMPION–CHALLENGER</p>
 <h1>Des probabilités sportives,<br/><span>pas des certitudes vendues.</span></h1>
 <p class="lede">Une application privée qui fige automatiquement les prédictions avant match, récupère les résultats et mesure sa qualité sans placer le moindre pari.</p>
 <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
@@ -97,18 +97,18 @@
 <article class="cloud-card"><small>Authentification</small><h3 id="cloudAuth">Accès privé</h3><p>Session privée et protection CSRF pour les actions d’écriture.</p></article>
 <article class="cloud-card"><small>Base de données</small><h3 id="cloudDatabase">Connectée</h3><p id="cloudLastSync">Dernière synchronisation inconnue.</p></article>
 <article class="cloud-card"><small>Readiness</small><h3 id="cloudReady">Prête</h3><p id="cloudIssues">Modèles, intégrité et stockage validés.</p></article>
-<article class="cloud-card"><small>Release active</small><h3 id="systemRelease">v3.5.0 · 7e13c921b4af</h3><p id="systemCommit">Commit 9f1c4b72a3d1 · déploiement vérifié</p></article>
-<article class="cloud-card"><small>Modèle football</small><h3 id="systemModel">3.5.0-fresh</h3><p id="systemDataset">Données jusqu’au 24/05/2026 · 1 900 matchs</p></article>
+<article class="cloud-card"><small>Release active</small><h3 id="systemRelease">v3.6.0 · 7e13c921b4af</h3><p id="systemCommit">Commit 9f1c4b72a3d1 · déploiement vérifié</p></article>
+<article class="cloud-card"><small>Modèle football</small><h3 id="systemModel">3.6.0-fresh</h3><p id="systemDataset">Données jusqu’au 24/05/2026 · 1 900 matchs</p></article>
 <article class="cloud-card"><small>Contrat de déploiement</small><h3 id="systemIntegrity">Vérifié</h3><p id="systemContract">4/4 contrôles réussis · artefact 6a1fd33b2e91</p></article>
 </div>
 <div class="history-panel system-panel">
 <div class="history-heading"><div><small>PREUVE OPÉRATIONNELLE</small><h3>Version, commit et artefacts</h3></div><button class="button ghost" id="refreshSystem" type="button">Vérifier</button></div>
 <div class="policy-note" id="systemIssues">Contrat vérifié : version API, commit, registre et intégrité des artefacts sont cohérents.</div>
-<div class="history-list" id="systemModels"><div class="history-row"><div><b>football</b><small>football-1n2-shadow</small></div><div><b>v3.5.0-fresh</b><small>entraîné jusqu’au 24/05/2026</small></div><span class="history-decision">shadow</span><time class="history-time">6a1fd33b2e91</time></div></div>
+<div class="history-list" id="systemModels"><div class="history-row"><div><b>football</b><small>football-1n2-shadow</small></div><div><b>v3.6.0-fresh</b><small>entraîné jusqu’au 24/05/2026</small></div><span class="history-decision">shadow</span><time class="history-time">6a1fd33b2e91</time></div></div>
 </div>
 <div class="history-panel">
 <div class="history-heading"><div><small>JOURNAL D’AUDIT</small><h3>Dernières prédictions</h3></div><button class="button ghost" id="refreshHistory" type="button">Actualiser</button></div>
-<div class="history-list" id="predictionHistory"><div class="history-row"><div><b>football</b><small>v3.5.0-fresh</small></div><div><b>Arsenal — Man City</b><small>observation shadow</small></div><span class="history-decision">abstention</span><time class="history-time">02/08/2026</time></div></div>
+<div class="history-list" id="predictionHistory"><div class="history-row"><div><b>football</b><small>v3.6.0-fresh</small></div><div><b>Arsenal — Man City</b><small>observation shadow</small></div><span class="history-decision">abstention</span><time class="history-time">02/08/2026</time></div></div>
 </div>
 </section>
 <section class="workbench shadow-section" id="shadow">
@@ -177,7 +177,7 @@
 </div>
 </section>
 <section class="audit-section" id="audit">
-<div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.5</h2></div>
+<div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.6</h2></div>
 <div class="role-grid">
 <article><span>01</span><h3>Quant marchés</h3><p>Le shadow mode sépare la qualité du modèle, le prix Winamax et le consensus sans confondre signal et résultat financier.</p></article>
 <article><span>02</span><h3>Statisticien</h3><p>Chaque prédiction est figée avant match et l’échantillon est classé anecdotique, exploratoire ou évaluable.</p></article>
@@ -187,13 +187,13 @@
 <article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
 </div>
 <div class="audit-callout">
-<div><b>Verdict</b><p>V3.5 = chaque déploiement relie version, commit, modèle, dataset et métriques. Aucun workflow vert ne vaut preuve sans contrôle post-déploiement.</p></div>
+<div><b>Verdict</b><p>V3.6 = chaque déploiement relie version, commit, modèle, dataset et métriques. Aucun workflow vert ne vaut preuve sans contrôle post-déploiement.</p></div>
 <a class="button ghost" href="/docs" rel="noreferrer" target="_blank">API interactive</a>
 </div>
 <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
 </section>
 </main>
-<footer><span>Sports Prediction Lab V3.5 Operational Evidence</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+<footer><span>Sports Prediction Lab V3.6 Evidence Engine</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
 <div aria-live="polite" id="toast" role="status"></div>
 
 </body>

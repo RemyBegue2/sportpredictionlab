@@ -38,3 +38,13 @@
 - Ajout du workflow GitHub Actions de reconstruction.
 - Conservation des artefacts préconstruits dans Docker.
 - Version API et frontend portée à 3.4.0.
+
+## 3.6.0 — Evidence Engine & Champion–Challenger
+
+- ajout de `/api/model-decision` et de la page de décision ;
+- collecte shadow du champion, de Winamax, du consensus et du blend 50/50 ;
+- benchmark multi-contenders ;
+- plan de backfill immuable, validation 30 événements et approbation exacte des plans complets ;
+- décisions de modèle persistées ;
+- handoff enrichi ;
+- 99 tests, 85 % de couverture.

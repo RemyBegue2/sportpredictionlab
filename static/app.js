@@ -126,6 +126,31 @@ function renderBenchmark(data){
 }
 
 
+function renderDecision(data){
+  const decision=(data||{}).decision||{};
+  const status=decision.status||'not_evaluable';
+  const labels={not_evaluable:'Non évaluable',continue_shadow:'Continuer le shadow',promotion_review:'Revue de promotion',no_go:'NO-GO'};
+  $('#decisionStatus').textContent=labels[status]||status;
+  $('#decisionReason').textContent=decision.reason||'Aucune décision disponible.';
+  $('#decisionChampion').textContent=decision.champion||'—';
+  $('#decisionHistorical').textContent=decision.historical_predictions??0;
+  $('#decisionLive').textContent=decision.live_shadow_predictions??0;
+  const leaderboard=decision.leaderboard||[];
+  $('#decisionLeaderboard').innerHTML=leaderboard.length?`<div class="table-scroll"><table class="market-table decision-score-table"><thead><tr><th>Contender</th><th>N</th><th>Log-loss</th><th>Brier</th><th>RPS</th><th>ECE</th><th>Δ consensus</th><th>IC 95 %</th></tr></thead><tbody>${leaderboard.map(row=>{
+    const finite=value=>Number.isFinite(Number(value));
+    const fmt4=value=>finite(value)?Number(value).toFixed(4):'—';
+    const ci=finite(row.ci95_low)&&finite(row.ci95_high)?`[${Number(row.ci95_low).toFixed(4)} ; ${Number(row.ci95_high).toFixed(4)}]`:'—';
+    return `<tr><td><b>${esc(row.contender||'—')}</b></td><td>${row.evaluated_rows??0}</td><td>${fmt4(row.log_loss)}</td><td>${fmt4(row.brier)}</td><td>${fmt4(row.rps)}</td><td>${fmt4(row.ece)}</td><td>${fmt4(row.model_minus_consensus_log_loss)}</td><td>${ci}</td></tr>`;
+  }).join('')}</tbody></table></div>`:'<p>Aucun contender évalué.</p>';
+  const gates=decision.gates||{};
+  $('#decisionGates').innerHTML=Object.entries(gates).map(([name,gate])=>`<article class="gate-card ${gate.passed?'passed':'blocked'}"><small>${gate.passed?'PASS':'BLOCK'}</small><h3>${esc(name.replaceAll('_',' '))}</h3><p>${esc(JSON.stringify(gate))}</p></article>`).join('')||'<p>Aucune porte évaluée.</p>';
+}
+
+async function refreshDecision(){
+  try{ renderDecision(await jsonFetch('/api/model-decision')); }
+  catch(error){ toast(`Décision modèle indisponible : ${error.message}`); }
+}
+
 function renderShadow(data, history){
   const summary=data.summary||{};
   const aggregate=summary.aggregate||{};
@@ -248,6 +273,7 @@ async function init(){
       provider:jsonFetch('/api/odds/status'),
       history:jsonFetch('/api/history/predictions?limit=20'),
       benchmark:jsonFetch('/api/benchmark/summary'),
+      decision:jsonFetch('/api/model-decision'),
       shadow:jsonFetch('/api/shadow/summary'),
       shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
       system:jsonFetch('/api/system/status'),
@@ -264,6 +290,7 @@ async function init(){
     if(loaded.provider) renderProviderStatus(loaded.provider);
     if(loaded.history) renderHistory(loaded.history);
     if(loaded.benchmark) renderBenchmark(loaded.benchmark);
+    if(loaded.decision) renderDecision(loaded.decision);
     if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
     if(loaded.system) renderSystem(loaded.system);
     if(loaded.provider?.configured){ try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); } }
@@ -329,6 +356,7 @@ $('#loadTennisOdds').addEventListener('click',async()=>{
 $('#refreshHistory').addEventListener('click',refreshHistory);
 $('#refreshShadow').addEventListener('click',refreshShadow);
 $('#refreshSystem').addEventListener('click',refreshSystem);
+$('#refreshDecision').addEventListener('click',refreshDecision);
 $('#logoutButton').addEventListener('click',async()=>{
   try{ await jsonFetch('/api/auth/logout',{method:'POST'}); window.location.assign('/login'); }catch(error){ toast(error.message); }
 });

@@ -8,7 +8,7 @@ import urllib.request
 
 
 def fetch_json(url: str, timeout: float) -> dict:
-    request = urllib.request.Request(url, headers={"User-Agent": "sports-prediction-lab-deploy-verifier/3.5"})
+    request = urllib.request.Request(url, headers={"User-Agent": "sports-prediction-lab-deploy-verifier/3.6"})
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
 
@@ -41,7 +41,14 @@ def main() -> None:
             if payload.get("artifact_integrity_ok") is not True:
                 problems.append("artifact integrity is not verified")
             if not problems:
-                print(json.dumps({"status": "verified", "attempt": attempt, "proof": payload}, ensure_ascii=False))
+                decision = fetch_json(args.base_url.rstrip("/") + "/api/model-decision", args.timeout)
+                model_decision = decision.get("decision") or {}
+                if model_decision.get("automatic_promotion") is not False:
+                    problems.append("automatic model promotion must remain disabled")
+                if model_decision.get("profitability_claim") is not False:
+                    problems.append("profitability claim flag must remain false")
+            if not problems:
+                print(json.dumps({"status": "verified", "attempt": attempt, "proof": payload, "model_decision": decision}, ensure_ascii=False))
                 return
             last_error = "; ".join(problems)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:

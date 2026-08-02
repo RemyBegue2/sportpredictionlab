@@ -1,4 +1,4 @@
-# Déployer V3.5 sur Railway
+# Déployer V3.6 sur Railway
 
 ## Mise à niveau sûre
 
@@ -7,7 +7,7 @@ Utiliser le paquet `sports_prediction_v3_5_upgrade.zip`. Il ne contient pas les 
 Après le push, mettre sur le web et le cron :
 
 ```text
-MODEL_VERSION=3.5.0
+MODEL_VERSION=3.6.0
 ```
 
 Puis déployer le dernier commit.
@@ -22,7 +22,7 @@ GET /api/release
 Contrôler :
 
 ```text
-version = 3.5.0
+version = 3.6.0
 source_commit = commit déployé
 artifact_integrity_ok = true
 football_model_sha256 = hash attendu

@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
+from sports_predictor.release_registry import APP_VERSION
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -20,4 +22,4 @@ def test_all_static_id_selectors_exist_in_html() -> None:
 
 def test_frontend_cache_bust_matches_release() -> None:
     html = (ROOT / "static" / "index.html").read_text(encoding="utf-8")
-    assert '/static/app.js?v=3.5.0' in html
+    assert f'/static/app.js?v={APP_VERSION}' in html

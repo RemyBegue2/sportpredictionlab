@@ -1,51 +1,35 @@
-# START HERE — Sports Prediction Lab V3.5
+# START HERE — Sports Prediction Lab V3.6
 
-Ce fichier est le point d’entrée canonique d’une nouvelle conversation.
+## État confirmé
 
-## État attendu après déploiement
+- Version applicative : **3.6.0**
+- Railway : service web, `shadow-cron`, PostgreSQL, worker historique manuel
+- Modèle football frais existant conservé depuis la V3.4/V3.5
+- Déploiement et intégrité déjà traçables via `/api/release`
+- Décision champion–challenger disponible via `/api/model-decision`
+- Promotion et paris automatiques désactivés
 
-- application privée Railway ;
-- service web `sportpredictionlab` ;
-- service `shadow-cron` ;
-- PostgreSQL partagé ;
-- The Odds API configurée côté serveur ;
-- API `3.5.0` ;
-- preuve publique `/api/release` ;
-- état complet privé `/api/system/status` ;
-- modèles et releases enregistrés en base ;
-- historique shadow inchangé.
+## Travail V3.6 livré
 
-## À ne jamais supposer
+- champion, Winamax, consensus et blend 50/50 enregistrés séparément en shadow ;
+- benchmark multi-contenders ;
+- portes de promotion déterministes ;
+- backfill historique immuable et limité par défaut à 30 événements ;
+- approbation exacte du plan pour un backfill complet ;
+- handoff enrichi.
 
-- qu’un workflow vert a été déployé ;
-- que le modèle bat Winamax ;
-- que le modèle frais est `active` ;
-- que le tennis est calibré ;
-- qu’une restauration PostgreSQL a été testée sans rapport explicite.
+## Vérité statistique
 
-## Fichiers à lire dans l’ordre
+Aucun benchmark historique réel n’a encore été exécuté dans le paquet. Ne pas annoncer de rentabilité.
+
+## Prochaine action prioritaire
+
+Créer puis examiner un plan historique de 30 événements EPL à T−1 h, avec un plafond de crédits explicite. Exécuter le benchmark `model` contre `blend50`, Winamax et consensus seulement après validation de la collecte.
+
+## Fichiers à lire
 
 1. `handoff/HANDOFF_CURRENT.md`
 2. `handoff/HANDOFF_CURRENT.json`
-3. `artifacts/release_manifest.json`
-4. `artifacts/fresh_rebuild_report.json`
-5. dernier log Railway ou GitHub Actions joint par l’utilisateur
-
-## Vérifications prioritaires
-
-1. comparer `/api/release.version` avec le commit attendu ;
-2. comparer `source_commit` au dernier commit déployé ;
-3. vérifier `artifact_integrity_ok` ;
-4. identifier le modèle football actif et son cutoff ;
-5. lire les métriques shadow par modèle et horizon ;
-6. distinguer les faits vérifiés des inférences.
-
-## Règles permanentes
-
-- pré-match uniquement ;
-- aucune connexion au compte Winamax ;
-- aucun pari automatique ;
-- aucune taille de mise ;
-- aucun historique réécrit silencieusement ;
-- une shortlist vide est valide ;
-- aucune rentabilité annoncée sans preuve hors échantillon.
+3. `handoff/NEXT_ACTIONS.md`
+4. `AUDIT_MULTI_ROLES_V3_6.md`
+5. `RESULTATS_V3_6.md`

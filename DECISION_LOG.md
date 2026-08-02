@@ -1,14 +1,12 @@
-# Journal des décisions V3.5
+# Journal des décisions
 
-1. La preuve de déploiement vient du conteneur exposé, pas du statut du workflow.
-2. `/api/release` est public mais minimal et sans secret.
-3. `/api/system/status` reste privé.
-4. Le statut modèle est explicite et ne change pas au redémarrage.
-5. Un seul modèle peut être `active` par sport.
-6. Les anciennes prédictions restent liées à leur version originale.
-7. Les métriques sont séparées par modèle et horizon.
-8. Les artefacts frais du dépôt utilisateur ne doivent pas être remplacés par une archive locale obsolète.
-9. Le rollback restaure des artefacts, pas l’historique de prédictions.
-10. Le backup portable complète, mais ne remplace pas, les backups managés Railway.
-11. Aucun pari automatique ni taille de mise ne sera ajouté.
-12. L’export de conversation suit une liste blanche et n’inclut aucun secret.
+## V3.6
+
+1. La priorité passe de la traçabilité du déploiement à la preuve comparative du modèle.
+2. Winamax et consensus deviennent des baselines shadow immuables.
+3. Un blend 50/50 est ajouté comme premier challenger simple et interprétable.
+4. Tous les contenders sont évalués sur des folds et lignes temporelles identiques.
+5. La validation historique commence par 30 événements maximum.
+6. Un backfill complet exige l’approbation exacte du `plan_id`.
+7. Une décision favorable ne déclenche jamais une promotion automatique.
+8. Aucun résultat synthétique n’est publié comme preuve réelle.
