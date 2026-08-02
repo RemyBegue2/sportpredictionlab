@@ -285,6 +285,10 @@ async function init(){
     fill('#homeTeam',cat.football_teams,'Arsenal'); fill('#awayTeam',cat.football_teams,'Man City');
     fill('#player1',cat.tennis_players,'Taylor Fritz'); fill('#player2',cat.tennis_players,'Alexander Zverev');
     syncDifferent('#homeTeam','#awayTeam'); syncDifferent('#player1','#player2');
+    // Le centre de contrôle est critique pour le pilotage. On le charge et
+    // l'affiche indépendamment des appels plus lents (cotes, shadow, benchmark).
+    // Ainsi, une API secondaire lente ne bloque plus son rendu.
+    const controlTask=refreshControl();
     const requests={
       audit:jsonFetch('/api/metrics'),
       slate:jsonFetch('/api/bets/today'),
@@ -295,7 +299,6 @@ async function init(){
       shadow:jsonFetch('/api/shadow/summary'),
       shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
       system:jsonFetch('/api/system/status'),
-      control:jsonFetch('/api/control-center'),
     };
     const keys=Object.keys(requests);
     const settled=await Promise.allSettled(Object.values(requests));
@@ -312,7 +315,7 @@ async function init(){
     if(loaded.decision) renderDecision(loaded.decision);
     if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
     if(loaded.system) renderSystem(loaded.system);
-    if(loaded.control) renderControlCenter(loaded.control);
+    await controlTask;
     if(loaded.provider?.configured){ try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); } }
   }catch(e){
     toast(`Interface partiellement chargée : ${e.message}`);

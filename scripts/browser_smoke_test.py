@@ -35,7 +35,27 @@ def main() -> None:
             page.wait_for_url(lambda url: "/login" not in url, timeout=args.timeout_ms)
         page.wait_for_selector("#health.ok", timeout=args.timeout_ms)
         health = page.locator("#health").inner_text()
-        control = page.locator("#controlOverall").inner_text()
+
+        # Le badge santé est rendu avant les appels secondaires. Attendre le
+        # contenu réel du centre de contrôle évite un faux négatif de course.
+        try:
+            page.wait_for_function(
+                """() => {
+                    const element = document.querySelector('#controlOverall');
+                    if (!element) return false;
+                    const value = (element.textContent || '').trim();
+                    return value.length > 0 && value !== '—';
+                }""",
+                timeout=args.timeout_ms,
+            )
+        except Exception as exc:
+            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
+            raise SystemExit(
+                "Browser smoke test failed: control center did not render"
+                + (f"; interface message: {toast}" if toast else "")
+            ) from exc
+
+        control = page.locator("#controlOverall").inner_text().strip()
         browser.close()
 
     expected = f"v{args.expected_version}"

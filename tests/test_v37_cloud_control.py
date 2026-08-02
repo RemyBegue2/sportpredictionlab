@@ -161,3 +161,14 @@ def test_cloud_workflow_caps_and_rollback_are_operational() -> None:
     assert "APP_PASSWORD" in deployment
     assert "the post" not in deployment.casefold() or "playwright" in deployment
     assert "scripts.browser_smoke_test" in deployment
+
+
+def test_browser_smoke_waits_for_control_center_render() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script = (root / "scripts" / "browser_smoke_test.py").read_text(encoding="utf-8")
+    frontend = (root / "static" / "app.js").read_text(encoding="utf-8")
+
+    assert "page.wait_for_function" in script
+    assert "value !== '—'" in script
+    assert "const controlTask=refreshControl();" in frontend
+    assert "control:jsonFetch('/api/control-center')" not in frontend
