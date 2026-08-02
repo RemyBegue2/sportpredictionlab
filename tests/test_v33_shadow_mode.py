@@ -270,22 +270,64 @@ def test_shadow_api_and_frontend_are_exposed() -> None:
     assert "app.js?v=3.4.0" in html
 
 
-def test_stale_football_model_vetoes_market_candidates() -> None:
+def test_stale_football_model_vetoes_market_candidates(monkeypatch) -> None:
     import webapp
 
+    # Le test contrôle le veto d'un modèle obsolète indépendamment du modèle
+    # réellement actif, qui peut avoir été promu par le workflow juste avant.
+    monkeypatch.setattr(
+        webapp,
+        "_model_freshness",
+        lambda **_: {
+            "status": "degraded_stale",
+            "age_days": 999,
+            "stale": True,
+            "maximum_age_days": 365,
+            "data_cutoff": "2023-10-23T00:00:00+00:00",
+        },
+    )
+
     with TestClient(webapp.app) as client:
-        payload = client.post("/api/football/predict", json={
-            "home_team": "Arsenal",
-            "away_team": "Man City",
-            "date": "2026-08-16",
-            "winamax_home_odds": 3.20,
-            "winamax_draw_odds": 3.60,
-            "winamax_away_odds": 2.20,
-            "odds_observed_at": datetime.now(timezone.utc).isoformat(),
-        }).json()
+        response = client.post(
+            "/api/football/predict",
+            json={
+                "home_team": "Arsenal",
+                "away_team": "Man City",
+                "date": "2026-08-16",
+                "winamax_home_odds": 3.20,
+                "winamax_draw_odds": 3.60,
+                "winamax_away_odds": 2.20,
+                "odds_observed_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+
+    assert response.status_code == 200, response.text
+
+    payload = response.json()
     assert payload["model_freshness"]["stale"] is True
     assert payload["market_analysis"]["shortlist"] == []
-    assert payload["market_analysis"]["operational_veto"] == "modèle trop ancien pour une sélection opérationnelle"
+    assert (
+        payload["market_analysis"]["operational_veto"]
+        == "modèle trop ancien pour une sélection opérationnelle"
+    )
+
+def test_model_freshness_distinguishes_stale_and_current_cutoffs() -> None:
+    import webapp
+
+    stale = webapp._model_freshness(
+        data_cutoff="2023-10-23",
+        as_of="2026-08-16",
+    )
+    current = webapp._model_freshness(
+        data_cutoff="2026-05-24",
+        as_of="2026-08-16",
+    )
+
+    assert stale["stale"] is True
+    assert stale["status"] == "degraded_stale"
+
+    assert current["stale"] is False
+    assert current["status"] == "current"
 
 
 def test_shadow_cycle_orchestration_and_quota_guard(monkeypatch, tmp_path: Path) -> None:
