@@ -1,0 +1,28 @@
+{
+  "app_version": "4.1.2",
+  "package_version": "0.4.1.2",
+  "status": "passed_by_batches",
+  "tests": {
+    "total": 162,
+    "passed": 162,
+    "failed": 0,
+    "exact_regression_path": {
+      "command": "pytest -q tests/test_v411_hotfix.py tests/test_webapp.py",
+      "passed": 11
+    },
+    "main_batch_passed": 152,
+    "deployment_entrypoints_passed": 10
+  },
+  "syntax": {
+    "python_compileall": "passed",
+    "javascript_node_check": "passed",
+    "yaml_files_loaded": 13
+  },
+  "scope": {
+    "database_schema_changed": false,
+    "prediction_logic_changed": false,
+    "provider_calls_made": false,
+    "credits_consumed": false
+  },
+  "known_validation_limit": "The monolithic suite can stall on deployment subprocess tests in this isolated environment; the same tests pass separately and the exact GitHub failure path passes in one process."
+}

@@ -1033,10 +1033,22 @@ def ready():
     db = database_summary()
     if not db["connected"]:
         issues.append("database unavailable")
-    if STARTUP_STATE.get("database_error"):
+
+    # Startup failures are diagnostics, not permanent readiness latches.
+    # A dependency may recover after process startup (or a test may have
+    # deliberately exercised a failure path). Current live checks are the
+    # source of truth for readiness. Clear stale startup errors once the
+    # corresponding dependency is demonstrably healthy.
+    if db["connected"]:
+        STARTUP_STATE["database_error"] = None
+    elif STARTUP_STATE.get("database_error"):
         issues.append(f"database startup error: {STARTUP_STATE['database_error']}")
-    if STARTUP_STATE.get("model_error"):
+
+    if models.get("football") and models.get("tennis") and models.get("artifact_integrity_verified"):
+        STARTUP_STATE["model_error"] = None
+    elif STARTUP_STATE.get("model_error"):
         issues.append(f"model startup error: {STARTUP_STATE['model_error']}")
+
     payload = {
         "status": "ready" if not issues else "not_ready",
         "version": app.version,

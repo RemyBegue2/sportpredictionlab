@@ -25,7 +25,7 @@ def _settings() -> CloudSettings:
         database_url="postgresql+psycopg://user:password@example.com:5432/railway",
         odds_sync_sports=("soccer_epl",),
         odds_stale_minutes=15,
-        model_version="4.1.1-test",
+        model_version="4.1.2-test",
     )
 
 
@@ -96,14 +96,35 @@ def test_startup_errors_are_logged_without_exception_details(monkeypatch, caplog
     def fail_models():
         raise ValueError("private model path")
 
-    monkeypatch.setattr(webapp, "init_database", fail_database)
-    monkeypatch.setattr(webapp, "resources", fail_models)
-    with caplog.at_level(logging.INFO, logger="sports_prediction_lab.startup"):
-        webapp.initialize_runtime()
+    previous_state = dict(webapp.STARTUP_STATE)
+    try:
+        monkeypatch.setattr(webapp, "init_database", fail_database)
+        monkeypatch.setattr(webapp, "resources", fail_models)
+        with caplog.at_level(logging.INFO, logger="sports_prediction_lab.startup"):
+            webapp.initialize_runtime()
 
-    assert "database startup failed error_type=RuntimeError" in caplog.text
-    assert "model startup failed error_type=ValueError" in caplog.text
-    assert "startup readiness version=4.1.1" in caplog.text
-    assert "secret-user" not in caplog.text
-    assert "secret-pass" not in caplog.text
-    assert "private model path" not in caplog.text
+        assert "database startup failed error_type=RuntimeError" in caplog.text
+        assert "model startup failed error_type=ValueError" in caplog.text
+        assert "startup readiness version=4.1.2" in caplog.text
+        assert "secret-user" not in caplog.text
+        assert "secret-pass" not in caplog.text
+        assert "private model path" not in caplog.text
+    finally:
+        webapp.STARTUP_STATE.clear()
+        webapp.STARTUP_STATE.update(previous_state)
+
+
+def test_readiness_recovers_from_stale_startup_errors() -> None:
+    import webapp
+    from fastapi.testclient import TestClient
+
+    previous_state = dict(webapp.STARTUP_STATE)
+    try:
+        webapp.STARTUP_STATE.update({"database_error": "RuntimeError", "model_error": "ValueError"})
+        response = TestClient(webapp.app).get("/api/ready")
+        assert response.status_code == 200, response.text
+        assert response.json()["status"] == "ready"
+        assert webapp.STARTUP_STATE == {"database_error": None, "model_error": None}
+    finally:
+        webapp.STARTUP_STATE.clear()
+        webapp.STARTUP_STATE.update(previous_state)

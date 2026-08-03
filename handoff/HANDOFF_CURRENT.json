@@ -38,7 +38,7 @@
     "synthetic_metrics_published_as_real": false,
     "version": "3.6.0"
   },
-  "current_version": "4.1.1",
+  "current_version": "4.1.2",
   "deployment": {
     "cloud_jobs": [
       "GitHub Actions evidence campaign"
@@ -102,7 +102,7 @@
     },
     "version": "3.4.0"
   },
-  "generated_at_utc": "2026-08-03T15:29:05.989440+00:00",
+  "generated_at_utc": "2026-08-03T15:50:44.090485+00:00",
   "git": {
     "branch": "unknown",
     "commit": "unknown",
@@ -1209,7 +1209,7 @@
       "service_id": null,
       "source_commit": "unknown",
       "source_commit_short": "unknown",
-      "version": "4.1.1"
+      "version": "4.1.2"
     },
     "football_model": {
       "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
@@ -1232,7 +1232,7 @@
       },
       "trained_until": "2026-05-24T00:00:00+00:00"
     },
-    "generated_at_utc": "2026-08-03T15:29:05.988933+00:00",
+    "generated_at_utc": "2026-08-03T15:50:44.089972+00:00",
     "integrity": {
       "artifact_integrity_ok": true,
       "artifact_manifest_present": true,
@@ -1262,7 +1262,7 @@
       "code_files": {
         ".github/workflows/deploy-production.yml": {
           "bytes": 5299,
-          "sha256": "6ebffc1a765f403ed9a4e5cac332fbc9a1fb4da107b3f6384d3382345e2dd167"
+          "sha256": "89df834b36ad93d22b61951e52caeee9b783924a04af90ac23a065d46e1160ed"
         },
         ".github/workflows/estimate-historical-sample.yml": {
           "bytes": 3864,
@@ -1274,15 +1274,15 @@
         },
         ".github/workflows/rebuild-fresh-football.yml": {
           "bytes": 5977,
-          "sha256": "d9106255e6756538f833ee05b736ec8b043035fcb20bfa83810645b617eda21a"
+          "sha256": "96f672ebb49166b4ea3ff2c4ba99412e010db7af7bc55c5b3427659dfc851620"
         },
         ".github/workflows/run-historical-sample.yml": {
           "bytes": 15311,
-          "sha256": "eb28de04a761e3504fe71f896f4a69e79fe85ac80e8331444ac1331f8c7cf66f"
+          "sha256": "86c8fc74ddc6c8d43d562cd6b195f038fc8a57f82f857c2bf4c8abc9a3a1fb58"
         },
         ".github/workflows/verify-production.yml": {
           "bytes": 3214,
-          "sha256": "c944730db43eefcdee4e311955fd6e357a4a36fad4ec6f230d1d0acb93648b84"
+          "sha256": "523e472945103ec3912eebe151227a846b372845b6400e0949353658a6c78fe8"
         },
         "Dockerfile": {
           "bytes": 1117,
@@ -1326,11 +1326,11 @@
         },
         "static/index.html": {
           "bytes": 24862,
-          "sha256": "3624601f234d75e59ab3a9bd0d4a0b41959bf8b3539fd0f5ca710355ab3b17c0"
+          "sha256": "28bc04988c8589b63c306b1dbe56b367bd54b6e81df6d5c803058e1f53d108f8"
         },
         "webapp.py": {
-          "bytes": 68847,
-          "sha256": "38dc28790b7302fffa570b94fc94cb5fbc849c013da4ca820d0c2649812b1bbe"
+          "bytes": 69420,
+          "sha256": "539007e599bbced2ab009563e8478384c5c9fea025ddaf112352d11df852b044"
         }
       }
     },
@@ -1364,7 +1364,7 @@
         "rps": 0.43954820365378716
       }
     },
-    "release_id": "6fd029112eee2e1ee00c",
+    "release_id": "e66e9ec0df19afee5a2f",
     "safety": {
       "automatic_bet_placement": false,
       "secrets_exported": false,

@@ -6,7 +6,7 @@
 2. Lancer **Deploy production**.
 3. Attendre la fin des tests et du déploiement.
 4. Vérifier `/api/ready` puis `/api/release`.
-5. Confirmer la version `4.1.1`, le commit et le hash du modèle.
+5. Confirmer la version `4.1.2`, le commit et le hash du modèle.
 
 ## Préparer une campagne sans crédit
 
@@ -57,8 +57,8 @@ Les workflows modifiant la production partagent le groupe `production-change`. N
 - aucune promotion automatique de modèle ;
 - aucune affirmation de rentabilité à partir d’un petit échantillon.
 
-## Incident backup ou healthcheck V4.1.1
+## Incident backup ou healthcheck V4.1.2
 
-- `Healthcheck failure` sans logs applicatifs : confirmer que la version déployée est au moins `4.1.1`; `/api/ready` doit être joignable sans connexion.
+- `Healthcheck failure` sans logs applicatifs : confirmer que la version déployée est au moins `4.1.2`; `/api/ready` doit être joignable sans connexion.
 - `invalid literal for int() with base 10: ''` : le secret de base contient un port vide. Créer `DATABASE_PUBLIC_URL` dans GitHub avec l’URL publique Railway résolue et relancer le backup.
 - Une URL se terminant par `.railway.internal` fonctionne dans Railway, mais pas depuis un runner GitHub hébergé.

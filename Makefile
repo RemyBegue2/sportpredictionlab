@@ -42,7 +42,7 @@ release-snapshot:
 	python -m scripts.snapshot_release
 
 system-proof:
-	@echo "Use: python -m scripts.post_deploy_verify --base-url <url> --expected-version 4.1.1"
+	@echo "Use: python -m scripts.post_deploy_verify --base-url <url> --expected-version 4.1.2"
 
 db-backup:
 	python -m scripts.portable_db_backup --backup

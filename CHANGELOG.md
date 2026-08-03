@@ -1,5 +1,12 @@
 # Changelog
 
+## V4.1.2 — Readiness recovery & test isolation hotfix
+
+- Fixed deployment pipeline failure caused by leaked global startup state between tests.
+- `/api/ready` now clears stale startup diagnostics after successful live checks.
+- Added regression coverage for transient startup recovery.
+
+
 ## V4.1.1 — Railway readiness & backup connectivity hotfix
 
 - rend `/api/ready` accessible aux sondes Railway/Docker même lorsque l’authentification applicative est activée ;
