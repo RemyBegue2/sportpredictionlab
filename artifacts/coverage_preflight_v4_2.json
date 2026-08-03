@@ -1,0 +1,132 @@
+{
+  "accepted": false,
+  "app_version": "4.2.0",
+  "assumed_matching_rate": 0.95,
+  "baseline": "consensus",
+  "baseline_coverage": 0.3,
+  "baseline_coverage_ci95_high": 0.6032218525388546,
+  "baseline_coverage_ci95_low": 0.10779126740630099,
+  "baseline_ready_event_ids": [
+    "1cb5fdae7703fb61d1de571066050f9b",
+    "e6e88546df45a25ee81d07b597d91167",
+    "ea38471acf4d5944929f9025e151376d"
+  ],
+  "baseline_ready_events": 3,
+  "bookmaker_coverage": [
+    {
+      "bookmaker_key": "winamax_fr",
+      "complete_events": 3,
+      "coverage": 0.3,
+      "probed_events": 10
+    },
+    {
+      "bookmaker_key": "betclic_fr",
+      "complete_events": 3,
+      "coverage": 0.3,
+      "probed_events": 10
+    },
+    {
+      "bookmaker_key": "unibet_fr",
+      "complete_events": 3,
+      "coverage": 0.3,
+      "probed_events": 10
+    },
+    {
+      "bookmaker_key": "pmu_fr",
+      "complete_events": 3,
+      "coverage": 0.3,
+      "probed_events": 10
+    },
+    {
+      "bookmaker_key": "pinnacle",
+      "complete_events": 10,
+      "coverage": 1.0,
+      "probed_events": 10
+    }
+  ],
+  "campaign_snapshot_capacity": 63,
+  "campaign_type": "french_market_comparison",
+  "candidate_campaign_plan": null,
+  "decision": "NOT_VIABLE",
+  "estimated_discovery_credits": 14,
+  "estimated_snapshot_cost": 10.0,
+  "generated_at": "2026-08-03T18:11:21.590724+00:00",
+  "maximum_campaign_credits": 650,
+  "maximum_preflight_credits": 120,
+  "odds_evidence_sha256": "9ca9cc0a27bd81683f38afd4b888583394cb1681ef4a1defad59b947f722403e",
+  "period_coverage": [
+    {
+      "baseline_ready_events": 0,
+      "ci95_high": 0.4898908364545973,
+      "ci95_low": 0.0,
+      "coverage": 0.0,
+      "end_date": "2023-03-31",
+      "period": "2023Q1",
+      "probed_events": 4,
+      "start_date": "2023-01-01"
+    },
+    {
+      "baseline_ready_events": 0,
+      "ci95_high": 0.5614970317550455,
+      "ci95_low": 4.8683609171202235e-17,
+      "coverage": 0.0,
+      "end_date": "2024-09-30",
+      "period": "2024Q3",
+      "probed_events": 3,
+      "start_date": "2024-07-01"
+    },
+    {
+      "baseline_ready_events": 3,
+      "ci95_high": 1.0,
+      "ci95_low": 0.4385029682449545,
+      "coverage": 1.0,
+      "end_date": "2026-06-30",
+      "period": "2026Q2",
+      "probed_events": 3,
+      "start_date": "2026-04-01"
+    }
+  ],
+  "preflight_credits": 114,
+  "preflight_id": "PFL-53928BFD01500CE4A0DE4C31",
+  "preflight_plan_id": "PFP-4183F2838B3071C51014E0A8",
+  "probe_event_ids": [
+    "037d7b6bb128546961e2a06680f63944",
+    "055f48ea54ea77ffa2b16ef7310b04b6",
+    "1cb5fdae7703fb61d1de571066050f9b",
+    "737d7f26ee63391ddd81c82a015c9f79",
+    "8b1906ff17c3bb18eb23409f223a4895",
+    "8f3ad2131853e76cd8960e844d1b7930",
+    "e6e88546df45a25ee81d07b597d91167",
+    "ea38471acf4d5944929f9025e151376d",
+    "eb749753d96a4af7d4a56f949573a279",
+    "ef614a0cdf2f14e4e20a8f8c2f1f46c4"
+  ],
+  "probe_event_ids_sha256": "3df94a2c5c588e5d87bd95ee5acf2f551dede8ff20ef3455886bf00cffe37a51",
+  "projected_benchmark_ready_events_at_capacity": 17,
+  "projected_benchmark_ready_rate": 0.285,
+  "provider_coverage": 1.0,
+  "provider_returned_events": 10,
+  "reason": "baseline_coverage_upper_bound_below_threshold",
+  "recommended_followup_preflight": {
+    "end_date": "2026-06-30",
+    "minimum_recommended_probe_events": 10,
+    "observed_coverage": 1.0,
+    "observed_events": 3,
+    "reason": "promising_period_requires_more_probe_events",
+    "start_date": "2026-04-01"
+  },
+  "recommended_selected_events": 106,
+  "responsible_use": {
+    "automatic_bet_placement": false,
+    "experimental_analysis": true,
+    "profitability_claim": false,
+    "stake_recommendation": false
+  },
+  "sampled_events": 10,
+  "sampling_method": "deterministic_quarter_stratified_without_outcomes",
+  "schema_version": "1.0",
+  "source_commit": "1d939f0e0047c47bdb3ab64a90b410d824a83871",
+  "target_stage": 30,
+  "uncertainty_limitations": "Diagnostic only: probes are deterministic, so this is not a formal random-sample population confidence interval.",
+  "uncertainty_method": "wilson_score_diagnostic"
+}

@@ -1,0 +1,6 @@
+bookmaker_key,probed_events,complete_events,coverage
+winamax_fr,10,3,0.3
+betclic_fr,10,3,0.3
+unibet_fr,10,3,0.3
+pmu_fr,10,3,0.3
+pinnacle,10,10,1.0
