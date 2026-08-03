@@ -1,0 +1,182 @@
+name: Recompute latest evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: recompute-latest-evidence
+  cancel-in-progress: false
+
+jobs:
+  recompute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
+      RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      EXPECTED_VERSION: '3.9.0'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Validate all required cloud configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          errors=()
+          [ -n "${RAILWAY_TOKEN:-}" ] || errors+=("missing repository secret: RAILWAY_TOKEN")
+          [ -n "${RAILWAY_PROJECT_ID:-}" ] || errors+=("missing repository secret: RAILWAY_PROJECT_ID")
+          [ -n "${APP_PUBLIC_URL:-}" ] || errors+=("missing repository variable: APP_PUBLIC_URL")
+          if [ ${#errors[@]} -gt 0 ]; then
+            {
+              echo '### Recompute blocked: complete configuration required'
+              echo
+              for error in "${errors[@]}"; do echo "- $error"; done
+            } >> "$GITHUB_STEP_SUMMARY"
+            printf 'Configuration errors:\n'
+            printf ' - %s\n' "${errors[@]}"
+            exit 2
+          fi
+
+      - name: Locate latest historical evidence artifact
+        id: latest
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" > /tmp/artifacts.json
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path('/tmp/artifacts.json').read_text(encoding='utf-8'))
+          candidates = [
+              item for item in payload.get('artifacts', [])
+              if not item.get('expired') and str(item.get('name', '')).startswith('historical-sample-evidence-')
+          ]
+          if not candidates:
+              raise SystemExit('No non-expired historical-sample-evidence artifact was found')
+          latest = max(candidates, key=lambda item: str(item.get('created_at') or ''))
+          run = latest.get('workflow_run') or {}
+          if not run.get('id'):
+              raise SystemExit('The latest historical artifact has no workflow run identifier')
+          print(f"artifact_id={latest['id']}")
+          print(f"artifact_name={latest['name']}")
+          print(f"run_id={run['id']}")
+          PY
+
+      - name: Download historical evidence without provider calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download '${{ steps.latest.outputs.run_id }}' \
+            --name '${{ steps.latest.outputs.artifact_name }}' \
+            --dir .
+          test -s data/odds_api/backfill/plan.json
+          test -s data/odds_api/backfill/state.json
+          test -s data/odds_api/backfill/historical_odds_long.csv
+          test -s data/odds_api/historical/events.csv
+          echo 'Latest historical artifact: `${{ steps.latest.outputs.artifact_name }}` (ID `${{ steps.latest.outputs.artifact_id }}`)' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Provider API calls executed: **0**' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Recompute V3.9 denominators and gates
+        run: |
+          if [ ! -f artifacts/market_benchmark_v3_9.json ] && [ -f artifacts/market_benchmark_v3_8.json ]; then
+            cp artifacts/market_benchmark_v3_8.json artifacts/market_benchmark_v3_9.json
+          fi
+          python -m scripts.build_evidence_report \
+            --matches-csv data/benchmark/event_mapping.csv \
+            --benchmark-json artifacts/market_benchmark_v3_9.json \
+            --output artifacts/evidence_report_v3_9.json
+          python -m scripts.export_evidence_tables \
+            --report artifacts/evidence_report_v3_9.json \
+            --events-output artifacts/event_outcomes_v3_9.csv \
+            --bookmakers-output artifacts/bookmaker_coverage_v3_9.csv
+
+      - name: Test
+        run: pytest -q
+
+      - name: Commit corrected evidence
+        id: evidence_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'sports-prediction-bot'
+          git config user.email 'sports-prediction-bot@users.noreply.github.com'
+          git add artifacts/evidence_report_v3_9.json artifacts/event_outcomes_v3_9.csv artifacts/bookmaker_coverage_v3_9.csv
+          if git diff --cached --quiet; then
+            echo 'No evidence change to commit.'
+          else
+            git commit -m 'chore: recompute V3.9 evidence denominators'
+            git push
+          fi
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release proof
+        env:
+          SOURCE_COMMIT: ${{ steps.evidence_commit.outputs.head_sha }}
+        run: python -m scripts.generate_release_manifest
+
+      - name: Install Railway CLI
+        run: npm install --global @railway/cli
+
+      - name: Deploy corrected dashboard
+        run: |
+          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
+            --service "$RAILWAY_WEB_SERVICE" --message "V3.9 evidence recompute ${{ steps.evidence_commit.outputs.head_sha }}"
+
+      - name: Verify production release
+        shell: bash
+        run: |
+          MODEL_SHA=$(python -c "import json; print(json.load(open('artifacts/release_manifest.json'))['football_model']['artifact_sha256'] or '')")
+          python -m scripts.post_deploy_verify \
+            --base-url "$APP_PUBLIC_URL" \
+            --expected-version "$EXPECTED_VERSION" \
+            --expected-commit '${{ steps.evidence_commit.outputs.head_sha }}' \
+            --expected-model-sha256 "$MODEL_SHA" \
+            --attempts 30 --delay-seconds 10
+
+      - name: Upload corrected evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3-9-recomputed-evidence-${{ github.run_id }}
+          path: |
+            artifacts/evidence_report_v3_9.json
+            artifacts/event_outcomes_v3_9.csv
+            artifacts/bookmaker_coverage_v3_9.csv
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f artifacts/evidence_report_v3_9.json ]; then
+            {
+              echo '### V3.9 zero-credit evidence recompute'
+              echo
+              echo "- Discovered events: \`$(jq -r '.funnel.discovered_events // 0' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Selected events: \`$(jq -r '.funnel.selected_events // 0' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Completed targets: \`$(jq -r '.funnel.completed_event_snapshots // 0' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Provider-returned targets: \`$(jq -r '.funnel.provider_returned_event_snapshots // 0' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Provider coverage: \`$(jq -r '((.rates.provider_return_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Consensus coverage: \`$(jq -r '((.rates.consensus_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Winamax coverage: \`$(jq -r '((.rates.winamax_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Provider credits consumed by this workflow: \`0\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
