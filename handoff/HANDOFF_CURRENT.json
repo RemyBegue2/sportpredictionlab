@@ -40,7 +40,7 @@
     "version": "3.6.0"
   },
   "coverage_preflight": null,
-  "current_version": "4.2.0",
+  "current_version": "4.2.1",
   "deployment": {
     "cloud_jobs": [
       "GitHub Actions evidence campaign"
@@ -104,11 +104,11 @@
     },
     "version": "3.4.0"
   },
-  "generated_at_utc": "2026-08-03T17:46:31.174572+00:00",
+  "generated_at_utc": "2026-08-03T18:15:07.492815+00:00",
   "git": {
-    "branch": "unverified",
-    "commit": "unverified",
-    "commit_short": "unverified"
+    "branch": "unknown",
+    "commit": "unknown",
+    "commit_short": "unknown"
   },
   "historical_evidence": {
     "app_version": "3.9.0",
@@ -1210,9 +1210,9 @@
       "environment": "development",
       "name": "sports-prediction-lab",
       "service_id": null,
-      "source_commit": "unverified",
-      "source_commit_short": "unverified",
-      "version": "4.2.0"
+      "source_commit": "unknown",
+      "source_commit_short": "unknown",
+      "version": "4.2.1"
     },
     "football_model": {
       "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
@@ -1235,7 +1235,7 @@
       },
       "trained_until": "2026-05-24T00:00:00+00:00"
     },
-    "generated_at_utc": "2026-08-03T17:46:31.174005+00:00",
+    "generated_at_utc": "2026-08-03T18:15:07.492200+00:00",
     "integrity": {
       "artifact_integrity_ok": true,
       "artifact_manifest_present": true,
@@ -1265,11 +1265,11 @@
       "code_files": {
         ".github/workflows/deploy-production.yml": {
           "bytes": 5339,
-          "sha256": "4eefda33af7ddb6f4b824bd7aa45f01651b2699df316813a127acf54444cbaa6"
+          "sha256": "cce580fba635a4ed19c5103340beededadf6bf2f99c323370cce1eb7030e2b09"
         },
         ".github/workflows/estimate-evidence-coverage.yml": {
           "bytes": 7819,
-          "sha256": "5940c915b07570994ffe680bcb469735c403ee39a9240a1e1383e8d87901c258"
+          "sha256": "bf9a40b0a31cc76089e2b431fdf993ef4e0476edd8463e349f43cdb9518abffc"
         },
         ".github/workflows/estimate-historical-sample.yml": {
           "bytes": 3864,
@@ -1281,19 +1281,19 @@
         },
         ".github/workflows/rebuild-fresh-football.yml": {
           "bytes": 5985,
-          "sha256": "7b55d86098f1d418fe3de1cc22d92539603118c25e8927c26b4ed3116d35030e"
+          "sha256": "46b5a2c3164de9e05345dc4ca940999cd34a03ebb6d2ff91bd5964667059d2a6"
         },
         ".github/workflows/run-evidence-campaign.yml": {
           "bytes": 25747,
-          "sha256": "55dd5342abcb56245829542b7b2822f137777007ec4c6144e7077ccdbecd74a9"
+          "sha256": "e55cb0a4b7fd1f40a8e7c339d3f141fb4a3fdf29b32e8f1c4952b0c0b4763c91"
         },
         ".github/workflows/run-historical-sample.yml": {
           "bytes": 15315,
-          "sha256": "94469d34380f2554b86e9bd18e1926ac8c9a148a086fa6c2cec3a4b5f3a447ac"
+          "sha256": "74ef2ba64b1ad0c36dcfe4dc267ae60da6b6edd68d74580eb765d37d46bda48f"
         },
         ".github/workflows/verify-production.yml": {
           "bytes": 3214,
-          "sha256": "07c7a040da85b7c5d2819b80c1e535cc68f248650523f39ed0c0de61dd23f947"
+          "sha256": "f5fb800d78a6c1da00d2ba9ba289824e4eddede022dbd600a438c716e509da41"
         },
         "Dockerfile": {
           "bytes": 1117,
@@ -1344,12 +1344,12 @@
           "sha256": "4d13557ec245d7c31e6f7d21e1756fb3ebc67b3b95f7b6f824ad2fb26d2193b5"
         },
         "static/app.js": {
-          "bytes": 38527,
-          "sha256": "fd3116d05ad77e728aeb8934334511408d8c610dbaf42cbfbe691c9699acae7f"
+          "bytes": 38537,
+          "sha256": "fcffa30b2e827b0425c31baa2c4fa315acdfea3f035cd91924915227fab9fd5f"
         },
         "static/index.html": {
           "bytes": 25660,
-          "sha256": "0d63a4422565d14c0d826c920fd9aa19302cc2bac3cc0ecfbc19756e5391d692"
+          "sha256": "fe1e2ce8606daec9f634e92bd71e1ec1daa47f42e13e8cace556f1a4d729fd7d"
         },
         "webapp.py": {
           "bytes": 70515,
@@ -1387,7 +1387,7 @@
         "rps": 0.43954820365378716
       }
     },
-    "release_id": "aa06acb2dc86b77997ac",
+    "release_id": "238f3febf419356c7e22",
     "safety": {
       "automatic_bet_placement": false,
       "secrets_exported": false,

@@ -59,7 +59,7 @@ def _viable_report(*, stage: int = 30, budget: int = 650, recommended: int = 32)
     candidate_ids = sorted(f"event-{index}" for index in range(max(recommended, 40)))
     candidate = {
         "schema_version": "1.0",
-        "app_version": "4.2.0",
+        "app_version": "4.2.1",
         "baseline": "consensus",
         "campaign_type": "french_market_comparison",
         "target_stage": stage,

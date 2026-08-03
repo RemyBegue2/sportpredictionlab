@@ -24,6 +24,7 @@ let CSRF_TOKEN = null;
 const fmt = (p) => `${(100*p).toFixed(1)}%`;
 const signed = (p) => `${p >= 0 ? '+' : ''}${(100*p).toFixed(1)}%`;
 const esc = (v) => String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const pct = (value) => Number.isFinite(Number(value)) ? `${(100 * Number(value)).toFixed(1)} %` : '—';
 
 function toast(message){ const el=$('#toast'); el.textContent=message; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),4200); }
 function loading(target){ target.className='result-panel'; target.innerHTML='<div class="loader">Calcul en cours</div>'; }
@@ -153,7 +154,6 @@ function renderEvidence(data){
   const gates=report.gates||{};
   const labels={not_run:'Non exécutée',needs_recompute:'Recalcul requis',blocked:'Bloquée',passed:'OK',available:'Disponible',insufficient:'Insuffisante',not_evaluable:'Non évaluable',not_evaluated:'Non évaluée',technical_validation:'Validation technique',pipeline_validation:'Validation du pipeline',exploratory:'Exploratoire',preliminary:'Préliminaire',analysis_ready:'Prête pour analyse'};
   const labelStatus=value=>labels[value]||String(value||'Non évaluée').replaceAll('_',' ');
-  const pct=value=>Number.isFinite(Number(value))?`${(100*Number(value)).toFixed(1)} %`:'—';
   const setText=(selector,value)=>{ const node=$(selector); if(node) node.textContent=value; };
 
   setText('#evidenceGate',labelStatus(gate.status));

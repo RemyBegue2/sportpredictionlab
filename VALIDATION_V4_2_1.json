@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "app_version": "4.2.1",
+  "package_version": "0.4.2.1",
+  "generated_at": "2026-08-03T18:15:05.042181+00:00",
+  "tests": {
+    "total": 184,
+    "passed": 184,
+    "failed": 0,
+    "batches": [
+      37,
+      42,
+      55,
+      50
+    ],
+    "monolithic_run": "timed_out_after_39_percent_without_observed_failure"
+  },
+  "frontend": {
+    "node_syntax": "passed",
+    "runtime_preflight_node": "passed",
+    "runtime_preflight_chromium_isolated": "passed",
+    "production_smoke_contract": "preflight_required_and_partial_interface_toast_blocked"
+  },
+  "python_compile": "passed",
+  "yaml": {
+    "github_workflows": 12,
+    "render_yaml": "passed"
+  },
+  "external_calls": {
+    "the_odds_api": 0,
+    "railway_deployments": 0,
+    "credits_consumed": 0
+  }
+}

@@ -1,14 +1,14 @@
 # HANDOFF CURRENT — Sports Prediction Lab
 
-Generated: `2026-08-03T17:46:31.174572+00:00`
+Generated: `2026-08-03T18:15:07.492815+00:00`
 
 ## Verified repository state
 
-- App version: **4.2.0**
-- Git branch: `unverified`
-- Git commit: `unverified`
-- Release ID: `aa06acb2dc86b77997ac`
-- Running/source commit detected locally: `unverified`
+- App version: **4.2.1**
+- Git branch: `unknown`
+- Git commit: `unknown`
+- Release ID: `238f3febf419356c7e22`
+- Running/source commit detected locally: `unknown`
 - Artifact integrity: **OK**
 - Football model version: `3.4.0-fresh`
 - Football model SHA-256: `04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4`

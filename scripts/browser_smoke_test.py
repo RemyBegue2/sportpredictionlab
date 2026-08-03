@@ -69,6 +69,24 @@ def main() -> None:
         except Exception as exc:
             raise SystemExit("Browser smoke test failed: evidence dashboard did not render") from exc
         evidence = page.locator("#evidenceGate").inner_text().strip()
+        try:
+            page.wait_for_function(
+                """() => {
+                    const element = document.querySelector('#preflightDecision');
+                    if (!element) return false;
+                    const value = (element.textContent || '').trim();
+                    return value.length > 0 && value !== '—';
+                }""",
+                timeout=args.timeout_ms,
+            )
+        except Exception as exc:
+            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
+            raise SystemExit(
+                "Browser smoke test failed: coverage preflight did not render"
+                + (f"; interface message: {toast}" if toast else "")
+            ) from exc
+        preflight = page.locator("#preflightDecision").inner_text().strip()
+        toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
         browser.close()
 
     expected = f"v{args.expected_version}"
@@ -79,6 +97,10 @@ def main() -> None:
         problems.append("control center did not render")
     if not evidence or evidence == "—":
         problems.append("evidence dashboard did not render")
+    if not preflight or preflight == "—":
+        problems.append("coverage preflight did not render")
+    if toast.startswith("Interface partiellement chargée"):
+        problems.append("partial interface error: " + toast)
     known_noise = ("favicon.ico",)
     console_errors = [item for item in console_errors if not any(noise in item for noise in known_noise)]
     if console_errors:
@@ -87,7 +109,7 @@ def main() -> None:
         problems.append("page errors: " + " | ".join(page_errors))
     if problems:
         raise SystemExit("Browser smoke test failed: " + "; ".join(problems))
-    print(json.dumps({"status": "ok", "health": health, "control_center": control, "evidence": evidence}, ensure_ascii=False))
+    print(json.dumps({"status": "ok", "health": health, "control_center": control, "evidence": evidence, "preflight": preflight}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

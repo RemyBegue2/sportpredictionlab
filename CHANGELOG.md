@@ -1,5 +1,12 @@
 # Changelog
 
+## V4.2.1 — Frontend preflight rendering hotfix
+
+- Déplace le formateur de pourcentage `pct` au niveau partagé afin que `renderPreflight` puisse l'utiliser.
+- Ajoute un test Node exécutant réellement le rendu du préflight.
+- Renforce le smoke test Chromium : le panneau préflight doit être rendu et tout message `Interface partiellement chargée` fait échouer la vérification.
+- Change la version des assets pour invalider le cache navigateur.
+
 ## V4.2.0 — Coverage-Aware Evidence Planning
 
 - adds a resumable, credit-capped `Estimate evidence coverage` workflow before any full historical backfill ;

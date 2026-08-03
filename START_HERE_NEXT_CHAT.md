@@ -1,8 +1,8 @@
-# Sports Prediction Lab — point de reprise V4.2
+# Sports Prediction Lab — point de reprise V4.2.1
 
 ## État préparé
 
-- Version du code : **4.2.0 — Coverage-Aware Evidence Planning**.
+- Version du code : **4.2.1 — Coverage-Aware Evidence Planning**.
 - Exploitation : GitHub Actions + Railway, sans Python local.
 - Nouveau workflow préalable : **Estimate evidence coverage**.
 - Workflow de campagne : **Run evidence campaign**.
@@ -27,7 +27,7 @@ La campagne précédente a démontré une bonne couverture Pinnacle mais seuleme
 
 ## Prochaine action sûre
 
-1. Déployer V4.2.0.
+1. Déployer V4.2.1.
 2. Vérifier `/api/ready`, `/api/release` et `/api/coverage-preflight`.
 3. Lancer **Estimate evidence coverage** avec un petit plafond.
 4. Lire le verdict et la matrice de couverture.
