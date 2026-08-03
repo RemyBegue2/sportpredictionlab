@@ -1,0 +1,1050 @@
+{
+  "schema_version": "2.0",
+  "app_version": "3.9.0",
+  "generated_at": "2026-08-03T12:33:35.891013+00:00",
+  "plan_id": "bd891288074a30b2c01866e596afc4a4a5c355a812ccc6e3dd338d038512b64b",
+  "plan_request_id": "REQ-8D7E4D0D7D916A88FB23446C",
+  "backfill_status": "completed",
+  "consumed_credits": 100,
+  "quality_gate": {
+    "status": "technical_validation",
+    "reason": "pipeline validated on a very small accepted sample",
+    "accepted": true
+  },
+  "gates": {
+    "technical_integrity": {
+      "status": "passed",
+      "reason": "temporal, duplicate and budget controls passed",
+      "accepted": true
+    },
+    "provider_coverage": {
+      "status": "passed",
+      "reason": "provider coverage is calculated only on completed targets",
+      "accepted": true
+    },
+    "result_matching": {
+      "status": "passed",
+      "reason": "reliable matching passed on returned events",
+      "accepted": true
+    },
+    "consensus": {
+      "status": "insufficient",
+      "reason": "consensus_coverage_below_70_percent",
+      "accepted": false
+    },
+    "winamax": {
+      "status": "insufficient",
+      "reason": "winamax_coverage_below_70_percent",
+      "accepted": false
+    },
+    "statistical_evidence": {
+      "status": "technical_validation",
+      "reason": "fewer than 30 accepted events; no statistical conclusion",
+      "accepted": false
+    }
+  },
+  "funnel": {
+    "discovered_events": 111,
+    "requested_events": 30,
+    "selected_events": 10,
+    "not_selected_sample_limit": 81,
+    "not_selected_budget_limit": 20,
+    "planned_requests": 10,
+    "completed_requests": 10,
+    "planned_event_snapshots": 10,
+    "completed_event_snapshots": 10,
+    "provider_returned_event_snapshots": 10,
+    "accepted_event_snapshots": 10,
+    "accepted_events": 10,
+    "reliably_matched_events": 10,
+    "consensus_ready_event_snapshots": 3,
+    "winamax_ready_event_snapshots": 3
+  },
+  "counts": {
+    "planned_events": 10,
+    "discovered_events": 111,
+    "requested_events": 30,
+    "selected_events": 10,
+    "events_with_odds": 10,
+    "historical_odds_rows": 63,
+    "accepted_rows": 63,
+    "quarantined_temporal_rows": 0,
+    "duplicate_rows": 0,
+    "bookmakers": 5,
+    "winamax_events": 3,
+    "consensus_events": 3
+  },
+  "rates": {
+    "event_coverage": 1.0,
+    "provider_return_coverage": 1.0,
+    "consensus_coverage": 0.3,
+    "winamax_coverage": 0.3,
+    "temporal_violation": 0.0,
+    "duplicate": 0.0,
+    "reliable_matching": 1.0
+  },
+  "bookmaker_coverage": [
+    {
+      "bookmaker_key": "winamax_fr",
+      "requested_event_snapshots": 10,
+      "complete_event_snapshots": 3,
+      "missing_or_incomplete_event_snapshots": 7,
+      "coverage": 0.3
+    },
+    {
+      "bookmaker_key": "betclic_fr",
+      "requested_event_snapshots": 10,
+      "complete_event_snapshots": 3,
+      "missing_or_incomplete_event_snapshots": 7,
+      "coverage": 0.3
+    },
+    {
+      "bookmaker_key": "unibet_fr",
+      "requested_event_snapshots": 10,
+      "complete_event_snapshots": 3,
+      "missing_or_incomplete_event_snapshots": 7,
+      "coverage": 0.3
+    },
+    {
+      "bookmaker_key": "pmu_fr",
+      "requested_event_snapshots": 10,
+      "complete_event_snapshots": 2,
+      "missing_or_incomplete_event_snapshots": 8,
+      "coverage": 0.2
+    },
+    {
+      "bookmaker_key": "pinnacle",
+      "requested_event_snapshots": 10,
+      "complete_event_snapshots": 10,
+      "missing_or_incomplete_event_snapshots": 0,
+      "coverage": 1.0
+    }
+  ],
+  "matching": {
+    "exact": 0,
+    "high_confidence": 10,
+    "manual_review": 0,
+    "rejected": 0
+  },
+  "event_outcome_counts": {
+    "accepted": 10,
+    "not_selected_sample_or_budget_limit": 101
+  },
+  "event_outcomes": [
+    {
+      "event_id": "037d7b6bb128546961e2a06680f63944",
+      "commence_time": "2023-01-01T14:00:00Z",
+      "home_team": "Tottenham Hotspur",
+      "away_team": "Aston Villa",
+      "status": "accepted",
+      "matching_confidence": 0.9533333333333334
+    },
+    {
+      "event_id": "2e4cf9e3e88011065edb63f7675eb562",
+      "commence_time": "2023-01-01T16:30:00Z",
+      "home_team": "Nottingham Forest",
+      "away_team": "Chelsea",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "d5df84314c8348c36df5eaf3e3b09b66",
+      "commence_time": "2023-01-02T17:30:00Z",
+      "home_team": "Brentford",
+      "away_team": "Liverpool",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "0a2612d23753bb4f67238391f8c796c5",
+      "commence_time": "2023-01-03T19:45:00Z",
+      "home_team": "Arsenal",
+      "away_team": "Newcastle United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "8f3ad2131853e76cd8960e844d1b7930",
+      "commence_time": "2023-01-03T19:45:00Z",
+      "home_team": "Leicester City",
+      "away_team": "Fulham",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "b5409b8adc851d8dcea6509f729f0081",
+      "commence_time": "2023-01-03T19:45:00Z",
+      "home_team": "Everton",
+      "away_team": "Brighton and Hove Albion",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "7195582a03ee653e94a7fd049c4694e8",
+      "commence_time": "2023-01-03T20:00:00Z",
+      "home_team": "Manchester United",
+      "away_team": "Bournemouth",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "737d7f26ee63391ddd81c82a015c9f79",
+      "commence_time": "2023-01-04T19:30:00Z",
+      "home_team": "Southampton",
+      "away_team": "Nottingham Forest",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "ba18757841e8a22892bf54cba168d489",
+      "commence_time": "2023-01-04T19:45:00Z",
+      "home_team": "Leeds United",
+      "away_team": "West Ham United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "8c97c6817a8980aad9940e7126e8b8a0",
+      "commence_time": "2023-01-04T20:00:00Z",
+      "home_team": "Aston Villa",
+      "away_team": "Wolverhampton Wanderers",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "f81a44dcad0d959da14cf374a457366c",
+      "commence_time": "2023-01-04T20:00:00Z",
+      "home_team": "Crystal Palace",
+      "away_team": "Tottenham Hotspur",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "ef614a0cdf2f14e4e20a8f8c2f1f46c4",
+      "commence_time": "2023-01-05T20:00:00Z",
+      "home_team": "Chelsea",
+      "away_team": "Manchester City",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "03a3b68258fec09d606570d3cf6c5354",
+      "commence_time": "2023-04-15T11:30:00Z",
+      "home_team": "Aston Villa",
+      "away_team": "Newcastle United",
+      "status": "accepted",
+      "matching_confidence": 0.9616666666666668
+    },
+    {
+      "event_id": "33a9ea27c810d630a3106773dcb9b7f5",
+      "commence_time": "2023-04-15T14:00:00Z",
+      "home_team": "Southampton",
+      "away_team": "Crystal Palace",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "60f95e803760b241f25dc49926f7b360",
+      "commence_time": "2023-04-15T14:00:00Z",
+      "home_team": "Chelsea",
+      "away_team": "Brighton and Hove Albion",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "71b1c704f12bbab37e873c11902ddbf6",
+      "commence_time": "2023-04-15T14:00:00Z",
+      "home_team": "Everton",
+      "away_team": "Fulham",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "c910efd56e4424989a1b90685fcd0ffe",
+      "commence_time": "2023-04-15T14:00:00Z",
+      "home_team": "Wolverhampton Wanderers",
+      "away_team": "Brentford",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "df23f7dad9dbb0d1c6f02df93b25837c",
+      "commence_time": "2023-04-15T14:00:00Z",
+      "home_team": "Tottenham Hotspur",
+      "away_team": "Bournemouth",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "b11cb36cd90e9f3a373545b32b6c5f55",
+      "commence_time": "2023-04-15T16:30:00Z",
+      "home_team": "Manchester City",
+      "away_team": "Leicester City",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "f89a50fec7398306f080cdedd56379ef",
+      "commence_time": "2023-04-16T13:00:00Z",
+      "home_team": "West Ham United",
+      "away_team": "Arsenal",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "4c91f559519b22e647b95d4c8d47cc92",
+      "commence_time": "2023-04-16T15:30:00Z",
+      "home_team": "Nottingham Forest",
+      "away_team": "Manchester United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "8082321e458b3bf57c62a9c2648ace85",
+      "commence_time": "2023-04-17T19:00:00Z",
+      "home_team": "Leeds United",
+      "away_team": "Liverpool",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "439ae8b6e6ccb25359cae67ccee9a61c",
+      "commence_time": "2023-11-04T12:30:00Z",
+      "home_team": "Fulham",
+      "away_team": "Manchester United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "197f71924f69a83fbd10a4f0daa2d8d6",
+      "commence_time": "2023-11-04T15:00:00Z",
+      "home_team": "Brentford",
+      "away_team": "West Ham United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "330ccff0621fbd93b991703a55bc3045",
+      "commence_time": "2023-11-04T15:00:00Z",
+      "home_team": "Sheffield United",
+      "away_team": "Wolverhampton Wanderers",
+      "status": "accepted",
+      "matching_confidence": 0.95
+    },
+    {
+      "event_id": "95d920ae631e4c3d05782f74cafb8010",
+      "commence_time": "2023-11-04T15:00:00Z",
+      "home_team": "Everton",
+      "away_team": "Brighton and Hove Albion",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "d42006aa25ebf9627c4146d69563b890",
+      "commence_time": "2023-11-04T15:00:00Z",
+      "home_team": "Manchester City",
+      "away_team": "Bournemouth",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "f77d9e4a963ee0e68fb0f71d51fa6855",
+      "commence_time": "2023-11-04T15:00:00Z",
+      "home_team": "Burnley",
+      "away_team": "Crystal Palace",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "e23f284f9be1986a3bdcbc63fdfeb5e9",
+      "commence_time": "2023-11-04T17:30:00Z",
+      "home_team": "Newcastle United",
+      "away_team": "Arsenal",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "2e4e068dd8799ba3fafa34acfab91fab",
+      "commence_time": "2023-11-05T14:00:00Z",
+      "home_team": "Nottingham Forest",
+      "away_team": "Aston Villa",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "d4be0bb766fcb90b5f0c7dfc5fe3e9fd",
+      "commence_time": "2023-11-05T16:30:00Z",
+      "home_team": "Luton",
+      "away_team": "Liverpool",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "f9797be65a325bc844892ebd2dd41a98",
+      "commence_time": "2023-11-06T20:00:00Z",
+      "home_team": "Tottenham Hotspur",
+      "away_team": "Chelsea",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "b77623287f92d5e974b03e5e6753bf81",
+      "commence_time": "2024-02-10T12:30:00Z",
+      "home_team": "Manchester City",
+      "away_team": "Everton",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "11412f895c123f5db92ca80285a84db0",
+      "commence_time": "2024-02-10T15:00:00Z",
+      "home_team": "Tottenham Hotspur",
+      "away_team": "Brighton and Hove Albion",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "12cbd97947130cea55b684e859efd27e",
+      "commence_time": "2024-02-10T15:00:00Z",
+      "home_team": "Fulham",
+      "away_team": "Bournemouth",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "868607f200b926da16729c486916aa0e",
+      "commence_time": "2024-02-10T15:00:00Z",
+      "home_team": "Wolverhampton Wanderers",
+      "away_team": "Brentford",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "9cf849d164fd53eaaa73ce1fa193f3e5",
+      "commence_time": "2024-02-10T15:00:00Z",
+      "home_team": "Liverpool",
+      "away_team": "Burnley",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "a1a4d1662b05d017d4c869672bbf89b4",
+      "commence_time": "2024-02-10T15:00:00Z",
+      "home_team": "Luton",
+      "away_team": "Sheffield United",
+      "status": "accepted",
+      "matching_confidence": 0.95
+    },
+    {
+      "event_id": "5a246b9f975b02ecc413b9fa026e09eb",
+      "commence_time": "2024-02-10T17:30:00Z",
+      "home_team": "Nottingham Forest",
+      "away_team": "Newcastle United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "174a5f6082c6a4677e65b711b8f2055a",
+      "commence_time": "2024-02-11T14:00:00Z",
+      "home_team": "West Ham United",
+      "away_team": "Arsenal",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "4f62745c3808b4649ff36f318b847f3a",
+      "commence_time": "2024-02-11T16:30:00Z",
+      "home_team": "Aston Villa",
+      "away_team": "Manchester United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "74ba465430204c6fca34874e2d913c85",
+      "commence_time": "2024-02-12T20:00:00Z",
+      "home_team": "Crystal Palace",
+      "away_team": "Chelsea",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "12c8092adaa57469145367ea74ed6872",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Manchester City",
+      "away_team": "West Ham United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "2afc81c23b9ef9ebdfc18a0db97e55ca",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Burnley",
+      "away_team": "Nottingham Forest",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "3c64fdd38cde33a37cee85c0cabff38f",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Brighton and Hove Albion",
+      "away_team": "Manchester United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "3fc76a90ce239f0cd3223cba025aa94f",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Sheffield United",
+      "away_team": "Tottenham Hotspur",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "4ee651c4bbbd6eeb0bd534b848255a32",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Luton",
+      "away_team": "Fulham",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "5866498ca2390a3c0cedf5037bd50b6a",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Crystal Palace",
+      "away_team": "Aston Villa",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "672a1729a6b0323ecd5b47e4d5a33c23",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Arsenal",
+      "away_team": "Everton",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "78983527cc9aee0d0b708fde9b91bd37",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Chelsea",
+      "away_team": "Bournemouth",
+      "status": "accepted",
+      "matching_confidence": 0.95
+    },
+    {
+      "event_id": "7f178786915e6ced46d0c76e34beb045",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Brentford",
+      "away_team": "Newcastle United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "fd2bfff9d295143ca491e063daf57119",
+      "commence_time": "2024-05-19T15:00:00Z",
+      "home_team": "Liverpool",
+      "away_team": "Wolverhampton Wanderers",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "055f48ea54ea77ffa2b16ef7310b04b6",
+      "commence_time": "2024-08-31T11:30:00Z",
+      "home_team": "Arsenal",
+      "away_team": "Brighton and Hove Albion",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "2e24cd63783632e9f73604e972e830a8",
+      "commence_time": "2024-08-31T14:00:00Z",
+      "home_team": "Leicester City",
+      "away_team": "Aston Villa",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "3fdb1474ffc8380ef82bb299afbac88f",
+      "commence_time": "2024-08-31T14:00:00Z",
+      "home_team": "Ipswich Town",
+      "away_team": "Fulham",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "5c835569c5bedfa3ef295b5ef1118dbf",
+      "commence_time": "2024-08-31T14:00:00Z",
+      "home_team": "Brentford",
+      "away_team": "Southampton",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "8b1906ff17c3bb18eb23409f223a4895",
+      "commence_time": "2024-08-31T14:00:00Z",
+      "home_team": "Nottingham Forest",
+      "away_team": "Wolverhampton Wanderers",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "dcf1380413740a8f8ee4c016c8550ea8",
+      "commence_time": "2024-08-31T14:00:00Z",
+      "home_team": "Everton",
+      "away_team": "Bournemouth",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "c9109e8a707da4eb673f2cfcef34bd15",
+      "commence_time": "2024-08-31T16:30:00Z",
+      "home_team": "West Ham United",
+      "away_team": "Manchester City",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "36c348ee3ab335d09cabd3a112caaa4a",
+      "commence_time": "2024-09-01T12:30:00Z",
+      "home_team": "Newcastle United",
+      "away_team": "Tottenham Hotspur",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "fc3ce4f31b7fe23e3d8eccd0c12ebfbf",
+      "commence_time": "2024-09-01T12:30:00Z",
+      "home_team": "Chelsea",
+      "away_team": "Crystal Palace",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "eb749753d96a4af7d4a56f949573a279",
+      "commence_time": "2024-09-01T15:00:00Z",
+      "home_team": "Manchester United",
+      "away_team": "Liverpool",
+      "status": "accepted",
+      "matching_confidence": 0.95
+    },
+    {
+      "event_id": "79ec8f88b4ba9da31ddd12fcb5ef5255",
+      "commence_time": "2024-12-05T19:30:00Z",
+      "home_team": "Fulham",
+      "away_team": "Brighton and Hove Albion",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "9d4b4b9aedc8b215eb1aefeccc88cfbb",
+      "commence_time": "2024-12-05T20:15:00Z",
+      "home_team": "Bournemouth",
+      "away_team": "Tottenham Hotspur",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "d6f8814e6aae9414e050ebef471ec70a",
+      "commence_time": "2024-12-07T12:30:00Z",
+      "home_team": "Everton",
+      "away_team": "Liverpool",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "1179eb54e941669c6e4a7c76e7ac2652",
+      "commence_time": "2024-12-07T15:00:00Z",
+      "home_team": "Brentford",
+      "away_team": "Newcastle United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "441ec3f40dac37e0bda3ca779bd91d08",
+      "commence_time": "2024-12-07T15:00:00Z",
+      "home_team": "Aston Villa",
+      "away_team": "Southampton",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "9299cecc64b75d89fa192e5b3361fbf9",
+      "commence_time": "2024-12-07T15:00:00Z",
+      "home_team": "Crystal Palace",
+      "away_team": "Manchester City",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "4b3a9dd04a516f725acd57a16c799fbd",
+      "commence_time": "2024-12-07T17:30:00Z",
+      "home_team": "Manchester United",
+      "away_team": "Nottingham Forest",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "8899ce68b0c9e451b17edc3f2e076a6b",
+      "commence_time": "2024-12-08T14:00:00Z",
+      "home_team": "Ipswich Town",
+      "away_team": "Bournemouth",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "ac9d59dd7555c122948f98b8b2a19c8e",
+      "commence_time": "2024-12-08T14:00:00Z",
+      "home_team": "Fulham",
+      "away_team": "Arsenal",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "d9163188e3e3d9a8bf2525e2f9e3a553",
+      "commence_time": "2024-12-08T14:00:00Z",
+      "home_team": "Leicester City",
+      "away_team": "Brighton and Hove Albion",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "c87f3d3551a57bd560cb056ade831890",
+      "commence_time": "2024-12-08T16:30:00Z",
+      "home_team": "Tottenham Hotspur",
+      "away_team": "Chelsea",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "86df5e4f56b948cd24fab60e998a43fc",
+      "commence_time": "2024-12-09T20:00:00Z",
+      "home_team": "West Ham United",
+      "away_team": "Wolverhampton Wanderers",
+      "status": "accepted",
+      "matching_confidence": 0.9333333333333332
+    },
+    {
+      "event_id": "328e1a3488f74bf694b7660a4dc0174a",
+      "commence_time": "2025-03-15T15:00:00Z",
+      "home_team": "Everton",
+      "away_team": "West Ham United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "5ea4d4399f71ce7c1aae2adfd5405bf6",
+      "commence_time": "2025-03-15T15:00:00Z",
+      "home_team": "Manchester City",
+      "away_team": "Brighton and Hove Albion",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "78012d25c524b145d002d02c26d105d5",
+      "commence_time": "2025-03-15T15:00:00Z",
+      "home_team": "Ipswich Town",
+      "away_team": "Nottingham Forest",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "9326a5cfebfb2f44eb932e1ad9686f2c",
+      "commence_time": "2025-03-15T15:00:00Z",
+      "home_team": "Southampton",
+      "away_team": "Wolverhampton Wanderers",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "8e851d7fd1cf737a2f8f58d4482c16b2",
+      "commence_time": "2025-03-15T17:30:00Z",
+      "home_team": "Bournemouth",
+      "away_team": "Brentford",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "01c1b188470ec92eeb8e88a989ef1b1a",
+      "commence_time": "2025-03-16T13:30:00Z",
+      "home_team": "Fulham",
+      "away_team": "Tottenham Hotspur",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "d86e00f7febeb44667711f90ce301ec2",
+      "commence_time": "2025-03-16T13:30:00Z",
+      "home_team": "Arsenal",
+      "away_team": "Chelsea",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "26f001bc7f494e5ea72b7010ff19587d",
+      "commence_time": "2025-03-16T19:00:00Z",
+      "home_team": "Leicester City",
+      "away_team": "Manchester United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "20d0e0d5048691dde1d293735e50ba29",
+      "commence_time": "2025-10-03T19:00:00Z",
+      "home_team": "Bournemouth",
+      "away_team": "Fulham",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "61e59a7f5fa664b288f99905303f9b8b",
+      "commence_time": "2025-10-04T11:30:00Z",
+      "home_team": "Leeds United",
+      "away_team": "Tottenham Hotspur",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "18f638078d90839494fc30fa576645a5",
+      "commence_time": "2025-10-04T14:00:00Z",
+      "home_team": "Manchester United",
+      "away_team": "Sunderland",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "f11d8d22f890ff34dc738eacc61a233c",
+      "commence_time": "2025-10-04T14:00:00Z",
+      "home_team": "Arsenal",
+      "away_team": "West Ham United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "87c12874bac6211a13e105dbfaaff0f5",
+      "commence_time": "2025-10-04T16:30:00Z",
+      "home_team": "Chelsea",
+      "away_team": "Liverpool",
+      "status": "accepted",
+      "matching_confidence": 0.945
+    },
+    {
+      "event_id": "1a7d9a230fc5e77b5fbf420993a8eb93",
+      "commence_time": "2025-10-05T13:00:00Z",
+      "home_team": "Everton",
+      "away_team": "Crystal Palace",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "7bed3dc248b80795a4e705648bed405c",
+      "commence_time": "2025-10-05T13:00:00Z",
+      "home_team": "Newcastle United",
+      "away_team": "Nottingham Forest",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "81898d0beffe7df4df053b39ae9885e7",
+      "commence_time": "2025-10-05T13:00:00Z",
+      "home_team": "Wolverhampton Wanderers",
+      "away_team": "Brighton and Hove Albion",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "9a57d9fdfef63947afdd99445357da86",
+      "commence_time": "2025-10-05T13:00:00Z",
+      "home_team": "Aston Villa",
+      "away_team": "Burnley",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "06a21a4e8bead908daaeb712499a0148",
+      "commence_time": "2025-10-05T15:30:00Z",
+      "home_team": "Brentford",
+      "away_team": "Manchester City",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "3fd1e970c718bfc0f99a7e4575e46f49",
+      "commence_time": "2026-01-17T12:30:00Z",
+      "home_team": "Manchester United",
+      "away_team": "Manchester City",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "47e36aed7df3160f584a73fbd1fd0830",
+      "commence_time": "2026-01-17T15:00:00Z",
+      "home_team": "Tottenham Hotspur",
+      "away_team": "West Ham United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "80cf233ec08173f3d8cf4645b687589d",
+      "commence_time": "2026-01-17T15:00:00Z",
+      "home_team": "Liverpool",
+      "away_team": "Burnley",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "86609aa022312a15ec01d5bc0c172dbc",
+      "commence_time": "2026-01-17T15:00:00Z",
+      "home_team": "Leeds United",
+      "away_team": "Fulham",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "876bd00ab1c4cff1c6635a8ac7f93d75",
+      "commence_time": "2026-01-17T15:00:00Z",
+      "home_team": "Chelsea",
+      "away_team": "Brentford",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "aa16a48d5e016963e076f7f5ecfc2f68",
+      "commence_time": "2026-01-17T15:00:00Z",
+      "home_team": "Sunderland",
+      "away_team": "Crystal Palace",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "b145d15344a4fca80d42b39faa58a050",
+      "commence_time": "2026-01-17T17:30:00Z",
+      "home_team": "Nottingham Forest",
+      "away_team": "Arsenal",
+      "status": "accepted",
+      "matching_confidence": 0.9416666666666668
+    },
+    {
+      "event_id": "e15eb2362921b16a6b6a0397ce607a11",
+      "commence_time": "2026-01-18T14:00:00Z",
+      "home_team": "Wolverhampton Wanderers",
+      "away_team": "Newcastle United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "80b312e80c4c6e8f267a99606665ac8c",
+      "commence_time": "2026-01-18T16:30:00Z",
+      "home_team": "Aston Villa",
+      "away_team": "Everton",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "e6e88546df45a25ee81d07b597d91167",
+      "commence_time": "2026-04-21T19:00:00Z",
+      "home_team": "Brighton and Hove Albion",
+      "away_team": "Chelsea",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "4a1a7f4a60859fc3ecc69d05f5729556",
+      "commence_time": "2026-04-22T19:00:00Z",
+      "home_team": "Burnley",
+      "away_team": "Manchester City",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "690fef3d62fc4c8015481626d5aab274",
+      "commence_time": "2026-04-22T19:00:00Z",
+      "home_team": "Bournemouth",
+      "away_team": "Leeds United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "1d779cd51003d8f01a9378594cea630e",
+      "commence_time": "2026-04-24T19:00:00Z",
+      "home_team": "Sunderland",
+      "away_team": "Nottingham Forest",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "1cb5fdae7703fb61d1de571066050f9b",
+      "commence_time": "2026-04-25T11:30:00Z",
+      "home_team": "Fulham",
+      "away_team": "Aston Villa",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "8a5b7d24683637ab7350fe8a20af1a62",
+      "commence_time": "2026-04-25T14:00:00Z",
+      "home_team": "Liverpool",
+      "away_team": "Crystal Palace",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "c5137cd717098fbb38acd0236bc41b34",
+      "commence_time": "2026-04-25T14:00:00Z",
+      "home_team": "Wolverhampton Wanderers",
+      "away_team": "Tottenham Hotspur",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "e7eba73b41f6b75f5b4692376efb888a",
+      "commence_time": "2026-04-25T14:00:00Z",
+      "home_team": "West Ham United",
+      "away_team": "Everton",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "76829fec3394b52a992b0a21eedbccf6",
+      "commence_time": "2026-04-25T16:30:00Z",
+      "home_team": "Arsenal",
+      "away_team": "Newcastle United",
+      "status": "not_selected_sample_or_budget_limit",
+      "matching_confidence": null
+    },
+    {
+      "event_id": "ea38471acf4d5944929f9025e151376d",
+      "commence_time": "2026-04-27T19:00:00Z",
+      "home_team": "Manchester United",
+      "away_team": "Brentford",
+      "status": "accepted",
+      "matching_confidence": 0.9366666666666666
+    }
+  ],
+  "selection_status_source": "legacy_reconstructed",
+  "blockers": [],
+  "warnings": [
+    "consensus_coverage_below_70_percent",
+    "winamax_coverage_below_70_percent",
+    "fewer_than_30_accepted_events;_no_statistical_conclusion"
+  ],
+  "benchmark": {
+    "evaluated_rows": 3,
+    "verdict": {
+      "status": "not_evaluable",
+      "reason": "no expanding-window fold could be formed; descriptive metrics are not a promotion test"
+    },
+    "comparisons": {
+      "model_vs_winamax": null,
+      "model_vs_consensus": null,
+      "blend_vs_winamax": null
+    },
+    "closing_line_value": null
+  },
+  "next_action": "Keep this run as a technical validation; do not infer model performance from it.",
+  "responsible_use": {
+    "experimental_analysis": true,
+    "profitability_claim": false,
+    "stake_recommendation": false,
+    "automatic_bet_placement": false
+  }
+}

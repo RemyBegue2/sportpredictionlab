@@ -1,0 +1,6 @@
+bookmaker_key,requested_event_snapshots,complete_event_snapshots,missing_or_incomplete_event_snapshots,coverage
+winamax_fr,10,3,7,0.3
+betclic_fr,10,3,7,0.3
+unibet_fr,10,3,7,0.3
+pmu_fr,10,2,8,0.2
+pinnacle,10,10,0,1.0
