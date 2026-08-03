@@ -17,6 +17,21 @@ def _csv(value: str | None, default: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(item.strip() for item in value.split(",") if item.strip())
 
 
+def cloud_runtime_detected() -> bool:
+    """Return True only inside an actual cloud service runtime.
+
+    CI workflows may set RAILWAY_ENVIRONMENT only to target a remote Railway
+    environment. That variable alone must not make the GitHub runner behave
+    as if it were executing inside Railway.
+    """
+    return bool(
+        os.getenv("RAILWAY_SERVICE_ID")
+        or os.getenv("RAILWAY_ENVIRONMENT_ID")
+        or os.getenv("RENDER_SERVICE_ID")
+        or os.getenv("RENDER")
+    )
+
+
 @dataclass(frozen=True)
 class CloudSettings:
     environment: str
@@ -37,7 +52,7 @@ class CloudSettings:
     def from_env(cls, root: Path | None = None) -> "CloudSettings":
         base = root or Path.cwd()
         environment = os.getenv("APP_ENV", "development").strip().lower()
-        cloud_detected = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RENDER"))
+        cloud_detected = cloud_runtime_detected()
         auth_required = _truthy(os.getenv("APP_AUTH_REQUIRED"), default=cloud_detected)
         session_secret = os.getenv("APP_SESSION_SECRET", "")
         if not session_secret and not auth_required:
