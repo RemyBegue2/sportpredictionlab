@@ -1,0 +1,96 @@
+event_id,commence_time,home_team,away_team,status,matching_confidence
+037d7b6bb128546961e2a06680f63944,2023-01-01T14:00:00Z,Tottenham Hotspur,Aston Villa,accepted,0.9533333333333334
+2e4cf9e3e88011065edb63f7675eb562,2023-01-01T16:30:00Z,Nottingham Forest,Chelsea,not_selected_sample_or_budget_limit,
+d5df84314c8348c36df5eaf3e3b09b66,2023-01-02T17:30:00Z,Brentford,Liverpool,not_selected_sample_or_budget_limit,
+0a2612d23753bb4f67238391f8c796c5,2023-01-03T19:45:00Z,Arsenal,Newcastle United,accepted,0.9341666666666668
+8f3ad2131853e76cd8960e844d1b7930,2023-01-03T19:45:00Z,Leicester City,Fulham,not_selected_sample_or_budget_limit,
+b5409b8adc851d8dcea6509f729f0081,2023-01-03T19:45:00Z,Everton,Brighton and Hove Albion,not_selected_sample_or_budget_limit,
+7195582a03ee653e94a7fd049c4694e8,2023-01-03T20:00:00Z,Manchester United,Bournemouth,accepted,0.9333333333333332
+737d7f26ee63391ddd81c82a015c9f79,2023-01-04T19:30:00Z,Southampton,Nottingham Forest,not_selected_sample_or_budget_limit,
+ba18757841e8a22892bf54cba168d489,2023-01-04T19:45:00Z,Leeds United,West Ham United,not_selected_sample_or_budget_limit,
+8c97c6817a8980aad9940e7126e8b8a0,2023-01-04T20:00:00Z,Aston Villa,Wolverhampton Wanderers,not_selected_sample_or_budget_limit,
+f81a44dcad0d959da14cf374a457366c,2023-01-04T20:00:00Z,Crystal Palace,Tottenham Hotspur,accepted,0.9333333333333332
+ef614a0cdf2f14e4e20a8f8c2f1f46c4,2023-01-05T20:00:00Z,Chelsea,Manchester City,not_selected_sample_or_budget_limit,
+03a3b68258fec09d606570d3cf6c5354,2023-04-15T11:30:00Z,Aston Villa,Newcastle United,not_selected_sample_or_budget_limit,
+33a9ea27c810d630a3106773dcb9b7f5,2023-04-15T14:00:00Z,Southampton,Crystal Palace,accepted,0.9533333333333334
+60f95e803760b241f25dc49926f7b360,2023-04-15T14:00:00Z,Chelsea,Brighton and Hove Albion,not_selected_sample_or_budget_limit,
+71b1c704f12bbab37e873c11902ddbf6,2023-04-15T14:00:00Z,Everton,Fulham,not_selected_sample_or_budget_limit,
+c910efd56e4424989a1b90685fcd0ffe,2023-04-15T14:00:00Z,Wolverhampton Wanderers,Brentford,accepted,0.9533333333333334
+df23f7dad9dbb0d1c6f02df93b25837c,2023-04-15T14:00:00Z,Tottenham Hotspur,Bournemouth,not_selected_sample_or_budget_limit,
+b11cb36cd90e9f3a373545b32b6c5f55,2023-04-15T16:30:00Z,Manchester City,Leicester City,not_selected_sample_or_budget_limit,
+f89a50fec7398306f080cdedd56379ef,2023-04-16T13:00:00Z,West Ham United,Arsenal,accepted,0.9566666666666668
+4c91f559519b22e647b95d4c8d47cc92,2023-04-16T15:30:00Z,Nottingham Forest,Manchester United,not_selected_sample_or_budget_limit,
+8082321e458b3bf57c62a9c2648ace85,2023-04-17T19:00:00Z,Leeds United,Liverpool,not_selected_sample_or_budget_limit,
+439ae8b6e6ccb25359cae67ccee9a61c,2023-11-04T12:30:00Z,Fulham,Manchester United,not_selected_sample_or_budget_limit,
+197f71924f69a83fbd10a4f0daa2d8d6,2023-11-04T15:00:00Z,Brentford,West Ham United,accepted,0.95
+330ccff0621fbd93b991703a55bc3045,2023-11-04T15:00:00Z,Sheffield United,Wolverhampton Wanderers,not_selected_sample_or_budget_limit,
+95d920ae631e4c3d05782f74cafb8010,2023-11-04T15:00:00Z,Everton,Brighton and Hove Albion,not_selected_sample_or_budget_limit,
+d42006aa25ebf9627c4146d69563b890,2023-11-04T15:00:00Z,Manchester City,Bournemouth,accepted,0.95
+f77d9e4a963ee0e68fb0f71d51fa6855,2023-11-04T15:00:00Z,Burnley,Crystal Palace,not_selected_sample_or_budget_limit,
+e23f284f9be1986a3bdcbc63fdfeb5e9,2023-11-04T17:30:00Z,Newcastle United,Arsenal,not_selected_sample_or_budget_limit,
+2e4e068dd8799ba3fafa34acfab91fab,2023-11-05T14:00:00Z,Nottingham Forest,Aston Villa,accepted,0.9533333333333334
+d4be0bb766fcb90b5f0c7dfc5fe3e9fd,2023-11-05T16:30:00Z,Luton,Liverpool,not_selected_sample_or_budget_limit,
+f9797be65a325bc844892ebd2dd41a98,2023-11-06T20:00:00Z,Tottenham Hotspur,Chelsea,not_selected_sample_or_budget_limit,
+b77623287f92d5e974b03e5e6753bf81,2024-02-10T12:30:00Z,Manchester City,Everton,accepted,0.9583333333333334
+11412f895c123f5db92ca80285a84db0,2024-02-10T15:00:00Z,Tottenham Hotspur,Brighton and Hove Albion,not_selected_sample_or_budget_limit,
+12cbd97947130cea55b684e859efd27e,2024-02-10T15:00:00Z,Fulham,Bournemouth,not_selected_sample_or_budget_limit,
+868607f200b926da16729c486916aa0e,2024-02-10T15:00:00Z,Wolverhampton Wanderers,Brentford,not_selected_sample_or_budget_limit,
+9cf849d164fd53eaaa73ce1fa193f3e5,2024-02-10T15:00:00Z,Liverpool,Burnley,accepted,0.95
+a1a4d1662b05d017d4c869672bbf89b4,2024-02-10T15:00:00Z,Luton,Sheffield United,not_selected_sample_or_budget_limit,
+5a246b9f975b02ecc413b9fa026e09eb,2024-02-10T17:30:00Z,Nottingham Forest,Newcastle United,not_selected_sample_or_budget_limit,
+174a5f6082c6a4677e65b711b8f2055a,2024-02-11T14:00:00Z,West Ham United,Arsenal,accepted,0.9533333333333334
+4f62745c3808b4649ff36f318b847f3a,2024-02-11T16:30:00Z,Aston Villa,Manchester United,not_selected_sample_or_budget_limit,
+74ba465430204c6fca34874e2d913c85,2024-02-12T20:00:00Z,Crystal Palace,Chelsea,not_selected_sample_or_budget_limit,
+12c8092adaa57469145367ea74ed6872,2024-05-19T15:00:00Z,Manchester City,West Ham United,accepted,0.95
+2afc81c23b9ef9ebdfc18a0db97e55ca,2024-05-19T15:00:00Z,Burnley,Nottingham Forest,not_selected_sample_or_budget_limit,
+3c64fdd38cde33a37cee85c0cabff38f,2024-05-19T15:00:00Z,Brighton and Hove Albion,Manchester United,not_selected_sample_or_budget_limit,
+3fc76a90ce239f0cd3223cba025aa94f,2024-05-19T15:00:00Z,Sheffield United,Tottenham Hotspur,accepted,0.95
+4ee651c4bbbd6eeb0bd534b848255a32,2024-05-19T15:00:00Z,Luton,Fulham,not_selected_sample_or_budget_limit,
+5866498ca2390a3c0cedf5037bd50b6a,2024-05-19T15:00:00Z,Crystal Palace,Aston Villa,not_selected_sample_or_budget_limit,
+672a1729a6b0323ecd5b47e4d5a33c23,2024-05-19T15:00:00Z,Arsenal,Everton,not_selected_sample_or_budget_limit,
+78983527cc9aee0d0b708fde9b91bd37,2024-05-19T15:00:00Z,Chelsea,Bournemouth,accepted,0.95
+7f178786915e6ced46d0c76e34beb045,2024-05-19T15:00:00Z,Brentford,Newcastle United,not_selected_sample_or_budget_limit,
+fd2bfff9d295143ca491e063daf57119,2024-05-19T15:00:00Z,Liverpool,Wolverhampton Wanderers,not_selected_sample_or_budget_limit,
+055f48ea54ea77ffa2b16ef7310b04b6,2024-08-31T11:30:00Z,Arsenal,Brighton and Hove Albion,accepted,0.9616666666666668
+2e24cd63783632e9f73604e972e830a8,2024-08-31T14:00:00Z,Leicester City,Aston Villa,not_selected_sample_or_budget_limit,
+3fdb1474ffc8380ef82bb299afbac88f,2024-08-31T14:00:00Z,Ipswich Town,Fulham,not_selected_sample_or_budget_limit,
+5c835569c5bedfa3ef295b5ef1118dbf,2024-08-31T14:00:00Z,Brentford,Southampton,accepted,0.9533333333333334
+8b1906ff17c3bb18eb23409f223a4895,2024-08-31T14:00:00Z,Nottingham Forest,Wolverhampton Wanderers,not_selected_sample_or_budget_limit,
+dcf1380413740a8f8ee4c016c8550ea8,2024-08-31T14:00:00Z,Everton,Bournemouth,not_selected_sample_or_budget_limit,
+c9109e8a707da4eb673f2cfcef34bd15,2024-08-31T16:30:00Z,West Ham United,Manchester City,accepted,0.945
+36c348ee3ab335d09cabd3a112caaa4a,2024-09-01T12:30:00Z,Newcastle United,Tottenham Hotspur,not_selected_sample_or_budget_limit,
+fc3ce4f31b7fe23e3d8eccd0c12ebfbf,2024-09-01T12:30:00Z,Chelsea,Crystal Palace,not_selected_sample_or_budget_limit,
+eb749753d96a4af7d4a56f949573a279,2024-09-01T15:00:00Z,Manchester United,Liverpool,not_selected_sample_or_budget_limit,
+d6f8814e6aae9414e050ebef471ec70a,2024-12-07T12:30:00Z,Everton,Liverpool,provider_event_missing,
+1179eb54e941669c6e4a7c76e7ac2652,2024-12-07T15:00:00Z,Brentford,Newcastle United,not_selected_sample_or_budget_limit,
+441ec3f40dac37e0bda3ca779bd91d08,2024-12-07T15:00:00Z,Aston Villa,Southampton,not_selected_sample_or_budget_limit,
+9299cecc64b75d89fa192e5b3361fbf9,2024-12-07T15:00:00Z,Crystal Palace,Manchester City,accepted,0.95
+4b3a9dd04a516f725acd57a16c799fbd,2024-12-07T17:30:00Z,Manchester United,Nottingham Forest,not_selected_sample_or_budget_limit,
+8899ce68b0c9e451b17edc3f2e076a6b,2024-12-08T14:00:00Z,Ipswich Town,Bournemouth,not_selected_sample_or_budget_limit,
+ac9d59dd7555c122948f98b8b2a19c8e,2024-12-08T14:00:00Z,Fulham,Arsenal,accepted,0.9533333333333334
+d9163188e3e3d9a8bf2525e2f9e3a553,2024-12-08T14:00:00Z,Leicester City,Brighton and Hove Albion,not_selected_sample_or_budget_limit,
+c87f3d3551a57bd560cb056ade831890,2024-12-08T16:30:00Z,Tottenham Hotspur,Chelsea,not_selected_sample_or_budget_limit,
+86df5e4f56b948cd24fab60e998a43fc,2024-12-09T20:00:00Z,West Ham United,Wolverhampton Wanderers,accepted,0.9333333333333332
+1a7d9a230fc5e77b5fbf420993a8eb93,2025-10-05T13:00:00Z,Everton,Crystal Palace,not_selected_sample_or_budget_limit,
+7bed3dc248b80795a4e705648bed405c,2025-10-05T13:00:00Z,Newcastle United,Nottingham Forest,not_selected_sample_or_budget_limit,
+81898d0beffe7df4df053b39ae9885e7,2025-10-05T13:00:00Z,Wolverhampton Wanderers,Brighton and Hove Albion,not_selected_sample_or_budget_limit,
+9a57d9fdfef63947afdd99445357da86,2025-10-05T13:00:00Z,Aston Villa,Burnley,accepted,0.9566666666666668
+06a21a4e8bead908daaeb712499a0148,2025-10-05T15:30:00Z,Brentford,Manchester City,not_selected_sample_or_budget_limit,
+3fd1e970c718bfc0f99a7e4575e46f49,2026-01-17T12:30:00Z,Manchester United,Manchester City,not_selected_sample_or_budget_limit,
+47e36aed7df3160f584a73fbd1fd0830,2026-01-17T15:00:00Z,Tottenham Hotspur,West Ham United,accepted,0.95
+80cf233ec08173f3d8cf4645b687589d,2026-01-17T15:00:00Z,Liverpool,Burnley,not_selected_sample_or_budget_limit,
+86609aa022312a15ec01d5bc0c172dbc,2026-01-17T15:00:00Z,Leeds United,Fulham,not_selected_sample_or_budget_limit,
+876bd00ab1c4cff1c6635a8ac7f93d75,2026-01-17T15:00:00Z,Chelsea,Brentford,accepted,0.95
+aa16a48d5e016963e076f7f5ecfc2f68,2026-01-17T15:00:00Z,Sunderland,Crystal Palace,not_selected_sample_or_budget_limit,
+b145d15344a4fca80d42b39faa58a050,2026-01-17T17:30:00Z,Nottingham Forest,Arsenal,not_selected_sample_or_budget_limit,
+e15eb2362921b16a6b6a0397ce607a11,2026-01-18T14:00:00Z,Wolverhampton Wanderers,Newcastle United,accepted,0.9533333333333334
+80b312e80c4c6e8f267a99606665ac8c,2026-01-18T16:30:00Z,Aston Villa,Everton,not_selected_sample_or_budget_limit,
+342788786c22e570ed2da53a9608113f,2026-01-19T20:00:00Z,Brighton and Hove Albion,Bournemouth,not_selected_sample_or_budget_limit,
+1d779cd51003d8f01a9378594cea630e,2026-04-24T19:00:00Z,Sunderland,Nottingham Forest,not_selected_sample_or_budget_limit,
+1cb5fdae7703fb61d1de571066050f9b,2026-04-25T11:30:00Z,Fulham,Aston Villa,accepted,0.9616666666666668
+8a5b7d24683637ab7350fe8a20af1a62,2026-04-25T14:00:00Z,Liverpool,Crystal Palace,not_selected_sample_or_budget_limit,
+c5137cd717098fbb38acd0236bc41b34,2026-04-25T14:00:00Z,Wolverhampton Wanderers,Tottenham Hotspur,not_selected_sample_or_budget_limit,
+e7eba73b41f6b75f5b4692376efb888a,2026-04-25T14:00:00Z,West Ham United,Everton,accepted,0.9533333333333334
+76829fec3394b52a992b0a21eedbccf6,2026-04-25T16:30:00Z,Arsenal,Newcastle United,not_selected_sample_or_budget_limit,
+ea38471acf4d5944929f9025e151376d,2026-04-27T19:00:00Z,Manchester United,Brentford,not_selected_sample_or_budget_limit,
+eaaf4ed0986f4f5414fc727f5c235d48,2026-05-01T19:00:00Z,Leeds United,Burnley,result_missing_or_unmatched,0.7554901960784314

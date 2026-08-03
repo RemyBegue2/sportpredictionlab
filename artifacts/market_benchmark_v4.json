@@ -1,0 +1,99 @@
+{
+  "protocol": "expanding-window folds; blend weight learned only on prior rows; identical match dates stay in the same fold",
+  "outcome_order": [
+    "away",
+    "draw",
+    "home"
+  ],
+  "policy": {
+    "minimum_predictions": 1000,
+    "exploratory_predictions": 100,
+    "n_folds": 5,
+    "minimum_train": 30,
+    "blend_grid_size": 21,
+    "bootstrap_samples": 1500,
+    "block_size": 20
+  },
+  "temporal_audit": {
+    "total_rows": 6,
+    "accepted_rows": 6,
+    "rejected_rows": 0,
+    "violations": {
+      "missing_timestamp": 0,
+      "odds_after_prediction": 0,
+      "prediction_at_or_after_start": 0,
+      "odds_at_or_after_start": 0,
+      "result_available_before_prediction": 0
+    }
+  },
+  "accepted_rows": 6,
+  "evaluated_rows": 6,
+  "folds": [],
+  "aggregate": {
+    "model": {
+      "n": 6,
+      "log_loss": 0.9154651415999147,
+      "brier": 0.5268781561913561,
+      "rps": 0.3939714167275352,
+      "accuracy": 0.6666666666666666,
+      "ece": 0.12756748219266373
+    },
+    "winamax": {
+      "n": 6,
+      "log_loss": 1.0103379669574442,
+      "brier": 0.6064409342299705,
+      "rps": 0.457095956126514,
+      "accuracy": 0.5,
+      "ece": 0.33525799818188884
+    },
+    "consensus": {
+      "n": 6,
+      "log_loss": 1.0127511722265505,
+      "brier": 0.6073864083430601,
+      "rps": 0.4582123994440355,
+      "accuracy": 0.6666666666666666,
+      "ece": 0.3789705350967589
+    },
+    "blend": {
+      "n": 6,
+      "log_loss": 1.0127511722265505,
+      "brier": 0.6073864083430601,
+      "rps": 0.4582123994440355,
+      "accuracy": 0.6666666666666666,
+      "ece": 0.3789705350967589
+    }
+  },
+  "comparisons": {
+    "model_vs_winamax": {
+      "n": 6,
+      "mean_left_minus_right_log_loss": -0.09487282535752946,
+      "ci95_low": -0.09487282535752946,
+      "ci95_high": -0.09487282535752946,
+      "left_better_if_negative": true
+    },
+    "model_vs_consensus": {
+      "n": 6,
+      "mean_left_minus_right_log_loss": -0.09728603062663578,
+      "ci95_low": -0.09728603062663578,
+      "ci95_high": -0.09728603062663578,
+      "left_better_if_negative": true
+    },
+    "blend_vs_winamax": {
+      "n": 6,
+      "mean_left_minus_right_log_loss": 0.0024132052691063313,
+      "ci95_low": 0.0024132052691063313,
+      "ci95_high": 0.0024132052691063313,
+      "left_better_if_negative": true
+    }
+  },
+  "closing_line_value": null,
+  "verdict": {
+    "status": "not_evaluable",
+    "reason": "no expanding-window fold could be formed; descriptive metrics are not a promotion test"
+  },
+  "limitations": [
+    "ROI is deliberately secondary to proper scoring rules and closing-line value.",
+    "A preliminary_go is not a claim of future profitability.",
+    "Rows rejected by the temporal audit are excluded rather than repaired silently."
+  ]
+}

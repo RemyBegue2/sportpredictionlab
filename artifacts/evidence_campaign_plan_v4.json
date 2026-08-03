@@ -1,0 +1,50 @@
+{
+  "schema_version": "2.0",
+  "app_version": "4.1.2",
+  "campaign_id": "CMP-7DD3582E9007344F9F9F500A",
+  "campaign_key": "CPK-6A2DAA037B68A18B81EC41CC",
+  "source_commit": "fe33cccd2ecb85b19c0542af83cdff58f18aea59",
+  "generated_at": "2026-08-03T16:16:30.092935+00:00",
+  "mode": "start_next_stage",
+  "target_stage": 30,
+  "baseline": "consensus",
+  "start_date": "2023-01-01",
+  "end_date": "2026-08-03",
+  "max_credits": 350,
+  "estimated_discovery_calls": 14,
+  "estimated_snapshot_cost": 10.0,
+  "estimated_snapshot_capacity": 33,
+  "estimated_events_this_run": 30,
+  "previous_completed_stage": null,
+  "scale_gate": {
+    "status": "HOLD",
+    "accepted": false,
+    "reason": "failed:technical_integrity,consensus_coverage_at_least_70_percent",
+    "baseline": "consensus",
+    "checks": {
+      "technical_integrity": false,
+      "temporal_violations_zero": true,
+      "duplicates_zero": true,
+      "matching_collisions_zero": true,
+      "provider_return_coverage_at_least_80_percent": true,
+      "reliable_matching_at_least_95_percent": true,
+      "consensus_coverage_at_least_70_percent": false
+    },
+    "completed_stage": null,
+    "benchmark_ready_events": 3,
+    "observed": {
+      "provider_return_coverage": 1.0,
+      "reliable_matching": 1.0,
+      "consensus_coverage": 0.3,
+      "temporal_violations": 0,
+      "duplicate_rows": 0,
+      "matching_collisions": 0
+    }
+  },
+  "execution_allowed": true,
+  "execution_reason": "approved",
+  "confirmation_required": "EXECUTE_CAMPAIGN",
+  "consumes_provider_credits": true,
+  "automatic_model_promotion": false,
+  "automatic_bet_placement": false
+}
