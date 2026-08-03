@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 import json
+import logging
 import re
 
 import pandas as pd
@@ -76,6 +77,7 @@ ODDS_BOOKMAKERS = ("winamax_fr", "betclic_fr", "unibet_fr", "pmu_fr", "netbet_fr
 SPORT_LEAGUE_MAP = {"soccer_epl": "E0"}
 SETTINGS = CloudSettings.from_env(ROOT)
 STARTUP_STATE: dict[str, str | None] = {"database_error": None, "model_error": None}
+LOGGER = logging.getLogger("sports_prediction_lab.startup")
 
 
 def _model_freshness(*, data_cutoff: Any, as_of: Any) -> dict[str, Any]:
@@ -114,6 +116,7 @@ def initialize_runtime() -> None:
         STARTUP_STATE["database_error"] = None
     except Exception as exc:  # readiness reports the failure without exposing credentials
         STARTUP_STATE["database_error"] = type(exc).__name__
+        LOGGER.error("database startup failed error_type=%s", type(exc).__name__)
     try:
         loaded = resources()
         STARTUP_STATE["model_error"] = None
@@ -151,6 +154,14 @@ def initialize_runtime() -> None:
         )
     except Exception as exc:
         STARTUP_STATE["model_error"] = type(exc).__name__
+        LOGGER.error("model startup failed error_type=%s", type(exc).__name__)
+    LOGGER.info(
+        "startup readiness version=%s database_error=%s model_error=%s config_issues=%s",
+        APP_VERSION,
+        STARTUP_STATE.get("database_error") or "none",
+        STARTUP_STATE.get("model_error") or "none",
+        ",".join(SETTINGS.readiness_issues()) or "none",
+    )
 
 
 @asynccontextmanager

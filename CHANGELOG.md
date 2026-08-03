@@ -1,5 +1,15 @@
 # Changelog
 
+## V4.1.1 — Railway readiness & backup connectivity hotfix
+
+- rend `/api/ready` accessible aux sondes Railway/Docker même lorsque l’authentification applicative est activée ;
+- conserve toutes les routes métier en accès privé ;
+- préfère le secret GitHub `DATABASE_PUBLIC_URL` pour les sauvegardes exécutées hors du réseau privé Railway ;
+- normalise les URL PostgreSQL copiées avec des guillemets ;
+- refuse les ports vides/non numériques et les hôtes `.railway.internal` depuis GitHub Actions avec un message sans identifiants ;
+- transforme l’ancien traceback SQLAlchemy en erreur de configuration actionnable ;
+- ajoute 6 tests de régression, portant la suite à 161 tests réussis par lots.
+
 ## V4.1.0 — Decision Integrity & Resumable Operations
 
 - verdict canonique `PASS/HOLD/FAIL` partagé par le rapport, la porte de scale-up et le dashboard ;

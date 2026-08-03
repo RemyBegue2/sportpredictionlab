@@ -80,7 +80,7 @@ def test_authentication_and_csrf_gate():
 
     client = TestClient(app)
     assert client.get("/api/private").status_code == 401
-    assert client.get("/api/ready").status_code == 401
+    assert client.get("/api/ready").status_code == 200
     login_response = client.post("/api/auth/login")
     assert login_response.status_code == 200
     csrf = login_response.json()["csrf"]

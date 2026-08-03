@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_PUBLIC_URL || secrets.DATABASE_URL }}
       BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
 
     steps:
@@ -30,7 +30,7 @@ jobs:
 
       - name: Validate backup secrets
         run: |
-          [ -n "${DATABASE_URL:-}" ] || { echo 'DATABASE_URL GitHub secret is missing'; exit 2; }
+          [ -n "${DATABASE_URL:-}" ] || { echo 'DATABASE_PUBLIC_URL (preferred) or DATABASE_URL GitHub secret is missing'; exit 2; }
           [ -n "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ] || { echo 'BACKUP_ENCRYPTION_PASSPHRASE GitHub secret is missing'; exit 2; }
           [ "${#BACKUP_ENCRYPTION_PASSPHRASE}" -ge 20 ] || { echo 'BACKUP_ENCRYPTION_PASSPHRASE must contain at least 20 characters'; exit 2; }
 

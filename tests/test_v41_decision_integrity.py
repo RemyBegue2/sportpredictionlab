@@ -46,7 +46,7 @@ def test_continue_mode_cannot_invent_a_higher_stage() -> None:
         baseline="consensus",
         previous_evidence=evidence,
         current_campaign={
-            "app_version": "4.1.0",
+            "app_version": "4.1.1",
             "target_stage": 30,
             "baseline": "consensus",
             "max_credits": 1200,
@@ -63,7 +63,7 @@ def test_continue_mode_cannot_invent_a_higher_stage() -> None:
 def test_continue_mode_allows_only_the_exact_existing_incomplete_stage() -> None:
     evidence = _stage_evidence()
     current = {
-        "app_version": "4.1.0",
+        "app_version": "4.1.1",
         "target_stage": 100,
         "baseline": "consensus",
         "max_credits": 1200,
@@ -349,7 +349,7 @@ def test_partial_discovery_checkpoint_can_be_restored(tmp_path: Path, monkeypatc
     current_root = tmp_path / "current"
     artifact_root = tmp_path / "artifact"
     plan = {
-        "app_version": "4.1.0",
+        "app_version": "4.1.1",
         "campaign_key": "CPK-ONE",
         "target_stage": 30,
         "baseline": "consensus",

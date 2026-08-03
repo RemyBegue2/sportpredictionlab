@@ -50,7 +50,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.1.0'
+      EXPECTED_VERSION: '4.1.1'
       INPUT_START_DATE: ${{ inputs.start_date }}
       INPUT_END_DATE: ${{ inputs.end_date }}
       INPUT_SAMPLE_EVENTS: ${{ inputs.sample_events }}

@@ -11,7 +11,7 @@ La V4.1 ne change pas le périmètre sportif. Elle corrige l’intégrité de la
 3. Vérifier que les tests GitHub Actions réussissent.
 4. Fusionner après revue humaine.
 5. Lancer **Deploy production**.
-6. Vérifier que `/api/ready` répond avec un statut prêt et que `/api/release` annonce `4.1.0` avec le commit attendu.
+6. Vérifier que `/api/ready` répond avec un statut prêt et que `/api/release` annonce `4.1.1` avec le commit attendu.
 7. Lancer **Run evidence campaign → dry_run → stage 30** avant tout appel fournisseur.
 
 ## Changements incompatibles à connaître
@@ -32,7 +32,8 @@ Secrets nécessaires selon l’opération :
 - `RAILWAY_TOKEN`
 - `RAILWAY_PROJECT_ID`
 - `APP_PASSWORD`
-- `DATABASE_URL`
+- `DATABASE_URL` dans Railway pour l’application
+- `DATABASE_PUBLIC_URL` dans GitHub pour le workflow de sauvegarde
 - `BACKUP_ENCRYPTION_PASSPHRASE`
 
 Variables principales :
@@ -44,7 +45,7 @@ Variables principales :
 
 ## Validation minimale après déploiement
 
-- version `4.1.0` confirmée ;
+- version `4.1.1` confirmée ;
 - commit déployé confirmé ;
 - modèle et hash confirmés ;
 - `/api/ready` vert ;
@@ -56,3 +57,7 @@ Variables principales :
 ## Retour arrière
 
 Utiliser le workflow **Rollback production** avec sa confirmation explicite. Le verrou commun `production-change` empêche les autres workflows de modification de production de s’exécuter en parallèle.
+
+## Hotfix V4.1.1
+
+Pour le backup GitHub, copier la valeur **résolue** de l’URL publique PostgreSQL Railway dans le secret `DATABASE_PUBLIC_URL`. Ne pas copier une référence `${{ ... }}`, une URL `.railway.internal` ou une URL dont le port est vide.

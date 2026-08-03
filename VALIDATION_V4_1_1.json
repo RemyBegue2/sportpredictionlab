@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "app_version": "4.1.1",
+  "validated_at": "2026-08-03",
+  "status": "validated_in_preparation_environment",
+  "incident_fixed": {
+    "railway_healthcheck_401": true,
+    "backup_empty_port_traceback": true,
+    "github_public_database_url_preferred": true,
+    "credential_safe_error_messages": true,
+    "sanitized_startup_logging": true
+  },
+  "tests": {
+    "collected": 161,
+    "passed": 161,
+    "failed": 0,
+    "execution": "four independent batches",
+    "batches": [
+      37,
+      41,
+      58,
+      25
+    ],
+    "hotfix_tests": 6
+  },
+  "static_validation": {
+    "python_compile": true,
+    "javascript_syntax": true,
+    "yaml_files_parsed": 12
+  },
+  "functional_validation": {
+    "portable_sqlite_backup": true,
+    "portable_sqlite_restore": true,
+    "malformed_url_clean_failure": true,
+    "ready_route_public_under_auth_gate": true
+  },
+  "not_verified": {
+    "github_actions_execution": true,
+    "railway_deployment": true,
+    "real_postgresql_backup": true
+  },
+  "required_user_configuration": {
+    "github_secret": "DATABASE_PUBLIC_URL",
+    "value": "resolved Railway public PostgreSQL URL with numeric port"
+  }
+}

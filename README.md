@@ -67,7 +67,8 @@ RAILWAY_TOKEN
 RAILWAY_PROJECT_ID
 APP_PASSWORD              test navigateur privé
 THE_ODDS_API_KEY          collecte historique
-DATABASE_URL              benchmark et sauvegarde PostgreSQL
+DATABASE_URL              connexion PostgreSQL du runtime Railway
+DATABASE_PUBLIC_URL       secret GitHub pour sauvegarde PostgreSQL externe
 BACKUP_ENCRYPTION_PASSPHRASE  chiffrement de la sauvegarde (20 caractères minimum)
 ```
 

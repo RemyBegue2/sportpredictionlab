@@ -2,7 +2,7 @@
 
 ## État préparé
 
-- Version du code : **4.1.0 — Decision Integrity & Resumable Operations**.
+- Version du code : **4.1.1 — Decision Integrity & Resumable Operations**.
 - Exploitation : GitHub Actions + Railway, sans Python local.
 - Workflow principal : **Run evidence campaign**.
 - Modes : `dry_run`, `recompute_only`, `continue_current_stage`, `start_next_stage`.
@@ -23,7 +23,7 @@
 
 ## État de validation
 
-- 155 tests réussis par lots ;
+- 161 tests réussis par lots, dont 6 régressions V4.1.1 ;
 - couverture cœur : 83 % ;
 - Python, JavaScript et YAML validés ;
 - aucun appel réel à The Odds API effectué pendant la préparation ;

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from sqlalchemy import MetaData, create_engine, delete, func, insert, select, text
+from sqlalchemy.engine import make_url
 
 from sports_predictor.cloud_config import CloudSettings
 from sports_predictor.database import Base
@@ -41,9 +42,54 @@ def from_json_value(value: Any) -> Any:
     return value
 
 
+def normalize_database_url(url: str) -> str:
+    """Normalize a database URL without ever echoing credentials.
+
+    GitHub secrets are commonly pasted with surrounding quotes or with an
+    unresolved Railway port placeholder. The latter previously surfaced as an
+    opaque SQLAlchemy ``invalid literal for int()`` traceback.
+    """
+    value = str(url or "").strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"\"", "'"}:
+        value = value[1:-1].strip()
+    if not value:
+        raise RuntimeError("DATABASE_URL is empty")
+    if value.startswith("postgres://"):
+        value = "postgresql+psycopg://" + value.removeprefix("postgres://")
+    elif value.startswith("postgresql://"):
+        value = "postgresql+psycopg://" + value.removeprefix("postgresql://")
+    try:
+        parsed = make_url(value)
+        # Accessing .port forces SQLAlchemy to validate the value now, before
+        # creating the engine and without printing the URL in an exception.
+        _ = parsed.port
+    except (TypeError, ValueError) as exc:
+        message = str(exc)
+        if "port" in message.casefold() or "invalid literal for int" in message.casefold():
+            raise RuntimeError(
+                "DATABASE_URL contains an invalid or empty port. In GitHub, "
+                "store Railway's resolved DATABASE_PUBLIC_URL (including its "
+                "numeric proxy port), not a Railway variable reference or an "
+                "internal URL."
+            ) from None
+        raise RuntimeError("DATABASE_URL is malformed") from None
+    if not parsed.drivername:
+        raise RuntimeError("DATABASE_URL is malformed")
+    if __import__("os").getenv("GITHUB_ACTIONS") == "true":
+        host = (parsed.host or "").casefold()
+        if host.endswith(".railway.internal"):
+            raise RuntimeError(
+                "GitHub Actions cannot reach a Railway private hostname. "
+                "Configure the DATABASE_PUBLIC_URL GitHub secret with the "
+                "resolved public PostgreSQL URL."
+            )
+    return value
+
+
 def engine_for(url: str):
-    connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-    return create_engine(url, future=True, pool_pre_ping=True, connect_args=connect_args)
+    normalized = normalize_database_url(url)
+    connect_args = {"check_same_thread": False} if normalized.startswith("sqlite") else {}
+    return create_engine(normalized, future=True, pool_pre_ping=True, connect_args=connect_args)
 
 
 def backup(database_url: str, output: Path) -> dict[str, Any]:
@@ -145,15 +191,19 @@ def main() -> None:
     args = parser.parse_args()
 
     settings = CloudSettings.from_env(ROOT)
-    if args.backup:
-        output = Path(args.file) if args.file else ROOT / "backups" / f"portable-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json.gz"
-        result = backup(args.database_url or settings.database_url, output)
-    else:
-        if not args.file:
-            parser.error("--file is required for restore")
-        if not args.database_url:
-            parser.error("--database-url must point to a separate restore target")
-        result = restore(args.database_url, Path(args.file), execute=args.execute, allow_nonempty=args.allow_nonempty)
+    try:
+        if args.backup:
+            output = Path(args.file) if args.file else ROOT / "backups" / f"portable-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json.gz"
+            result = backup(args.database_url or settings.database_url, output)
+        else:
+            if not args.file:
+                parser.error("--file is required for restore")
+            if not args.database_url:
+                parser.error("--database-url must point to a separate restore target")
+            result = restore(args.database_url, Path(args.file), execute=args.execute, allow_nonempty=args.allow_nonempty)
+    except RuntimeError as exc:
+        print(json.dumps({"status": "error", "error": str(exc)}, ensure_ascii=False, indent=2))
+        raise SystemExit(2) from None
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

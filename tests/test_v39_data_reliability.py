@@ -157,7 +157,7 @@ def test_v39_planner_writes_explicit_selection_funnel(tmp_path: Path, monkeypatc
     assert planner.main() == 0
     summary = json.loads((output_dir / "plan.json").read_text(encoding="utf-8"))
     selection = pd.read_csv(output_dir / "event_selection.csv")
-    assert summary["version"] == "4.1.0"
+    assert summary["version"] == "4.1.1"
     assert summary["discovered_event_count"] == 20
     assert summary["requested_event_count"] == 10
     assert summary["selected_event_count"] == 3
@@ -192,4 +192,4 @@ def test_v39_zero_credit_recompute_workflow_and_frontend_contract() -> None:
     ):
         assert f'id="{element_id}"' in html
         assert f"#{element_id}" in js
-    assert "app.js?v=4.1.0" in html
+    assert "app.js?v=4.1.1" in html

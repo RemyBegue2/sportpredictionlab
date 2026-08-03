@@ -38,7 +38,7 @@
     "synthetic_metrics_published_as_real": false,
     "version": "3.6.0"
   },
-  "current_version": "4.1.0",
+  "current_version": "4.1.1",
   "deployment": {
     "cloud_jobs": [
       "GitHub Actions evidence campaign"
@@ -102,11 +102,11 @@
     },
     "version": "3.4.0"
   },
-  "generated_at_utc": "2026-08-03T14:52:43.774139+00:00",
+  "generated_at_utc": "2026-08-03T15:29:05.989440+00:00",
   "git": {
-    "branch": "master",
-    "commit": "8b67f7b002dc53910e7558855cbc6489871382c9",
-    "commit_short": "8b67f7b"
+    "branch": "unknown",
+    "commit": "unknown",
+    "commit_short": "unknown"
   },
   "historical_evidence": {
     "app_version": "3.9.0",
@@ -1204,12 +1204,12 @@
   "release": {
     "app": {
       "deployment_id": null,
-      "environment": "development",
+      "environment": "test",
       "name": "sports-prediction-lab",
       "service_id": null,
-      "source_commit": "8b67f7b002dc53910e7558855cbc6489871382c9",
-      "source_commit_short": "8b67f7b002dc",
-      "version": "4.1.0"
+      "source_commit": "unknown",
+      "source_commit_short": "unknown",
+      "version": "4.1.1"
     },
     "football_model": {
       "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
@@ -1232,7 +1232,7 @@
       },
       "trained_until": "2026-05-24T00:00:00+00:00"
     },
-    "generated_at_utc": "2026-08-03T14:52:43.773509+00:00",
+    "generated_at_utc": "2026-08-03T15:29:05.988933+00:00",
     "integrity": {
       "artifact_integrity_ok": true,
       "artifact_manifest_present": true,
@@ -1262,7 +1262,7 @@
       "code_files": {
         ".github/workflows/deploy-production.yml": {
           "bytes": 5299,
-          "sha256": "0ee269e55179bf124ce790118ef779de50573abf1241b0d320fa36ca0ebea4ea"
+          "sha256": "6ebffc1a765f403ed9a4e5cac332fbc9a1fb4da107b3f6384d3382345e2dd167"
         },
         ".github/workflows/estimate-historical-sample.yml": {
           "bytes": 3864,
@@ -1274,15 +1274,15 @@
         },
         ".github/workflows/rebuild-fresh-football.yml": {
           "bytes": 5977,
-          "sha256": "51831687232b77278a297a8fec0f66c0df047f6a0c5e323129244243ec7a4736"
+          "sha256": "d9106255e6756538f833ee05b736ec8b043035fcb20bfa83810645b617eda21a"
         },
         ".github/workflows/run-historical-sample.yml": {
           "bytes": 15311,
-          "sha256": "20d42506eb68f77403616aa1efc3400472ef05a9b4bdb5471e61d4a8bdc6eda6"
+          "sha256": "eb28de04a761e3504fe71f896f4a69e79fe85ac80e8331444ac1331f8c7cf66f"
         },
         ".github/workflows/verify-production.yml": {
           "bytes": 3214,
-          "sha256": "01192b91935d7fbde5806a6a97c5ad7999712223cf56de39725eaec4f034da32"
+          "sha256": "c944730db43eefcdee4e311955fd6e357a4a36fad4ec6f230d1d0acb93648b84"
         },
         "Dockerfile": {
           "bytes": 1117,
@@ -1326,11 +1326,11 @@
         },
         "static/index.html": {
           "bytes": 24862,
-          "sha256": "817a58250cd24f0b5675cfcf2fe82fc6ad5be2ec0605f97367c5cfccf7f7c6e6"
+          "sha256": "3624601f234d75e59ab3a9bd0d4a0b41959bf8b3539fd0f5ca710355ab3b17c0"
         },
         "webapp.py": {
-          "bytes": 68313,
-          "sha256": "4c58c163fc8501e0d1b0cf0de67121c41e8e51fb3f6ec4db0c65a658c7c6cb5c"
+          "bytes": 68847,
+          "sha256": "38dc28790b7302fffa570b94fc94cb5fbc849c013da4ca820d0c2649812b1bbe"
         }
       }
     },
@@ -1364,7 +1364,7 @@
         "rps": 0.43954820365378716
       }
     },
-    "release_id": "ca5bbdadc51d538dd902",
+    "release_id": "6fd029112eee2e1ee00c",
     "safety": {
       "automatic_bet_placement": false,
       "secrets_exported": false,
