@@ -1,5 +1,12 @@
 # Changelog
 
+## V4.1.3 — Railway CLI detached deployment hotfix
+
+- switches every GitHub Actions `railway up` invocation from CI log streaming to detached queue mode ;
+- prevents a successful Railway upload/deployment from being reported as failed only because build-log streaming is temporarily unavailable ;
+- keeps exact post-deployment validation of version, commit, model hash and readiness for every web deployment ;
+- adds regression tests preventing `railway up --ci` from returning to production workflows.
+
 ## V4.1.2 — Readiness recovery & test isolation hotfix
 
 - Fixed deployment pipeline failure caused by leaked global startup state between tests.

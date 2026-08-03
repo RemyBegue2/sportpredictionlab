@@ -38,7 +38,7 @@ jobs:
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       RAILWAY_CRON_SERVICE_ID: ${{ vars.RAILWAY_CRON_SERVICE_ID }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.1.2'
+      EXPECTED_VERSION: '4.1.3'
 
     steps:
       - name: Checkout repository
@@ -89,20 +89,20 @@ jobs:
       - name: Install Railway CLI
         run: npm install --global @railway/cli
 
-      - name: Stamp and deploy web service
+      - name: Queue web deployment without log streaming
         if: ${{ inputs.deploy_web }}
         shell: bash
         run: |
           set -euo pipefail
-          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
+          railway up --detach --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
             --service "$RAILWAY_WEB_SERVICE" --message "Sports Prediction Lab ${GITHUB_SHA}"
 
-      - name: Deploy shadow cron by service ID
+      - name: Queue shadow cron deployment without log streaming
         if: ${{ inputs.deploy_cron }}
         shell: bash
         run: |
           set -euo pipefail
-          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
+          railway up --detach --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
             --service "$RAILWAY_CRON_SERVICE_ID" --message "Sports Prediction Lab ${GITHUB_SHA}"
 
       - name: Verify production release

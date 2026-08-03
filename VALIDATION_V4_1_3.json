@@ -1,0 +1,16 @@
+{
+  "app_version": "4.1.3",
+  "package_version": "0.4.1.3",
+  "tests_collected": 164,
+  "tests_passed": 164,
+  "tests_failed": 0,
+  "validation_mode": "four independent pytest batches",
+  "python_compile": "passed",
+  "javascript_syntax": "passed",
+  "yaml_files_validated": 12,
+  "railway_ci_streaming_invocations": 0,
+  "railway_detached_invocations": 8,
+  "web_deployment_verification": "exact version, source commit, model hash and readiness",
+  "provider_calls": 0,
+  "provider_credits_consumed": 0
+}

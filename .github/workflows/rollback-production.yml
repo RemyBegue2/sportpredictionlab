@@ -118,8 +118,8 @@ jobs:
 
       - name: Deploy restored release
         run: |
-          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_WEB_SERVICE" --message 'Rollback ${{ inputs.source_commit }}'
-          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE_ID" --message 'Rollback ${{ inputs.source_commit }}'
+          railway up --detach --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_WEB_SERVICE" --message 'Rollback ${{ inputs.source_commit }}'
+          railway up --detach --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE_ID" --message 'Rollback ${{ inputs.source_commit }}'
 
       - name: Verify restored production proof
         shell: bash
@@ -131,7 +131,7 @@ jobs:
           print(p['football_model']['artifact_sha256'] or '')
           PY
           )
-          python -m scripts.post_deploy_verify --base-url "$APP_PUBLIC_URL" --expected-version '4.1.2' --expected-commit '${{ steps.commit.outputs.sha }}' --expected-model-sha256 "$MODEL_SHA" --attempts 30 --delay-seconds 10
+          python -m scripts.post_deploy_verify --base-url "$APP_PUBLIC_URL" --expected-version '4.1.3' --expected-commit '${{ steps.commit.outputs.sha }}' --expected-model-sha256 "$MODEL_SHA" --attempts 30 --delay-seconds 10
 
       - name: Install Chromium smoke-test dependencies
         run: |
@@ -141,7 +141,7 @@ jobs:
       - name: Verify restored private interface
         env:
           APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
-        run: python -m scripts.browser_smoke_test --base-url "$APP_PUBLIC_URL" --expected-version '4.1.2'
+        run: python -m scripts.browser_smoke_test --base-url "$APP_PUBLIC_URL" --expected-version '4.1.3'
 
       - name: Summary
         if: always()

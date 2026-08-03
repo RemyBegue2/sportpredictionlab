@@ -66,7 +66,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.1.2'
+      EXPECTED_VERSION: '4.1.3'
       INPUT_MODE: ${{ inputs.mode }}
       INPUT_TARGET_STAGE: ${{ inputs.target_stage }}
       INPUT_MAX_CREDITS: ${{ inputs.max_credits }}
@@ -97,7 +97,7 @@ jobs:
           required = {
               "sports_predictor/evidence_campaign.py": "CAMPAIGN_STAGES",
               "scripts/plan_evidence_campaign.py": "ZERO-CREDIT CAMPAIGN PLAN",
-              "sports_predictor/version.py": 'APP_VERSION = "4.1.2"',
+              "sports_predictor/version.py": 'APP_VERSION = "4.1.3"',
               "sports_predictor/cloud_config.py": "cloud_runtime_detected",
           }
           errors = []
@@ -446,7 +446,7 @@ jobs:
       - name: Deploy campaign dashboard
         if: ${{ inputs.mode != 'dry_run' }}
         run: |
-          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
+          railway up --detach --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
             --service "$RAILWAY_WEB_SERVICE" --message "V4.1 campaign ${{ steps.campaign_plan.outputs.campaign_id }}"
 
       - name: Verify deployed release

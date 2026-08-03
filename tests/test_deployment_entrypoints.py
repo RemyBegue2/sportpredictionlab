@@ -157,3 +157,39 @@ def test_v32_historical_scripts_have_safe_dry_run_help() -> None:
     ):
         result = subprocess.run([sys.executable, "-m", module, "--help"], cwd=ROOT, capture_output=True, text=True, timeout=30)
         assert result.returncode == 0, result.stderr
+
+
+def test_railway_deployments_use_detached_mode_and_never_ci_log_streaming() -> None:
+    workflows = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+    deploy_workflows = []
+    for workflow in workflows:
+        text = workflow.read_text(encoding="utf-8")
+        if "railway up" not in text:
+            continue
+        deploy_workflows.append(workflow.name)
+        assert "railway up --ci" not in text, f"{workflow.name} still uses fragile Railway CI log streaming"
+        for line in text.splitlines():
+            if "railway up" in line:
+                assert "--detach" in line, f"{workflow.name} must queue Railway deployments in detached mode"
+    assert deploy_workflows == [
+        "deploy-production.yml",
+        "rebuild-fresh-football.yml",
+        "recompute-latest-evidence.yml",
+        "rollback-production.yml",
+        "run-evidence-campaign.yml",
+        "run-historical-sample.yml",
+    ]
+
+
+def test_web_deploy_workflows_keep_exact_public_release_verification() -> None:
+    for name in (
+        "deploy-production.yml",
+        "rebuild-fresh-football.yml",
+        "recompute-latest-evidence.yml",
+        "rollback-production.yml",
+        "run-evidence-campaign.yml",
+        "run-historical-sample.yml",
+    ):
+        text = (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
+        assert "scripts.post_deploy_verify" in text, f"{name} must verify the queued web deployment"
+        assert "--expected-commit" in text, f"{name} must verify the exact deployed commit"

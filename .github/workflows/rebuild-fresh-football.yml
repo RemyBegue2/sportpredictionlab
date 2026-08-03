@@ -24,7 +24,7 @@ jobs:
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       RAILWAY_CRON_SERVICE_ID: ${{ vars.RAILWAY_CRON_SERVICE_ID }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.1.2'
+      EXPECTED_VERSION: '4.1.3'
 
     steps:
       - name: Checkout repository
@@ -104,8 +104,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_WEB_SERVICE" --message "Fresh model ${{ steps.generated_commit.outputs.head_sha }}"
-          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE_ID" --message "Fresh model ${{ steps.generated_commit.outputs.head_sha }}"
+          railway up --detach --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_WEB_SERVICE" --message "Fresh model ${{ steps.generated_commit.outputs.head_sha }}"
+          railway up --detach --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" --service "$RAILWAY_CRON_SERVICE_ID" --message "Fresh model ${{ steps.generated_commit.outputs.head_sha }}"
 
       - name: Verify deployed release
         if: ${{ steps.railway_deploy.outputs.enabled == 'true' }}
