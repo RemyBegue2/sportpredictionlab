@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import subprocess
 from typing import Any
@@ -13,6 +14,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def git_value(*args: str) -> str:
+    if args == ("branch", "--show-current"):
+        override = (os.getenv("SOURCE_BRANCH") or os.getenv("GITHUB_REF_NAME") or "").strip()
+        if override:
+            return override
+    if args == ("rev-parse", "HEAD"):
+        override = (os.getenv("SOURCE_COMMIT") or os.getenv("GITHUB_SHA") or "").strip()
+        if override:
+            return override
+    if args == ("rev-parse", "--short", "HEAD"):
+        override = (os.getenv("SOURCE_COMMIT") or os.getenv("GITHUB_SHA") or "").strip()
+        if override:
+            return override[:12]
     try:
         result = subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True, timeout=3)
         return result.stdout.strip() or "unknown"
@@ -40,6 +53,8 @@ def build_handoff() -> dict[str, Any]:
     evidence_report = read_json("artifacts/evidence_report_v3_9.json") or read_json("artifacts/evidence_report_v3_8.json")
     evidence_campaign = read_json("artifacts/evidence_campaign_v4.json")
     evidence_campaign_plan = read_json("artifacts/evidence_campaign_plan_v4.json")
+    coverage_preflight = read_json("artifacts/coverage_preflight_v4_2.json")
+    candidate_campaign_plan = read_json("artifacts/candidate_campaign_plan_v4_2.json")
     return {
         "schema_version": "1.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -60,6 +75,8 @@ def build_handoff() -> dict[str, Any]:
         "historical_evidence": evidence_report,
         "evidence_campaign": evidence_campaign,
         "evidence_campaign_plan": evidence_campaign_plan,
+        "coverage_preflight": coverage_preflight,
+        "candidate_campaign_plan": candidate_campaign_plan,
         "model_decision": (evidence_bundle or {}).get("decision") if evidence_bundle else None,
         "deployment": {
             "platform": "Railway",
@@ -68,15 +85,16 @@ def build_handoff() -> dict[str, Any]:
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Deploy V4.1, verify /api/ready and /api/release, then run stage 30 in dry_run before any paid stage.",
+        "next_priority": "Deploy V4.2, verify /api/ready and /api/release, then run Estimate evidence coverage before any paid campaign.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
             "Tennis remains experimental and uncalibrated.",
             "A green workflow is insufficient without /api/release post-deployment verification.",
             "The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.",
             "Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.",
-            "Use Run evidence campaign in dry_run mode before approving a paid stage.",
-            "Stage 100 remains blocked until a real V4.1 stage-30 report returns PASS.",
+            "Use Estimate evidence coverage before approving any paid evidence campaign.",
+            "Only an exact VIABLE preflight may authorize a paid campaign.",
+            "Stage 100 remains blocked until a real V4.2 stage-30 report returns PASS.",
             "A consensus requires at least two independent bookmakers after Winamax exclusion.",
             "No model promotion is automatic, even when all evidence gates pass.",
         ],
@@ -126,7 +144,8 @@ GitHub Actions
 ├── verify-production.yml       read-only production proof
 ├── rebuild-fresh-football.yml  rebuild → tests → deploy → proof
 ├── estimate-historical-sample.yml  immutable zero-credit request plan
-├── run-evidence-campaign.yml       staged campaign → quality gate → Railway dashboard
+├── estimate-evidence-coverage.yml coverage probe → VIABLE/RISKY/NOT_VIABLE
+├── run-evidence-campaign.yml       preflight-gated campaign → quality gate → Railway dashboard
 ├── recompute-latest-evidence.yml   latest GitHub artifact → zero-credit recalculation
 ├── backup-database.yml         backup → temporary restore verification
 ├── rollback-production.yml     restore from known Git commit → tests → deploy → proof
@@ -148,6 +167,8 @@ GitHub Actions
 - Champion–challenger artifact: `artifacts/champion_challenger_v3_6.json`
 - Historical quality artifact: `artifacts/evidence_report_v3_9.json`
 - Campaign artifact: `artifacts/evidence_campaign_v4.json`
+- Coverage preflight: `artifacts/coverage_preflight_v4_2.json`
+- Candidate campaign plan: `artifacts/candidate_campaign_plan_v4_2.json`
 - Cloud control endpoint: `/api/control-center`
 - Local Python required for operations: **no**
 - Authenticated deterministic verdict: `/api/model-decision`
@@ -189,7 +210,7 @@ def active_model_card(payload: dict[str, Any]) -> str:
 
 def next_actions(payload: dict[str, Any]) -> str:
     decision = payload.get("model_decision") or {}
-    action = decision.get("next_action") or "Deploy V4.1, verify /api/ready and /api/release, then run the stage-30 dry run before any paid campaign."
+    action = decision.get("next_action") or "Deploy V4.2, verify /api/ready and /api/release, then run Estimate evidence coverage before any paid campaign."
     return f"""# NEXT ACTIONS
 
 1. {action}

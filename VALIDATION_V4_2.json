@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "app_version": "4.2.0",
+  "package_version": "0.4.2.0",
+  "validation_status": "passed_in_preparation_environment",
+  "tests": {
+    "execution_mode": "four_independent_batches",
+    "passed": 181,
+    "failed": 0,
+    "batches": [37, 31, 43, 70]
+  },
+  "coverage": {
+    "scope": "sports_predictor,webapp",
+    "total_percent": 83,
+    "coverage_preflight_percent": 87,
+    "evidence_campaign_percent": 83,
+    "evidence_quality_percent": 90,
+    "webapp_percent": 78
+  },
+  "static_validation": {
+    "python_compile": true,
+    "javascript_syntax": true,
+    "github_workflows_parsed": 12,
+    "render_yaml_parsed": true,
+    "railway_ci_streaming_removed": true
+  },
+  "real_environment_validation": {
+    "the_odds_api_calls": false,
+    "provider_credits_consumed": false,
+    "railway_deployed": false,
+    "coverage_preflight_executed": false,
+    "paid_campaign_executed": false
+  },
+  "release_decision": {
+    "code_review": "GO",
+    "controlled_deployment": "GO",
+    "real_preflight": "GO_WITH_HUMAN_APPROVAL_AND_SMALL_CAP",
+    "paid_campaign": "ONLY_AFTER_VIABLE_PREFLIGHT",
+    "stage_100": "NO_GO_UNTIL_REAL_STAGE_30_PASS"
+  }
+}

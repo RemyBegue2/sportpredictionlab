@@ -407,7 +407,7 @@ def test_v386_planner_is_database_independent_even_with_legacy_flag(tmp_path: Pa
 
     assert planner.main() == 0
     summary = json.loads((output_dir / "plan.json").read_text(encoding="utf-8"))
-    assert summary["version"] == "4.1.3"
+    assert summary["version"] == "4.2.0"
     assert summary["database_job_registration"] == "disabled_file_only"
 
 
@@ -416,7 +416,7 @@ def test_v386_workflow_verifies_root_level_file_only_planner() -> None:
     workflow = (root / ".github" / "workflows" / "run-historical-sample.yml").read_text(encoding="utf-8")
     planner = (root / "scripts" / "plan_historical_backfill.py").read_text(encoding="utf-8")
     assert "Verify file-only planner revision" in workflow
-    assert "V4.1 planner markers are missing" in workflow
+    assert "V4.2 planner markers are missing" in workflow
     assert "init_database" not in planner
     assert "create_backfill_job" not in planner
     assert "CloudSettings" not in planner

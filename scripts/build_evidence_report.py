@@ -15,7 +15,7 @@ from sports_predictor.evidence_quality import build_evidence_quality_report, loa
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build the canonical V4.1 coverage-funnel and evidence report.")
+    parser = argparse.ArgumentParser(description="Build the canonical V4.2 coverage-funnel and evidence report.")
     parser.add_argument("--plan-dir", default="data/odds_api/backfill")
     parser.add_argument("--events-csv", default="data/odds_api/historical/events.csv")
     parser.add_argument("--discovery-state-json", default="data/odds_api/historical/event_discovery_state.json")

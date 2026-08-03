@@ -1,14 +1,14 @@
 # HANDOFF CURRENT — Sports Prediction Lab
 
-Generated: `2026-08-03T16:33:39.856572+00:00`
+Generated: `2026-08-03T17:46:31.174572+00:00`
 
 ## Verified repository state
 
-- App version: **4.1.3**
-- Git branch: `unknown`
-- Git commit: `unknown`
-- Release ID: `c9581c383e487e84a227`
-- Running/source commit detected locally: `unknown`
+- App version: **4.2.0**
+- Git branch: `unverified`
+- Git commit: `unverified`
+- Release ID: `aa06acb2dc86b77997ac`
+- Running/source commit detected locally: `unverified`
 - Artifact integrity: **OK**
 - Football model version: `3.4.0-fresh`
 - Football model SHA-256: `04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4`
@@ -29,7 +29,8 @@ GitHub Actions
 ├── verify-production.yml       read-only production proof
 ├── rebuild-fresh-football.yml  rebuild → tests → deploy → proof
 ├── estimate-historical-sample.yml  immutable zero-credit request plan
-├── run-evidence-campaign.yml       staged campaign → quality gate → Railway dashboard
+├── estimate-evidence-coverage.yml coverage probe → VIABLE/RISKY/NOT_VIABLE
+├── run-evidence-campaign.yml       preflight-gated campaign → quality gate → Railway dashboard
 ├── recompute-latest-evidence.yml   latest GitHub artifact → zero-credit recalculation
 ├── backup-database.yml         backup → temporary restore verification
 ├── rollback-production.yml     restore from known Git commit → tests → deploy → proof
@@ -51,6 +52,8 @@ GitHub Actions
 - Champion–challenger artifact: `artifacts/champion_challenger_v3_6.json`
 - Historical quality artifact: `artifacts/evidence_report_v3_9.json`
 - Campaign artifact: `artifacts/evidence_campaign_v4.json`
+- Coverage preflight: `artifacts/coverage_preflight_v4_2.json`
+- Candidate campaign plan: `artifacts/candidate_campaign_plan_v4_2.json`
 - Cloud control endpoint: `/api/control-center`
 - Local Python required for operations: **no**
 - Authenticated deterministic verdict: `/api/model-decision`
@@ -64,8 +67,9 @@ GitHub Actions
 - A green workflow is insufficient without /api/release post-deployment verification.
 - The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.
 - Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.
-- Use Run evidence campaign in dry_run mode before approving a paid stage.
-- Stage 100 remains blocked until a real V4.1 stage-30 report returns PASS.
+- Use Estimate evidence coverage before approving any paid evidence campaign.
+- Only an exact VIABLE preflight may authorize a paid campaign.
+- Stage 100 remains blocked until a real V4.2 stage-30 report returns PASS.
 - A consensus requires at least two independent bookmakers after Winamax exclusion.
 - No model promotion is automatic, even when all evidence gates pass.
 

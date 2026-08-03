@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -37,6 +38,43 @@ def _stage_evidence(*, consensus: float = 0.9, winamax: float = 0.9) -> dict:
     }
 
 
+
+def _viable_preflight(*, stage: int, budget: int) -> dict:
+    recommended = stage + max(2, stage // 20)
+    candidate_ids = sorted(f"candidate-{index}" for index in range(recommended + 10))
+    candidate = {
+        "schema_version": "1.0",
+        "app_version": "4.2.0",
+        "baseline": "consensus",
+        "campaign_type": "french_market_comparison",
+        "target_stage": stage,
+        "recommended_selected_events": recommended,
+        "start_date": "2023-01-01",
+        "end_date": "2026-07-31",
+        "maximum_campaign_credits": budget,
+        "estimated_snapshot_cost": 10.0,
+        "candidate_event_pool_count": len(candidate_ids),
+        "candidate_event_ids_sha256": hashlib.sha256(
+            json.dumps(candidate_ids, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        ).hexdigest(),
+        "candidate_event_ids": candidate_ids,
+        "selection_policy": "chronological_evenly_spaced_without_results",
+    }
+    candidate_id = "CPL-" + hashlib.sha256(
+        json.dumps(candidate, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    ).hexdigest()[:24].upper()
+    return {
+        "app_version": "4.2.0",
+        "preflight_id": "PFL-CONTINUE-TEST",
+        "decision": "VIABLE",
+        "accepted": True,
+        "baseline": "consensus",
+        "campaign_type": "french_market_comparison",
+        "target_stage": stage,
+        "maximum_campaign_credits": budget,
+        "candidate_campaign_plan": {**candidate, "candidate_plan_id": candidate_id},
+    }
+
 def test_continue_mode_cannot_invent_a_higher_stage() -> None:
     evidence = _stage_evidence()
     blocked = build_campaign_plan(
@@ -46,7 +84,7 @@ def test_continue_mode_cannot_invent_a_higher_stage() -> None:
         baseline="consensus",
         previous_evidence=evidence,
         current_campaign={
-            "app_version": "4.1.3",
+            "app_version": "4.2.0",
             "target_stage": 30,
             "baseline": "consensus",
             "max_credits": 1200,
@@ -62,13 +100,16 @@ def test_continue_mode_cannot_invent_a_higher_stage() -> None:
 
 def test_continue_mode_allows_only_the_exact_existing_incomplete_stage() -> None:
     evidence = _stage_evidence()
+    preflight = _viable_preflight(stage=100, budget=1200)
     current = {
-        "app_version": "4.1.3",
+        "app_version": "4.2.0",
         "target_stage": 100,
         "baseline": "consensus",
         "max_credits": 1200,
         "start_date": "2023-01-01",
         "end_date": "2026-07-31",
+        "coverage_preflight_id": preflight["preflight_id"],
+        "coverage_candidate_plan_id": preflight["candidate_campaign_plan"]["candidate_plan_id"],
     }
     allowed = build_campaign_plan(
         mode="continue_current_stage",
@@ -79,6 +120,7 @@ def test_continue_mode_allows_only_the_exact_existing_incomplete_stage() -> None
         current_campaign=current,
         start_date="2023-01-01",
         end_date="2026-07-31",
+        coverage_preflight=preflight,
     )
     assert allowed.execution_allowed is True
 
@@ -349,7 +391,7 @@ def test_partial_discovery_checkpoint_can_be_restored(tmp_path: Path, monkeypatc
     current_root = tmp_path / "current"
     artifact_root = tmp_path / "artifact"
     plan = {
-        "app_version": "4.1.3",
+        "app_version": "4.2.0",
         "campaign_key": "CPK-ONE",
         "target_stage": 30,
         "baseline": "consensus",

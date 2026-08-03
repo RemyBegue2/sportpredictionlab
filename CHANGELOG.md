@@ -1,5 +1,17 @@
 # Changelog
 
+## V4.2.0 — Coverage-Aware Evidence Planning
+
+- adds a resumable, credit-capped `Estimate evidence coverage` workflow before any full historical backfill ;
+- classifies proposed campaigns as `VIABLE`, `RISKY` or `NOT_VIABLE` from bookmaker availability, budget and uncertainty ;
+- blocks paid evidence campaigns unless an exact immutable `VIABLE` preflight matches the baseline, stage, budget and app version ;
+- oversamples candidate events so the stage target represents benchmark-ready observations rather than merely requested matches ;
+- requires at least two independent complete bookmakers for a consensus preflight ;
+- keeps Pinnacle as a separate provider-availability experiment and never substitutes it silently for Winamax/consensus ;
+- hashes the probe set, odds evidence and candidate event pool, then materializes the exact embedded candidate plan used by the campaign ;
+- adds `/api/coverage-preflight` and a dashboard summary before paid execution ;
+- adds V4.2 regression coverage for empty provider responses, resumability, uncertain billing, plan tampering, budget rejection and the real low-coverage scenario.
+
 ## V4.1.3 — Railway CLI detached deployment hotfix
 
 - switches every GitHub Actions `railway up` invocation from CI log streaming to detached queue mode ;

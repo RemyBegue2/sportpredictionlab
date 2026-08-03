@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -32,6 +33,39 @@ def _good_evidence(completed: int = 30) -> dict:
     }
 
 
+def _viable_preflight(stage: int, max_credits: int, *, baseline: str = "consensus", recommended: int | None = None) -> dict:
+    recommended = int(recommended or stage)
+    ids = sorted(f"event-{index}" for index in range(max(recommended, stage)))
+    candidate = {
+        "schema_version": "1.0",
+        "app_version": "4.2.0",
+        "baseline": baseline,
+        "campaign_type": "french_market_comparison",
+        "target_stage": stage,
+        "recommended_selected_events": recommended,
+        "start_date": "2023-01-01",
+        "end_date": "2026-07-31",
+        "maximum_campaign_credits": max_credits,
+        "estimated_snapshot_cost": 10.0,
+        "candidate_event_pool_count": len(ids),
+        "candidate_event_ids_sha256": hashlib.sha256(json.dumps(ids, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest(),
+        "candidate_event_ids": ids,
+        "selection_policy": "chronological_evenly_spaced_without_results",
+    }
+    candidate_id = "CPL-" + hashlib.sha256(json.dumps(candidate, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()[:24].upper()
+    return {
+        "preflight_id": f"PFL-TEST-{baseline}-{stage}-{max_credits}",
+        "decision": "VIABLE",
+        "accepted": True,
+        "baseline": baseline,
+        "campaign_type": "french_market_comparison",
+        "target_stage": stage,
+        "maximum_campaign_credits": max_credits,
+        "estimated_snapshot_cost": 10.0,
+        "candidate_campaign_plan": {**candidate, "candidate_plan_id": candidate_id},
+    }
+
+
 def test_v40_dry_run_is_zero_credit_and_never_executes() -> None:
     plan = build_campaign_plan(
         mode="dry_run",
@@ -55,6 +89,7 @@ def test_v40_first_stage_requires_budget_for_complete_stage() -> None:
         baseline="consensus",
         start_date="2023-01-01",
         end_date="2026-07-31",
+        coverage_preflight=_viable_preflight(30, 120),
     )
     allowed = build_campaign_plan(
         mode="start_next_stage",
@@ -63,9 +98,10 @@ def test_v40_first_stage_requires_budget_for_complete_stage() -> None:
         baseline="consensus",
         start_date="2023-01-01",
         end_date="2026-07-31",
+        coverage_preflight=_viable_preflight(30, 350),
     )
     assert blocked.execution_allowed is False
-    assert blocked.execution_reason == "budget_cannot_fund_complete_target_stage"
+    assert blocked.execution_reason == "budget_cannot_fund_preflight_recommended_sample"
     assert allowed.execution_allowed is True
     assert allowed.estimated_events_this_run == 30
 
@@ -79,6 +115,7 @@ def test_v40_next_stage_requires_previous_quality_gate() -> None:
         previous_evidence=_good_evidence(30),
         start_date="2023-01-01",
         end_date="2026-07-31",
+        coverage_preflight=_viable_preflight(100, 1200),
     )
     bad_evidence = _good_evidence(30)
     bad_evidence["rates"]["reliable_matching"] = 0.80
@@ -90,6 +127,7 @@ def test_v40_next_stage_requires_previous_quality_gate() -> None:
         previous_evidence=bad_evidence,
         start_date="2023-01-01",
         end_date="2026-07-31",
+        coverage_preflight=_viable_preflight(100, 1200),
     )
     assert good.execution_allowed is True
     assert bad.execution_allowed is False
@@ -130,7 +168,7 @@ def test_v40_campaign_planner_cli_is_file_only(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["app_version"] == "4.1.3"
+    assert payload["app_version"] == "4.2.0"
     assert "ZERO-CREDIT CAMPAIGN PLAN" in result.stdout
 
 
@@ -174,7 +212,7 @@ def test_v40_api_frontend_and_workflow_contract() -> None:
         release = client.get("/api/release")
         campaign = client.get("/api/evidence-campaign")
     assert release.status_code == 200
-    assert release.json()["version"] == "4.1.3"
+    assert release.json()["version"] == "4.2.0"
     assert campaign.status_code == 200
     assert campaign.json()["report"]["automatic_model_promotion"] is False
 
@@ -184,7 +222,7 @@ def test_v40_api_frontend_and_workflow_contract() -> None:
     for element_id in ("campaignDecision", "campaignCompleted", "campaignNext", "campaignBudget"):
         assert f'id="{element_id}"' in html
         assert f"#{element_id}" in js
-    assert "app.js?v=4.1.3" in html
+    assert "app.js?v=4.2.0" in html
     assert "plan_request_id" not in workflow
     assert "Test before any provider request" in workflow
     assert workflow.index("Test before any provider request") < workflow.index("Discover historical events")

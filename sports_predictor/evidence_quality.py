@@ -305,7 +305,7 @@ def build_evidence_quality_report(
     baseline: str | None = None,
     target_stage: int | None = None,
 ) -> dict[str, Any]:
-    """Build a canonical V4.1 evidence report.
+    """Build a canonical V4.2 evidence report.
 
     Every consumer receives the same PASS/HOLD/FAIL verdict. Provider coverage
     uses completed targets only, consensus excludes Winamax and requires two

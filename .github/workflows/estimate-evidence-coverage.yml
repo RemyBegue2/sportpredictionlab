@@ -1,0 +1,196 @@
+name: Estimate evidence coverage
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: Start date YYYY-MM-DD
+        required: true
+        type: string
+        default: '2023-01-01'
+      end_date:
+        description: End date YYYY-MM-DD
+        required: true
+        type: string
+      target_stage:
+        description: Required benchmark-ready events
+        required: true
+        type: choice
+        default: '30'
+        options: ['30', '100', '300', '1000']
+      baseline:
+        description: Baseline to probe
+        required: true
+        type: choice
+        default: consensus
+        options: [consensus, winamax, pinnacle]
+      max_preflight_credits:
+        description: Immutable discovery plus probe credit cap
+        required: true
+        type: number
+        default: 120
+      max_campaign_credits:
+        description: Proposed full campaign credit cap
+        required: true
+        type: number
+        default: 650
+      max_discovery_calls:
+        description: Event discovery calls spread across the period
+        required: true
+        type: number
+        default: 14
+      max_probe_events:
+        description: Maximum representative events to probe
+        required: true
+        type: number
+        default: 12
+      confirmation:
+        description: Type EXECUTE_PREFLIGHT to consume provider credits
+        required: true
+        type: string
+      retry_uncertain_preflight:
+        description: Explicitly retry probe calls whose billing outcome is uncertain
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  EXPECTED_VERSION: '4.2.0'
+  THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+  INPUT_START_DATE: ${{ inputs.start_date }}
+  INPUT_END_DATE: ${{ inputs.end_date }}
+  INPUT_TARGET_STAGE: ${{ inputs.target_stage }}
+  INPUT_BASELINE: ${{ inputs.baseline }}
+  INPUT_MAX_PREFLIGHT_CREDITS: ${{ inputs.max_preflight_credits }}
+  INPUT_MAX_CAMPAIGN_CREDITS: ${{ inputs.max_campaign_credits }}
+  INPUT_MAX_DISCOVERY_CALLS: ${{ inputs.max_discovery_calls }}
+  INPUT_MAX_PROBE_EVENTS: ${{ inputs.max_probe_events }}
+  INPUT_CONFIRMATION: ${{ inputs.confirmation }}
+  INPUT_RETRY_UNCERTAIN_PREFLIGHT: ${{ inputs.retry_uncertain_preflight }}
+
+concurrency:
+  group: production-change
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Validate paid preflight configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$(printf '%s' "$INPUT_CONFIRMATION" | tr -d '\r\n' | xargs)" = 'EXECUTE_PREFLIGHT' ] || { echo 'confirmation must equal EXECUTE_PREFLIGHT'; exit 2; }
+          [ -n "${THE_ODDS_API_KEY:-}" ] || { echo 'missing repository secret: THE_ODDS_API_KEY'; exit 2; }
+          python - <<'PY'
+          from sports_predictor.version import APP_VERSION
+          if APP_VERSION != '4.2.0':
+              raise SystemExit(f'expected 4.2.0, found {APP_VERSION}')
+          PY
+      - name: Run V4.2 regression tests
+        run: pytest -q tests/test_v42_coverage_preflight.py
+      - name: Discover representative historical events
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          python -m scripts.discover_historical_events \
+            --sport-key soccer_epl \
+            --start "$INPUT_START_DATE" \
+            --end "$INPUT_END_DATE" \
+            --max-calls "$INPUT_MAX_DISCOVERY_CALLS" \
+            --max-credits "$INPUT_MAX_PREFLIGHT_CREDITS" \
+            --output data/odds_api/preflight/events_all.csv \
+            --execute
+          CODE=$?
+          set -e
+          if [ "$CODE" -ne 0 ] && [ "$CODE" -ne 4 ]; then
+            exit "$CODE"
+          fi
+      - name: Resolve discovery cost
+        id: discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          USED=$(jq -r '.consumed_credits // 0' data/odds_api/preflight/event_discovery_state.json)
+          echo "credits=$USED" >> "$GITHUB_OUTPUT"
+      - name: Probe bookmaker coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARGS=(
+            --events-csv data/odds_api/preflight/events_all.csv
+            --baseline "$INPUT_BASELINE"
+            --target-stage "$INPUT_TARGET_STAGE"
+            --max-probe-events "$INPUT_MAX_PROBE_EVENTS"
+            --max-preflight-credits "$INPUT_MAX_PREFLIGHT_CREDITS"
+            --max-campaign-credits "$INPUT_MAX_CAMPAIGN_CREDITS"
+            --discovery-credits '${{ steps.discovery.outputs.credits }}'
+            --output-dir data/odds_api/preflight
+            --execute
+          )
+          if [ "$INPUT_RETRY_UNCERTAIN_PREFLIGHT" = 'true' ]; then
+            ARGS+=(--retry-uncertain)
+          fi
+          python -m scripts.run_coverage_preflight "${ARGS[@]}"
+      - name: Publish immutable preflight result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'sports-prediction-bot'
+          git config user.email 'sports-prediction-bot@users.noreply.github.com'
+          git add artifacts/coverage_preflight_v4_2.json artifacts/coverage_matrix_v4_2.csv
+          [ ! -f artifacts/candidate_campaign_plan_v4_2.json ] || git add artifacts/candidate_campaign_plan_v4_2.json
+          if ! git diff --cached --quiet; then
+            PREFLIGHT_ID=$(jq -r '.preflight_id' artifacts/coverage_preflight_v4_2.json)
+            git commit -m "chore: publish V4.2 coverage preflight $PREFLIGHT_ID"
+            git push
+          fi
+      - name: Upload preflight evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-coverage-preflight-${{ github.run_id }}
+          path: |
+            artifacts/coverage_preflight_v4_2.json
+            artifacts/coverage_matrix_v4_2.csv
+            artifacts/candidate_campaign_plan_v4_2.json
+            data/odds_api/preflight/plan.json
+            data/odds_api/preflight/state.json
+            data/odds_api/preflight/probe_events.csv
+            data/odds_api/preflight/requests.csv
+            data/odds_api/preflight/historical_odds_long.csv
+            data/odds_api/preflight/event_discovery_plan.json
+            data/odds_api/preflight/event_discovery_state.json
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Coverage decision summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f artifacts/coverage_preflight_v4_2.json ]; then
+            {
+              echo '### V4.2 coverage preflight'
+              echo
+              echo "- Decision: \`$(jq -r '.decision' artifacts/coverage_preflight_v4_2.json)\`"
+              echo "- Reason: \`$(jq -r '.reason' artifacts/coverage_preflight_v4_2.json)\`"
+              echo "- Baseline coverage: \`$(jq -r '(.baseline_coverage * 100 | tostring) + "%"' artifacts/coverage_preflight_v4_2.json)\`"
+              echo "- Wilson diagnostic interval: \`$(jq -r '((.baseline_coverage_ci95_low * 100 | tostring) + "% - " + (.baseline_coverage_ci95_high * 100 | tostring) + "%")' artifacts/coverage_preflight_v4_2.json)\`"
+              echo "- Recommended selected events: \`$(jq -r '.recommended_selected_events // "unavailable"' artifacts/coverage_preflight_v4_2.json)\`"
+              echo "- Campaign capacity: \`$(jq -r '.campaign_snapshot_capacity' artifacts/coverage_preflight_v4_2.json)\`"
+              echo "- Preflight credits: \`$(jq -r '.preflight_credits' artifacts/coverage_preflight_v4_2.json)\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

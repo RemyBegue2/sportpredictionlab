@@ -19,6 +19,7 @@ CAMPAIGN_MODES: tuple[str, ...] = (
     "recompute_only",
 )
 BASELINES: tuple[str, ...] = ("consensus", "winamax")
+CAMPAIGN_TYPES: tuple[str, ...] = ("french_market_comparison",)
 DEFAULT_START_DATE = "2023-01-01"
 DEFAULT_SNAPSHOT_COST = 10.0
 PROVIDER_MIN_COVERAGE = 0.80
@@ -208,6 +209,10 @@ class CampaignPlan:
     mode: str
     target_stage: int
     baseline: str
+    campaign_type: str
+    coverage_preflight_id: str | None
+    coverage_candidate_plan_id: str | None
+    coverage_preflight_decision: str
     start_date: str
     end_date: str
     max_credits: int
@@ -215,6 +220,7 @@ class CampaignPlan:
     estimated_snapshot_cost: float
     estimated_snapshot_capacity: int
     estimated_events_this_run: int
+    recommended_selected_events: int
     previous_completed_stage: int | None
     scale_gate: dict[str, Any]
     execution_allowed: bool
@@ -240,6 +246,7 @@ def build_campaign_plan(
     end_date: str | None = None,
     app_version: str = APP_VERSION,
     source_commit: str | None = None,
+    coverage_preflight: Mapping[str, Any] | None = None,
 ) -> CampaignPlan:
     if mode not in CAMPAIGN_MODES:
         raise ValueError(f"mode must be one of {list(CAMPAIGN_MODES)}")
@@ -257,11 +264,26 @@ def build_campaign_plan(
 
     previous_stage = evidence_stage(previous_evidence, baseline=baseline)
     gate = evaluate_scale_gate(previous_evidence, baseline=baseline)
-    discovery_calls = min(180, max(14, math.ceil(stage / 8)))
-    snapshot_cost = estimate_snapshot_cost(previous_evidence)
+    preflight = dict(coverage_preflight or {})
+    preflight_candidate = dict(preflight.get("candidate_campaign_plan") or {})
+    preflight_id = str(preflight.get("preflight_id") or "").strip() or None
+    candidate_plan_id = str(preflight_candidate.get("candidate_plan_id") or "").strip() or None
+    preflight_decision = str(preflight.get("decision") or "MISSING").strip().upper()
+    campaign_type = str(preflight.get("campaign_type") or "french_market_comparison")
+    recommended_selected = int(preflight_candidate.get("recommended_selected_events") or stage)
+    recommended_selected = max(stage, recommended_selected)
+    if preflight_candidate.get("start_date") and start_date == DEFAULT_START_DATE:
+        start = date.fromisoformat(str(preflight_candidate["start_date"]))
+    if preflight_candidate.get("end_date") and end_date is None:
+        end = date.fromisoformat(str(preflight_candidate["end_date"]))
+    if end < start:
+        raise ValueError("coverage preflight end_date must be on or after start_date")
+    discovery_calls = min(180, max(14, math.ceil(recommended_selected / 8)))
+    snapshot_cost = float(preflight.get("estimated_snapshot_cost") or estimate_snapshot_cost(previous_evidence))
+    snapshot_cost = max(1.0, min(50.0, snapshot_cost))
     available_for_snapshots = max(0, max_credits - discovery_calls)
     snapshot_capacity = int(available_for_snapshots // snapshot_cost)
-    estimated_events = min(stage, snapshot_capacity)
+    estimated_events = min(recommended_selected, snapshot_capacity)
 
     execution_allowed = True
     reason = "approved"
@@ -277,9 +299,9 @@ def build_campaign_plan(
     elif estimated_events <= 0:
         execution_allowed = False
         reason = "no_snapshot_capacity"
-    elif estimated_events < stage:
+    elif estimated_events < recommended_selected:
         execution_allowed = False
-        reason = "budget_cannot_fund_complete_target_stage"
+        reason = "budget_cannot_fund_preflight_recommended_sample"
     elif mode == "start_next_stage":
         expected = next_stage(previous_stage)
         if expected is None:
@@ -291,6 +313,18 @@ def build_campaign_plan(
         elif stage > CAMPAIGN_STAGES[0] and not gate["accepted"]:
             execution_allowed = False
             reason = "previous_stage_quality_gate_failed"
+        else:
+            from .coverage_preflight import validate_preflight_for_campaign
+
+            preflight_ok, preflight_reason = validate_preflight_for_campaign(
+                preflight,
+                baseline=baseline,
+                target_stage=stage,
+                maximum_campaign_credits=max_credits,
+            )
+            if not preflight_ok:
+                execution_allowed = False
+                reason = preflight_reason
     elif mode == "continue_current_stage":
         current = dict(current_campaign or {})
         required_match = {
@@ -309,15 +343,37 @@ def build_campaign_plan(
         elif str(current.get("app_version") or app_version) != app_version:
             execution_allowed = False
             reason = "checkpoint_app_version_mismatch"
-        elif previous_stage is not None and stage <= previous_stage:
+        elif str(current.get("coverage_preflight_id") or "") != str(preflight_id or ""):
+            execution_allowed = False
+            reason = "continue_preflight_must_match_existing_campaign"
+        elif str(current.get("coverage_candidate_plan_id") or "") != str(candidate_plan_id or ""):
+            execution_allowed = False
+            reason = "continue_candidate_plan_must_match_existing_campaign"
+        else:
+            from .coverage_preflight import validate_preflight_for_campaign
+
+            preflight_ok, preflight_reason = validate_preflight_for_campaign(
+                preflight,
+                baseline=baseline,
+                target_stage=stage,
+                maximum_campaign_credits=max_credits,
+            )
+            if not preflight_ok:
+                execution_allowed = False
+                reason = preflight_reason
+        if execution_allowed and previous_stage is not None and stage <= previous_stage:
             execution_allowed = False
             reason = "current_stage_already_completed_use_start_next_stage"
 
     stable_identity = {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "app_version": app_version,
         "target_stage": stage,
         "baseline": baseline,
+        "campaign_type": campaign_type,
+        "coverage_preflight_id": preflight_id,
+        "coverage_candidate_plan_id": candidate_plan_id,
+        "recommended_selected_events": recommended_selected,
         "start_date": start.isoformat(),
         "end_date": end.isoformat(),
         "max_credits": max_credits,
@@ -334,7 +390,7 @@ def build_campaign_plan(
     campaign_id = "CMP-" + hashlib.sha256(_canonical_json(run_identity).encode("utf-8")).hexdigest()[:24].upper()
 
     return CampaignPlan(
-        schema_version="2.0",
+        schema_version="3.0",
         app_version=app_version,
         campaign_id=campaign_id,
         campaign_key=campaign_key,
@@ -343,6 +399,10 @@ def build_campaign_plan(
         mode=mode,
         target_stage=stage,
         baseline=baseline,
+        campaign_type=campaign_type,
+        coverage_preflight_id=preflight_id,
+        coverage_candidate_plan_id=candidate_plan_id,
+        coverage_preflight_decision=preflight_decision,
         start_date=start.isoformat(),
         end_date=end.isoformat(),
         max_credits=max_credits,
@@ -350,6 +410,7 @@ def build_campaign_plan(
         estimated_snapshot_cost=round(snapshot_cost, 4),
         estimated_snapshot_capacity=snapshot_capacity,
         estimated_events_this_run=estimated_events,
+        recommended_selected_events=recommended_selected,
         previous_completed_stage=previous_stage,
         scale_gate=gate,
         execution_allowed=execution_allowed,

@@ -171,7 +171,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V4.1 Decision Integrity & Resumable Operations",
+    title="Sports Prediction Lab V4.2 Coverage-Aware Evidence Planning",
     version=APP_VERSION,
     description="Cloud-first data-reliability edition with explicit coverage denominators, zero-credit evidence recomputation, bookmaker matrices and leakage-safe quality gates.",
     lifespan=lifespan,
@@ -1425,6 +1425,33 @@ def evidence_report() -> dict[str, Any]:
                 "responsible_use": {"profitability_claim": False, "stake_recommendation": False, "automatic_bet_placement": False},
             },
         }
+    return {"source": artifact.name, "report": report}
+
+
+@app.get("/api/coverage-preflight")
+def coverage_preflight() -> dict[str, Any]:
+    artifact = ROOT / "artifacts" / "coverage_preflight_v4_2.json"
+    if not artifact.exists():
+        return {
+            "source": "none",
+            "report": {
+                "schema_version": "1.0",
+                "app_version": APP_VERSION,
+                "decision": "NOT_RUN",
+                "reason": "coverage_preflight_missing",
+                "accepted": False,
+                "baseline_coverage": 0.0,
+                "recommended_selected_events": None,
+                "preflight_credits": 0,
+                "maximum_preflight_credits": 0,
+                "candidate_campaign_plan": None,
+            },
+            "required_next_step": "GitHub Actions → Estimate evidence coverage.",
+        }
+    try:
+        report = json.loads(artifact.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=503, detail=f"Coverage preflight unreadable: {type(exc).__name__}") from exc
     return {"source": artifact.name, "report": report}
 
 

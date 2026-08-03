@@ -15,7 +15,7 @@ from sports_predictor.version import APP_VERSION
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build the V4.1 canonical campaign decision report from saved evidence.")
+    parser = argparse.ArgumentParser(description="Build the V4.2 canonical coverage-aware campaign decision report from saved evidence.")
     parser.add_argument("--plan", default="artifacts/evidence_campaign_plan_v4.json")
     parser.add_argument("--evidence", default="artifacts/evidence_report_v3_9.json")
     parser.add_argument("--output", default="artifacts/evidence_campaign_v4.json")
@@ -41,7 +41,7 @@ def main() -> int:
         else "hold_and_fix_data_quality"
     )
     report = {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "app_version": APP_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "campaign_id": plan.get("campaign_id"),
@@ -50,6 +50,13 @@ def main() -> int:
         "mode": plan.get("mode"),
         "target_stage": plan.get("target_stage"),
         "baseline": baseline,
+        "campaign_type": plan.get("campaign_type", "french_market_comparison"),
+        "coverage_preflight": {
+            "preflight_id": plan.get("coverage_preflight_id"),
+            "candidate_plan_id": plan.get("coverage_candidate_plan_id"),
+            "decision": plan.get("coverage_preflight_decision"),
+            "recommended_selected_events": plan.get("recommended_selected_events"),
+        },
         "budget": {
             "maximum_credits": plan.get("max_credits", 0),
             "estimated_snapshot_cost": plan.get("estimated_snapshot_cost"),

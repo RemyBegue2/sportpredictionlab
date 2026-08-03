@@ -1,17 +1,27 @@
-# Sports Prediction Lab V4.1 — Decision Integrity & Resumable Operations
+# Sports Prediction Lab V4.2 — Coverage-Aware Evidence Planning
 
-La V4.1 durcit la campagne de preuve cloud avant toute montée en volume. Elle impose un verdict canonique `PASS/HOLD/FAIL`, empêche le contournement des stages, compte uniquement les événements uniques réellement prêts pour le benchmark, exige deux bookmakers indépendants pour le consensus et reprend la découverte après interruption sans perdre silencieusement les crédits déjà consommés.
+La V4.2 empêche une campagne historique coûteuse de démarrer lorsque la baseline demandée est manifestement indisponible. Un préflight plafonné sonde la couverture réelle des bookmakers, estime le nombre d’événements nécessaires pour obtenir le stage demandé en observations benchmark-ready, puis produit un verdict `VIABLE`, `RISKY` ou `NOT_VIABLE`.
 
-Le workflow principal reste `Run evidence campaign`, piloté depuis GitHub Actions et Railway, sans Python local. Les opérations responsables restent inchangées : aucun pari automatique, aucune recommandation de mise et aucune promotion automatique de modèle.
+Le workflow à exécuter avant toute campagne payante est **Estimate evidence coverage**. Seul un manifeste `VIABLE`, immuable et cohérent avec la baseline, le stage, le budget, la version et la liste candidate peut déverrouiller **Run evidence campaign**.
 
-Documents V4.1 :
+Garanties principales :
 
-- `UPGRADE_V4_1.md`
-- `AUDIT_MULTI_ROLES_V4_1.md`
-- `RESULTATS_V4_1.md`
-- `KNOWN_ISSUES_AND_GATES_V4_1.md`
-- `OPERATIONS_RUNBOOK_V4_1.md`
-- `VALIDATION_V4_1.json`
+- aucune sélection basée sur les résultats sportifs ou les performances du modèle ;
+- consensus composé d’au moins deux bookmakers indépendants complets ;
+- sur-échantillonnage explicite pour atteindre un nombre cible d’événements réellement évaluables ;
+- budgets distincts pour le préflight et la campagne complète ;
+- reprise après interruption sans répétition silencieuse des appels terminés ;
+- Pinnacle traité comme expérience séparée, jamais comme remplacement silencieux de Winamax/consensus ;
+- aucune promotion automatique, recommandation de mise ou exécution de pari.
+
+Documents V4.2 :
+
+- `UPGRADE_V4_2.md`
+- `AUDIT_MULTI_ROLES_V4_2.md`
+- `RESULTATS_V4_2.md`
+- `KNOWN_ISSUES_AND_GATES_V4_2.md`
+- `OPERATIONS_RUNBOOK_V4_2.md`
+- `VALIDATION_V4_2.json`
 
 ---
 # Sports Prediction Lab V3.7 — Cloud Control Center

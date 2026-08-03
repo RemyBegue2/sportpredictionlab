@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 from pathlib import Path
 import sys
 
@@ -31,6 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input", required=True)
     parser.add_argument("--target", type=int, required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--candidate-plan", help="Optional V4.2 immutable candidate plan restricting eligible event IDs.")
     return parser.parse_args()
 
 
@@ -46,6 +49,29 @@ def main() -> int:
     frame = frame.copy()
     frame["commence_time"] = pd.to_datetime(frame["commence_time"], utc=True, errors="raise", format="mixed")
     frame = frame.sort_values(["commence_time", "event_id"], kind="stable").drop_duplicates("event_id")
+    if args.candidate_plan:
+        candidate = json.loads((ROOT / args.candidate_plan).read_text(encoding="utf-8"))
+        candidate_material = dict(candidate)
+        candidate_plan_id = str(candidate_material.pop("candidate_plan_id", ""))
+        expected_plan_id = "CPL-" + hashlib.sha256(
+            json.dumps(candidate_material, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        ).hexdigest()[:24].upper()
+        if not candidate_plan_id or candidate_plan_id != expected_plan_id:
+            raise ValueError("candidate plan failed immutable plan integrity validation")
+        allowed_ids = sorted(str(value) for value in candidate.get("candidate_event_ids") or [])
+        expected_hash = str(candidate.get("candidate_event_ids_sha256") or "")
+        actual_hash = hashlib.sha256(
+            json.dumps(allowed_ids, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+        if not allowed_ids or actual_hash != expected_hash:
+            raise ValueError("candidate plan event pool is missing or failed integrity validation")
+        if int(candidate.get("recommended_selected_events") or 0) != int(args.target):
+            raise ValueError("candidate plan recommended event count does not match --target")
+        frame = frame[frame["event_id"].astype(str).isin(set(allowed_ids))].copy()
+        if len(frame) < int(args.target):
+            raise ValueError(
+                f"current discovery contains only {len(frame)} of {args.target} immutable candidate events"
+            )
     selected = _evenly_spaced(frame, min(args.target, len(frame)))
     output = ROOT / args.output
     output.parent.mkdir(parents=True, exist_ok=True)

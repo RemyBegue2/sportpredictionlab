@@ -19,7 +19,7 @@ def _load(path: Path) -> dict:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Restore a compatible V4.1 campaign checkpoint extracted from a GitHub artifact.")
+    parser = argparse.ArgumentParser(description="Restore a compatible V4.2 campaign checkpoint extracted from a GitHub artifact.")
     parser.add_argument("--current-plan", default="artifacts/evidence_campaign_plan_v4.json")
     parser.add_argument("--artifact-root", required=True)
     parser.add_argument("--destination-root", default=".")

@@ -25,7 +25,7 @@ def _settings() -> CloudSettings:
         database_url="postgresql+psycopg://user:password@example.com:5432/railway",
         odds_sync_sports=("soccer_epl",),
         odds_stale_minutes=15,
-        model_version="4.1.3-test",
+        model_version="4.2.0-test",
     )
 
 
@@ -105,7 +105,7 @@ def test_startup_errors_are_logged_without_exception_details(monkeypatch, caplog
 
         assert "database startup failed error_type=RuntimeError" in caplog.text
         assert "model startup failed error_type=ValueError" in caplog.text
-        assert "startup readiness version=4.1.3" in caplog.text
+        assert "startup readiness version=4.2.0" in caplog.text
         assert "secret-user" not in caplog.text
         assert "secret-pass" not in caplog.text
         assert "private model path" not in caplog.text

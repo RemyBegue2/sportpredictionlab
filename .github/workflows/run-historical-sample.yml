@@ -50,7 +50,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.1.3'
+      EXPECTED_VERSION: '4.2.0'
       INPUT_START_DATE: ${{ inputs.start_date }}
       INPUT_END_DATE: ${{ inputs.end_date }}
       INPUT_SAMPLE_EVENTS: ${{ inputs.sample_events }}
@@ -165,10 +165,10 @@ jobs:
           missing = [token for token in required if token not in source]
           if missing:
               raise SystemExit(
-                  "V4.1 planner markers are missing. Replace the root-level "
+                  "V4.2 planner markers are missing. Replace the root-level "
                   f"scripts/plan_historical_backfill.py file: {missing}"
               )
-          print("Planner verified: V4.1 file-only with explicit selection funnel.")
+          print("Planner verified: V4.2 file-only with explicit selection funnel.")
           PY
       - name: Build immutable budget-adapted provider plan
         run: |

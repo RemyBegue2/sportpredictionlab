@@ -14,7 +14,7 @@ on:
           - continue_current_stage
           - start_next_stage
       target_stage:
-        description: Target number of event snapshots
+        description: Required benchmark-ready events
         required: true
         type: choice
         default: '30'
@@ -27,7 +27,7 @@ on:
         description: Immutable global provider credit cap (0 to 20000)
         required: true
         type: number
-        default: 350
+        default: 650
       baseline:
         description: Primary market baseline
         required: true
@@ -66,7 +66,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.1.3'
+      EXPECTED_VERSION: '4.2.0'
       INPUT_MODE: ${{ inputs.mode }}
       INPUT_TARGET_STAGE: ${{ inputs.target_stage }}
       INPUT_MAX_CREDITS: ${{ inputs.max_credits }}
@@ -87,7 +87,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Verify V4.1 source contract
+      - name: Verify V4.2 source contract
         shell: bash
         run: |
           set -euo pipefail
@@ -96,8 +96,9 @@ jobs:
 
           required = {
               "sports_predictor/evidence_campaign.py": "CAMPAIGN_STAGES",
+              "sports_predictor/coverage_preflight.py": "PREFLIGHT_DECISIONS",
               "scripts/plan_evidence_campaign.py": "ZERO-CREDIT CAMPAIGN PLAN",
-              "sports_predictor/version.py": 'APP_VERSION = "4.1.3"',
+              "sports_predictor/version.py": 'APP_VERSION = "4.2.0"',
               "sports_predictor/cloud_config.py": "cloud_runtime_detected",
           }
           errors = []
@@ -109,8 +110,8 @@ jobs:
               if marker not in path.read_text(encoding="utf-8"):
                   errors.append(f"missing marker {marker!r} in {filename}")
           if errors:
-              raise SystemExit("V4.1 mixed-version repository: " + "; ".join(errors))
-          print("V4.1 source contract verified.")
+              raise SystemExit("V4.2 mixed-version repository: " + "; ".join(errors))
+          print("V4.2 source contract verified.")
           PY
 
       - name: Test before any provider request
@@ -163,6 +164,9 @@ jobs:
           END_DATE=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['end_date'])")
           DISCOVERY_CALLS=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['estimated_discovery_calls'])")
           EVENTS_THIS_RUN=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['estimated_events_this_run'])")
+          RECOMMENDED_EVENTS=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['recommended_selected_events'])")
+          PREFLIGHT_ID=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['coverage_preflight_id'] or '')")
+          PREFLIGHT_DECISION=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['coverage_preflight_decision'])")
 
           echo "campaign_id=$CAMPAIGN_ID" >> "$GITHUB_OUTPUT"
           echo "allowed=$ALLOWED" >> "$GITHUB_OUTPUT"
@@ -171,16 +175,20 @@ jobs:
           echo "end_date=$END_DATE" >> "$GITHUB_OUTPUT"
           echo "discovery_calls=$DISCOVERY_CALLS" >> "$GITHUB_OUTPUT"
           echo "events_this_run=$EVENTS_THIS_RUN" >> "$GITHUB_OUTPUT"
+          echo "recommended_events=$RECOMMENDED_EVENTS" >> "$GITHUB_OUTPUT"
+          echo "preflight_id=$PREFLIGHT_ID" >> "$GITHUB_OUTPUT"
+          echo "preflight_decision=$PREFLIGHT_DECISION" >> "$GITHUB_OUTPUT"
 
           {
-            echo '### V4.1 campaign plan'
+            echo '### V4.2 coverage-gated campaign plan'
             echo
             echo "- Campaign: \`$CAMPAIGN_ID\`"
             echo "- Mode: \`$INPUT_MODE\`"
             echo "- Target stage: \`$INPUT_TARGET_STAGE\`"
             echo "- Baseline: \`$INPUT_BASELINE\`"
             echo "- Credit cap: \`$INPUT_MAX_CREDITS\`"
-            echo "- Estimated events this run: \`$EVENTS_THIS_RUN\`"
+            echo "- Recommended selected events: \`$RECOMMENDED_EVENTS\`"
+            echo "- Coverage preflight: \`$PREFLIGHT_DECISION\` (\`$PREFLIGHT_ID\`)"
             echo "- Execution allowed: \`$ALLOWED\`"
             echo "- Reason: \`$REASON\`"
             echo
@@ -330,7 +338,7 @@ jobs:
       - name: Select deterministic campaign events
         if: ${{ steps.campaign_data.outputs.has_events == 'true' && (inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.backfill_ready != 'true')) }}
         run: |
-          python -m scripts.select_campaign_events             --input data/odds_api/campaign/events_all.csv             --target '${{ steps.campaign_plan.outputs.events_this_run }}'             --output data/odds_api/campaign/events_selected.csv
+          python -m scripts.select_campaign_events             --input data/odds_api/campaign/events_all.csv             --target '${{ steps.campaign_plan.outputs.recommended_events }}'             --candidate-plan artifacts/candidate_campaign_plan_v4_2.json             --output data/odds_api/campaign/events_selected.csv
 
       - name: Build immutable provider plan
         if: ${{ steps.campaign_data.outputs.has_events == 'true' && (inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.backfill_ready != 'true')) }}
@@ -420,6 +428,8 @@ jobs:
           git config user.name 'sports-prediction-bot'
           git config user.email 'sports-prediction-bot@users.noreply.github.com'
           git add artifacts/evidence_campaign_plan_v4.json artifacts/evidence_campaign_v4.json
+          [ ! -f artifacts/coverage_preflight_v4_2.json ] || git add artifacts/coverage_preflight_v4_2.json
+          [ ! -f artifacts/candidate_campaign_plan_v4_2.json ] || git add artifacts/candidate_campaign_plan_v4_2.json
           [ ! -f artifacts/evidence_report_v3_9.json ] || git add artifacts/evidence_report_v3_9.json
           [ ! -f artifacts/event_outcomes_v4.csv ] || git add artifacts/event_outcomes_v4.csv
           [ ! -f artifacts/bookmaker_coverage_v4.csv ] || git add artifacts/bookmaker_coverage_v4.csv
@@ -447,7 +457,7 @@ jobs:
         if: ${{ inputs.mode != 'dry_run' }}
         run: |
           railway up --detach --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
-            --service "$RAILWAY_WEB_SERVICE" --message "V4.1 campaign ${{ steps.campaign_plan.outputs.campaign_id }}"
+            --service "$RAILWAY_WEB_SERVICE" --message "V4.2 campaign ${{ steps.campaign_plan.outputs.campaign_id }}"
 
       - name: Verify deployed release
         if: ${{ inputs.mode != 'dry_run' }}
@@ -469,6 +479,9 @@ jobs:
           path: |
             artifacts/evidence_campaign_plan_v4.json
             artifacts/evidence_campaign_v4.json
+            artifacts/coverage_preflight_v4_2.json
+            artifacts/candidate_campaign_plan_v4_2.json
+            artifacts/coverage_matrix_v4_2.csv
             artifacts/evidence_report_v3_9.json
             artifacts/event_outcomes_v4.csv
             artifacts/bookmaker_coverage_v4.csv
@@ -494,13 +507,15 @@ jobs:
         shell: bash
         run: |
           {
-            echo '### V4.1 decision-integrity campaign'
+            echo '### V4.2 coverage-aware campaign'
             echo
             echo "- Campaign: \`${{ steps.campaign_plan.outputs.campaign_id }}\`"
             echo "- Mode: \`$INPUT_MODE\`"
             echo "- Target stage: \`$INPUT_TARGET_STAGE\`"
             echo "- Baseline: \`$INPUT_BASELINE\`"
             echo "- Immutable credit cap: \`$INPUT_MAX_CREDITS\`"
+            echo "- Coverage preflight: \`${{ steps.campaign_plan.outputs.preflight_decision }}\` (\`${{ steps.campaign_plan.outputs.preflight_id }}\`)"
+            echo "- Selected event target: \`${{ steps.campaign_plan.outputs.recommended_events }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
           if [ -f artifacts/evidence_campaign_v4.json ]; then
             echo "- Decision: \`$(jq -r '.decision' artifacts/evidence_campaign_v4.json)\`" >> "$GITHUB_STEP_SUMMARY"

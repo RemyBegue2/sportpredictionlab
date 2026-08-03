@@ -210,8 +210,22 @@ function renderEvidence(data){
   if(!items.length) items.push({kind:'passed',label:'Contrôle',value:report.generated_at?'Aucune anomalie bloquante détectée.':'Aucun rapport publié.'});
   const issuesNode=$('#evidenceIssues');
   if(issuesNode){
-    issuesNode.innerHTML=items.map(item=>`<article class="gate-card ${esc(item.kind)}"><small>${esc(item.label)}</small><h3>${esc(String(item.value).replaceAll('_',' '))}</h3><p>${esc(report.next_action||'Les détails sont conservés dans l’artefact GitHub V4.1.')}</p></article>`).join('');
+    issuesNode.innerHTML=items.map(item=>`<article class="gate-card ${esc(item.kind)}"><small>${esc(item.label)}</small><h3>${esc(String(item.value).replaceAll('_',' '))}</h3><p>${esc(report.next_action||'Les détails sont conservés dans l’artefact GitHub V4.2.')}</p></article>`).join('');
   }
+}
+
+function renderPreflight(data){
+  const report=(data||{}).report||{};
+  const labels={VIABLE:'Viable',RISKY:'À confirmer',NOT_VIABLE:'Non viable',NOT_RUN:'Non exécuté'};
+  const setText=(selector,value)=>{ const node=$(selector); if(node) node.textContent=value; };
+  setText('#preflightDecision',labels[report.decision]||String(report.decision||'Non exécuté').replaceAll('_',' '));
+  setText('#preflightReason',report.reason||data.required_next_step||'Aucun préflight publié.');
+  setText('#preflightCoverage',pct(report.baseline_coverage));
+  setText('#preflightInterval',`Intervalle Wilson diagnostique : ${pct(report.baseline_coverage_ci95_low)} à ${pct(report.baseline_coverage_ci95_high)}.`);
+  setText('#preflightRecommended',report.recommended_selected_events??'—');
+  setText('#preflightCapacity',report.candidate_campaign_plan?`Plan candidat ${report.candidate_campaign_plan.candidate_plan_id}.`:'Aucune campagne payante autorisée.');
+  setText('#preflightCredits',report.preflight_credits??0);
+  setText('#preflightBudget',`Plafond préflight : ${report.maximum_preflight_credits??0} crédits.`);
 }
 
 function renderCampaign(data){
@@ -231,8 +245,9 @@ function renderCampaign(data){
 
 async function refreshEvidence(){
   try{
-    const [evidence,campaign]=await Promise.all([jsonFetch('/api/evidence'),jsonFetch('/api/evidence-campaign')]);
+    const [evidence,preflight,campaign]=await Promise.all([jsonFetch('/api/evidence'),jsonFetch('/api/coverage-preflight'),jsonFetch('/api/evidence-campaign')]);
     renderEvidence(evidence);
+    renderPreflight(preflight);
     renderCampaign(campaign);
   }
   catch(error){ toast(`Rapport de preuve indisponible : ${error.message}`); }
@@ -390,6 +405,7 @@ async function init(){
       history:jsonFetch('/api/history/predictions?limit=20'),
       benchmark:jsonFetch('/api/benchmark/summary'),
       evidence:jsonFetch('/api/evidence'),
+      preflight:jsonFetch('/api/coverage-preflight'),
       campaign:jsonFetch('/api/evidence-campaign'),
       decision:jsonFetch('/api/model-decision'),
       shadow:jsonFetch('/api/shadow/summary'),
@@ -409,6 +425,7 @@ async function init(){
     if(loaded.history) renderHistory(loaded.history);
     if(loaded.benchmark) renderBenchmark(loaded.benchmark);
     if(loaded.evidence) renderEvidence(loaded.evidence);
+    if(loaded.preflight) renderPreflight(loaded.preflight);
     if(loaded.campaign) renderCampaign(loaded.campaign);
     if(loaded.decision) renderDecision(loaded.decision);
     if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
