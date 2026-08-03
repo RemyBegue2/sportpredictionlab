@@ -1,0 +1,215 @@
+{
+  "app": {
+    "deployment_id": null,
+    "environment": "development",
+    "name": "sports-prediction-lab",
+    "service_id": null,
+    "source_commit": "unknown",
+    "source_commit_short": "unknown",
+    "version": "4.4.0"
+  },
+  "football_model": {
+    "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
+    "dataset_cutoff": "2026-05-24T00:00:00+00:00",
+    "dataset_rows": 1900,
+    "dataset_sha256": "ae48ba7dc4715936f8891177f054c5a4799c681c0b65fc4bd7aea8031478eac7",
+    "model_version": "3.4.0-fresh",
+    "promoted": true,
+    "promotion": {
+      "checks": {
+        "better_than_naive": true,
+        "calibration": true,
+        "finite_log_loss": true,
+        "fresh_cutoff": true,
+        "minimum_rows": true,
+        "minimum_test_rows": true
+      },
+      "eligible": true,
+      "reasons": []
+    },
+    "trained_until": "2026-05-24T00:00:00+00:00"
+  },
+  "generated_at_utc": "2026-08-03T21:06:36.879347+00:00",
+  "integrity": {
+    "artifact_integrity_ok": true,
+    "artifact_manifest_present": true,
+    "artifacts": {
+      "football_model.joblib": {
+        "bytes": 1750957,
+        "declared_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
+        "matches_manifest": true,
+        "present": true,
+        "sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4"
+      },
+      "metrics.json": {
+        "bytes": 1615,
+        "declared_sha256": "35cbf2ddbbd2e82ba0fa0aef0c54899a2cba9d5a1ba5cddadda60752f44d4f25",
+        "matches_manifest": true,
+        "present": true,
+        "sha256": "35cbf2ddbbd2e82ba0fa0aef0c54899a2cba9d5a1ba5cddadda60752f44d4f25"
+      },
+      "tennis_model.joblib": {
+        "bytes": 625,
+        "declared_sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658",
+        "matches_manifest": true,
+        "present": true,
+        "sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658"
+      }
+    },
+    "code_files": {
+      ".github/workflows/capture-daily-research.yml": {
+        "bytes": 5797,
+        "sha256": "658a11cd754060ad1f65d5a42df189287bedfae43e9e64d5805a475186274b29"
+      },
+      ".github/workflows/deploy-production.yml": {
+        "bytes": 5365,
+        "sha256": "9355bbd622dfd6bfc774d0a4ad8957dffaf161afb72e7a7fba556236058e0109"
+      },
+      ".github/workflows/estimate-evidence-coverage.yml": {
+        "bytes": 8173,
+        "sha256": "4896a2a910bb96b5d96516b012e820ce373f03accae358f1dfcb008c9b4e46b5"
+      },
+      ".github/workflows/estimate-historical-sample.yml": {
+        "bytes": 3864,
+        "sha256": "33c143f53b24922c42efde2e68b6f67a0417ce5331df3beb6d40d0793487305c"
+      },
+      ".github/workflows/generate-handoff.yml": {
+        "bytes": 1279,
+        "sha256": "c9790d74ecc6313dd27d52a9d64fab23e4ea17d29bff5299781491718260d90b"
+      },
+      ".github/workflows/optimise-roi-policy.yml": {
+        "bytes": 2872,
+        "sha256": "31859b4741d2ad0eca8b299b3e963ad578d93aa2e1ba71720f2ba097f28a946c"
+      },
+      ".github/workflows/rebuild-fresh-football.yml": {
+        "bytes": 5985,
+        "sha256": "f80666818060667c2196ca2deb0858a82dd5d810ef1244fce28b3557d881407b"
+      },
+      ".github/workflows/run-evidence-campaign.yml": {
+        "bytes": 26102,
+        "sha256": "51978125dd8e430b4868a54de101709dd93f3352f3381bead7649088aa57f71a"
+      },
+      ".github/workflows/run-historical-sample.yml": {
+        "bytes": 15665,
+        "sha256": "a24dfdec799bd6368e8f247c421ae0a278667fa226d68d4044d26c7797022075"
+      },
+      ".github/workflows/settle-daily-research.yml": {
+        "bytes": 4060,
+        "sha256": "4b07123dcb4ee0b77223cd4f9e0505b1249fd6d79e1e66048cba3e7ebac93347"
+      },
+      ".github/workflows/verify-production.yml": {
+        "bytes": 3214,
+        "sha256": "cd7a4bed201ad65b47aaa7ae42b3a407dcf13db451e4bad6cc3bc7e7e0e4f4e5"
+      },
+      "Dockerfile": {
+        "bytes": 1117,
+        "sha256": "699a22b7c94633ba93d863e17d339abf79235c59824c5edfa80c582244f86b27"
+      },
+      "railway.cron.toml": {
+        "bytes": 240,
+        "sha256": "6b53c3bce3458f24bd14ff4b6da60d072042d87899066c0024a28a50b14f4408"
+      },
+      "railway.toml": {
+        "bytes": 416,
+        "sha256": "c43ca6879fef6ba96a2380a09e0621e5627e222003fcf858fe3f7f0702b4cd16"
+      },
+      "scripts/browser_smoke_test.py": {
+        "bytes": 9354,
+        "sha256": "369ce09b9bbad70d9aaebc5aa7d04812c1b5d8d4242542d465574de210587ec7"
+      },
+      "scripts/run_coverage_preflight.py": {
+        "bytes": 13253,
+        "sha256": "f6a96fc56d294a0f60317526d3c3adc8d9a44ab314591125d39cac7400cc380c"
+      },
+      "sports_predictor/control_center.py": {
+        "bytes": 15908,
+        "sha256": "562935f46b691fcda173b40d0d959817920b78027ddfcdce6042160733bcbb9f"
+      },
+      "sports_predictor/coverage_preflight.py": {
+        "bytes": 21242,
+        "sha256": "743ed8cf0c6915d1f19d3062ed6893bea9400dc4127ef4eca2f69db8a9969af9"
+      },
+      "sports_predictor/database.py": {
+        "bytes": 61431,
+        "sha256": "e79b13cc6426ab72e27b984587d6aef6a5ac5feba66c21d78804facb479143dc"
+      },
+      "sports_predictor/evidence_campaign.py": {
+        "bytes": 17594,
+        "sha256": "e2aadf230780d57371d51b54008951379a55057c13b7faa490d8d993ef438fab"
+      },
+      "sports_predictor/evidence_quality.py": {
+        "bytes": 30410,
+        "sha256": "bbd50db0ad24d9dcd21c5b437407404b136928d6948fd596dc4ef7b6cb52e191"
+      },
+      "sports_predictor/fresh_rebuild.py": {
+        "bytes": 10257,
+        "sha256": "19e088dfa6ad939ff8f4e2f079bfc14d2f13edbdd7834532ac1d0ba06532c23a"
+      },
+      "sports_predictor/release_registry.py": {
+        "bytes": 13850,
+        "sha256": "6e9ffe854d3d7b908dacccabaa0c89b0c95a21688ea25142b5e07688368da3c0"
+      },
+      "sports_predictor/roi_lab.py": {
+        "bytes": 24052,
+        "sha256": "8d55a23f426fcc992ec7cb989b3dacff7e8747248acec57d7d140625b167c27d"
+      },
+      "sports_predictor/sample_plan.py": {
+        "bytes": 9057,
+        "sha256": "4d13557ec245d7c31e6f7d21e1756fb3ebc67b3b95f7b6f824ad2fb26d2193b5"
+      },
+      "sports_predictor/shadow_mode.py": {
+        "bytes": 11966,
+        "sha256": "a0a8262dfe6614caf66709aeccc2c20e63719b921f002aae150fab69c500ded5"
+      },
+      "static/app.js": {
+        "bytes": 47820,
+        "sha256": "032a4bb3d177606a7aaaa5e13e49930b45934a3933a86175e214a77cebc4fc87"
+      },
+      "static/index.html": {
+        "bytes": 29468,
+        "sha256": "d73a66d85684968ffef1fcc35fa1b6ac2df506f3f9612b25ff5bd7a9f5379ece"
+      },
+      "webapp.py": {
+        "bytes": 114159,
+        "sha256": "3742791c64786b02ba579d2994c9d5cfe7464e7384201d9795b50179aa6c1cbe"
+      }
+    }
+  },
+  "metrics_digest": {
+    "football": {
+      "accuracy": 0.4605263157894737,
+      "brier": 0.6409275706193381,
+      "calibration_temperature": 1.9711817595785415,
+      "dixon_coles_rho": 0.015000000000000013,
+      "ece": 0.0958730475496105,
+      "log_loss": 1.0618926736262253,
+      "ml_blend_weight": 0.0,
+      "ml_only_log_loss": 1.0410196388251696,
+      "n_test": 380,
+      "naive_log_loss": 1.0846018600662934,
+      "poisson_dc_log_loss": 1.0618926736262253,
+      "rps": 0.43954820365378716
+    },
+    "fresh_rebuild": {
+      "accuracy": 0.4605263157894737,
+      "brier": 0.6409275706193381,
+      "calibration_temperature": 1.9711817595785415,
+      "dixon_coles_rho": 0.015000000000000013,
+      "ece": 0.0958730475496105,
+      "log_loss": 1.0618926736262253,
+      "ml_blend_weight": 0.0,
+      "ml_only_log_loss": 1.0410196388251696,
+      "n_test": 380,
+      "naive_log_loss": 1.0846018600662934,
+      "poisson_dc_log_loss": 1.0618926736262253,
+      "rps": 0.43954820365378716
+    }
+  },
+  "release_id": "0666ec6afaa39ebbd5a9",
+  "safety": {
+    "automatic_bet_placement": false,
+    "secrets_exported": false,
+    "staking_recommendations": false
+  },
+  "schema_version": "1.0"
+}

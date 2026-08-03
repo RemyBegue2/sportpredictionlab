@@ -1,5 +1,19 @@
 # Changelog
 
+## V4.4.0 — Dual-Sport ROI Lab
+
+- adds one persisted football-and-tennis research view for today’s matches, probabilities, shadow signals and simulated bankrolls ;
+- adds manual credit-capped workflows to capture live markets and settle football/tennis results ;
+- requires shadow recording before any paid daily snapshot can be captured ;
+- adds flat 1 %, flat 2 % and quarter-Kelly-capped bankroll simulations for fictitious bankrolls 100, 500 and 1,000 ;
+- tunes a bounded 144-policy grid on chronological development folds with instability, downside and drawdown penalties ;
+- trains a portable logistic signal-quality meta-model on chronological train/validation/holdout splits ;
+- counts one decision per event rather than treating mutually exclusive outcomes as independent samples ;
+- requires at least 30 settled events for a sport before the meta-model may rehabilitate a base-model abstention ;
+- keeps the dashboard read-only with respect to paid provider calls ;
+- strengthens the Chromium smoke test to require the ROI lab to render ;
+- preserves no real stake, no automatic bet and no profitability-claim invariants.
+
 ## V4.3.0 — Daily Product Recovery & Credit Firewall
 
 - adds zero-credit daily fixture discovery with cached ESPN and Football-Data fallback sources ;

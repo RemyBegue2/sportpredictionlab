@@ -991,7 +991,7 @@ def recent_shadow_predictions(limit: int = 100, *, sport_key: str | None = None,
 
 
 def settle_shadow_predictions(*, provider_event_id: str | None = None) -> dict[str, int]:
-    from .shadow_mode import evaluate_football_shadow
+    from .shadow_mode import evaluate_football_shadow, evaluate_tennis_shadow
 
     settled = 0
     skipped = 0
@@ -1006,15 +1006,22 @@ def settle_shadow_predictions(*, provider_event_id: str | None = None) -> dict[s
             statement = statement.where(ShadowPredictionRecord.provider_event_id == provider_event_id)
         rows = session.execute(statement).all()
         for shadow, _event, result in rows:
-            if shadow.sport != "football":
+            if shadow.sport == "football":
+                evaluation = evaluate_football_shadow(
+                    fixture=shadow.fixture, probabilities=shadow.probabilities,
+                    market_analysis=shadow.market_analysis, decision=shadow.decision,
+                    home_score=result.home_score, away_score=result.away_score,
+                )
+            elif shadow.sport == "tennis":
+                evaluation = evaluate_tennis_shadow(
+                    fixture=shadow.fixture, probabilities=shadow.probabilities,
+                    market_analysis=shadow.market_analysis, decision=shadow.decision,
+                    player_1_score=result.home_score, player_2_score=result.away_score,
+                )
+            else:
                 shadow.status = "experimental_unsettled"
                 skipped += 1
                 continue
-            evaluation = evaluate_football_shadow(
-                fixture=shadow.fixture, probabilities=shadow.probabilities,
-                market_analysis=shadow.market_analysis, decision=shadow.decision,
-                home_score=result.home_score, away_score=result.away_score,
-            )
             shadow.result_class = str(evaluation["result_class"])
             shadow.home_score = int(result.home_score)
             shadow.away_score = int(result.away_score)

@@ -1,0 +1,79 @@
+name: Optimise simulated ROI policy
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '25 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: roi-policy-optimisation
+  cancel-in-progress: true
+
+jobs:
+  optimise:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+    steps:
+      - name: Validate configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL is missing'; exit 2; }
+          [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing'; exit 2; }
+
+      - name: Authenticate and optimise without provider calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${APP_PUBLIC_URL%/}"
+          COOKIE_JAR="$RUNNER_TEMP/roi-policy.cookies"
+          python - <<'PY' > "$RUNNER_TEMP/login-body.json"
+          import json, os
+          print(json.dumps({'password': os.environ['APP_PASSWORD']}))
+          PY
+          curl --fail --silent --show-error \
+            --cookie-jar "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' \
+            --data @"$RUNNER_TEMP/login-body.json" \
+            "$BASE/api/auth/login" > "$RUNNER_TEMP/login.json"
+          CSRF_TOKEN=$(python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'login.json').read_text())
+          print(payload.get('csrf_token') or '')
+          PY
+          )
+          curl --fail --silent --show-error \
+            --request POST \
+            --cookie "$COOKIE_JAR" \
+            --header "X-CSRF-Token: $CSRF_TOKEN" \
+            "$BASE/api/research-lab/optimise" > "$RUNNER_TEMP/roi-policy.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'roi-policy.json').read_text())
+          summary=payload.get('summary') or {}
+          if int(summary.get('credits_consumed') or 0) != 0:
+              raise SystemExit('ROI policy optimisation must not consume provider credits')
+          constraints=payload.get('constraints') or {}
+          if constraints.get('automatic_bet_placement') is not False:
+              raise SystemExit('automatic bet placement invariant missing')
+          print(json.dumps({
+              'settled_market_events': summary.get('settled_market_events', 0),
+              'roi_policy_status': summary.get('roi_policy_status'),
+              'provider_credits': 0,
+          }, ensure_ascii=False))
+          PY
+
+      - name: Upload optimisation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulated-roi-policy
+          path: ${{ runner.temp }}/roi-policy.json
+          retention-days: 90

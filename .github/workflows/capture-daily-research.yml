@@ -1,0 +1,151 @@
+name: Capture daily football and tennis research
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: Optional YYYY-MM-DD date; empty uses Europe/Paris today
+        required: false
+        type: string
+        default: ''
+      max_credits:
+        description: Hard maximum provider credits for this capture
+        required: true
+        type: number
+        default: 3
+      tennis_limit:
+        description: Maximum active tennis tournaments to capture
+        required: true
+        type: number
+        default: 2
+      tennis_sport_keys:
+        description: Optional comma-separated tennis_* keys; empty auto-discovers active tournaments
+        required: false
+        type: string
+        default: ''
+      confirmation:
+        description: Must equal CAPTURE_DAILY_MARKET
+        required: true
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-market-capture
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+      REQUESTED_DATE: ${{ inputs.date || '' }}
+      MAX_CREDITS: ${{ inputs.max_credits || 3 }}
+      TENNIS_LIMIT: ${{ inputs.tennis_limit || 2 }}
+      TENNIS_SPORT_KEYS: ${{ inputs.tennis_sport_keys || '' }}
+      CONFIRMATION: ${{ inputs.confirmation || '' }}
+    steps:
+      - name: Validate explicit approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL is missing'; exit 2; }
+          [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing'; exit 2; }
+          [ "${CONFIRMATION:-}" = 'CAPTURE_DAILY_MARKET' ] || { echo 'confirmation must equal CAPTURE_DAILY_MARKET'; exit 2; }
+          python - <<'PY'
+          import os
+          cap=int(os.environ['MAX_CREDITS'])
+          limit=int(os.environ['TENNIS_LIMIT'])
+          if not 1 <= cap <= 20:
+              raise SystemExit('max_credits must be between 1 and 20')
+          if not 0 <= limit <= 10:
+              raise SystemExit('tennis_limit must be between 0 and 10')
+          PY
+
+      - name: Authenticate and capture controlled market research
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${APP_PUBLIC_URL%/}"
+          COOKIE_JAR="$RUNNER_TEMP/daily-research.cookies"
+          python - <<'PY' > "$RUNNER_TEMP/login-body.json"
+          import json, os
+          print(json.dumps({'password': os.environ['APP_PASSWORD']}))
+          PY
+          curl --fail --silent --show-error \
+            --cookie-jar "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' \
+            --data @"$RUNNER_TEMP/login-body.json" \
+            "$BASE/api/auth/login" > "$RUNNER_TEMP/login.json"
+          CSRF_TOKEN=$(python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'login.json').read_text())
+          print(payload.get('csrf_token') or '')
+          PY
+          )
+          export CSRF_TOKEN
+          python - <<'PY' > "$RUNNER_TEMP/research-body.json"
+          import json, os
+          keys=[item.strip() for item in os.environ.get('TENNIS_SPORT_KEYS','').split(',') if item.strip()]
+          print(json.dumps({
+              'date': os.environ.get('REQUESTED_DATE') or None,
+              'max_credits': int(os.environ['MAX_CREDITS']),
+              'tennis_limit': int(os.environ['TENNIS_LIMIT']),
+              'tennis_sport_keys': keys,
+              'confirmation': os.environ['CONFIRMATION'],
+          }))
+          PY
+          curl --fail --silent --show-error \
+            --cookie "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' \
+            --header "X-CSRF-Token: $CSRF_TOKEN" \
+            --data @"$RUNNER_TEMP/research-body.json" \
+            "$BASE/api/research-lab/refresh" > "$RUNNER_TEMP/daily-research.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'daily-research.json').read_text())
+          summary=payload.get('summary') or {}
+          cap=int(os.environ['MAX_CREDITS'])
+          consumed=int(summary.get('credits_consumed') or 0)
+          if consumed > cap:
+              raise SystemExit(f'credit cap exceeded: {consumed}>{cap}')
+          constraints=payload.get('constraints') or {}
+          if constraints.get('automatic_bet_placement') is not False:
+              raise SystemExit('automatic bet placement invariant missing')
+          print(json.dumps({
+              'date': payload.get('date'),
+              'football_matches': summary.get('football_matches', 0),
+              'tennis_matches': summary.get('tennis_matches', 0),
+              'experimental_signals': summary.get('experimental_signals', 0),
+              'credits_consumed': consumed,
+              'roi_policy_status': summary.get('roi_policy_status'),
+          }, ensure_ascii=False))
+          PY
+
+      - name: Upload research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-dual-sport-research
+          path: ${{ runner.temp }}/daily-research.json
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### Dual-sport daily research'
+            echo
+            echo "- Maximum credits: ${MAX_CREDITS}"
+            echo "- Tennis tournament limit: ${TENNIS_LIMIT}"
+            echo '- Mode: shadow research only'
+            echo '- Automatic bet placement: no'
+            echo '- Real-money stake recommendation: no'
+          } >> "$GITHUB_STEP_SUMMARY"

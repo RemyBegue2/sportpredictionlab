@@ -94,7 +94,7 @@ class FootballFixtureSource:
         self.session = session or requests.Session()
         retry = Retry(total=1, backoff_factor=0.5, status_forcelist=(429, 500, 502, 503, 504))
         self.session.mount("https://", HTTPAdapter(max_retries=retry))
-        self.session.headers["User-Agent"] = "sports-prediction-lab/0.4.3.0"
+        self.session.headers["User-Agent"] = "sports-prediction-lab/0.4.4.0"
 
     @staticmethod
     def _now() -> datetime:
@@ -243,7 +243,7 @@ class EspnFixtureSource:
         self.session = session or requests.Session()
         retry = Retry(total=1, backoff_factor=0.5, status_forcelist=(429, 500, 502, 503, 504))
         self.session.mount("https://", HTTPAdapter(max_retries=retry))
-        self.session.headers["User-Agent"] = "sports-prediction-lab/0.4.3.0"
+        self.session.headers["User-Agent"] = "sports-prediction-lab/0.4.4.0"
 
     @staticmethod
     def _date_token(value: str | datetime | pd.Timestamp) -> str:

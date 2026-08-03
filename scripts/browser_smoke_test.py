@@ -123,6 +123,28 @@ def main() -> None:
                 + (f"; interface message: {toast}" if toast else "")
             ) from exc
         preflight = page.locator("#preflightDecision").inner_text().strip()
+        try:
+            page.wait_for_function(
+                """() => {
+                    const count = document.querySelector('#researchSignalCount');
+                    const signals = document.querySelector('#researchSignals');
+                    const bankrolls = document.querySelector('#researchBankrolls');
+                    const training = document.querySelector('#researchTraining');
+                    if (!count || !signals || !bankrolls || !training) return false;
+                    return (count.textContent || '').trim().length > 0
+                      && !signals.querySelector('.loading-card')
+                      && (training.textContent || '').trim().length > 0;
+                }""",
+                timeout=args.timeout_ms,
+            )
+        except Exception as exc:
+            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
+            raise SystemExit(
+                "Browser smoke test failed: dual-sport ROI lab did not render"
+                + (f"; interface message: {toast}" if toast else "")
+            ) from exc
+        research_signals = page.locator("#researchSignalCount").inner_text().strip()
+        research_training = page.locator("#researchTraining").inner_text().strip()
         toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
         browser.close()
 
@@ -140,6 +162,10 @@ def main() -> None:
         problems.append("evidence dashboard did not render")
     if not preflight or preflight == "—":
         problems.append("coverage preflight did not render")
+    if not research_signals:
+        problems.append("dual-sport research signal count did not render")
+    if not research_training:
+        problems.append("dual-sport ROI training status did not render")
     if toast.startswith("Interface partiellement chargée"):
         problems.append("partial interface error: " + toast)
     known_noise = ("favicon.ico",)
@@ -150,7 +176,17 @@ def main() -> None:
         problems.append("page errors: " + " | ".join(page_errors))
     if problems:
         raise SystemExit("Browser smoke test failed: " + "; ".join(problems))
-    print(json.dumps({"status": "ok", "health": health, "control_center": control, "daily_model": daily_model, "daily_predictions": daily_count, "evidence": evidence, "preflight": preflight}, ensure_ascii=False))
+    print(json.dumps({
+        "status": "ok",
+        "health": health,
+        "control_center": control,
+        "daily_model": daily_model,
+        "daily_predictions": daily_count,
+        "evidence": evidence,
+        "preflight": preflight,
+        "research_signals": research_signals,
+        "research_training_rendered": bool(research_training),
+    }, ensure_ascii=False))
 
 
 if __name__ == "__main__":

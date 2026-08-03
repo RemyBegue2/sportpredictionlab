@@ -1,0 +1,108 @@
+name: Settle daily football and tennis research
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_credits:
+        description: Hard maximum provider credits for score synchronization
+        required: true
+        type: number
+        default: 3
+      confirmation:
+        description: Must equal SETTLE_DAILY_MARKET
+        required: true
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-market-settlement
+  cancel-in-progress: false
+
+jobs:
+  settle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+      MAX_CREDITS: ${{ inputs.max_credits || 3 }}
+      CONFIRMATION: ${{ inputs.confirmation || '' }}
+    steps:
+      - name: Validate explicit approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL is missing'; exit 2; }
+          [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing'; exit 2; }
+          [ "${CONFIRMATION:-}" = 'SETTLE_DAILY_MARKET' ] || { echo 'confirmation must equal SETTLE_DAILY_MARKET'; exit 2; }
+          python - <<'PY'
+          import os
+          cap=int(os.environ['MAX_CREDITS'])
+          if not 1 <= cap <= 20:
+              raise SystemExit('max_credits must be between 1 and 20')
+          PY
+
+      - name: Authenticate and settle completed events
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${APP_PUBLIC_URL%/}"
+          COOKIE_JAR="$RUNNER_TEMP/daily-settlement.cookies"
+          python - <<'PY' > "$RUNNER_TEMP/login-body.json"
+          import json, os
+          print(json.dumps({'password': os.environ['APP_PASSWORD']}))
+          PY
+          curl --fail --silent --show-error \
+            --cookie-jar "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' \
+            --data @"$RUNNER_TEMP/login-body.json" \
+            "$BASE/api/auth/login" > "$RUNNER_TEMP/login.json"
+          CSRF_TOKEN=$(python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'login.json').read_text())
+          print(payload.get('csrf_token') or '')
+          PY
+          )
+          python - <<'PY' > "$RUNNER_TEMP/settle-body.json"
+          import json, os
+          print(json.dumps({
+              'max_credits': int(os.environ['MAX_CREDITS']),
+              'confirmation': os.environ['CONFIRMATION'],
+          }))
+          PY
+          curl --fail --silent --show-error \
+            --cookie "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' \
+            --header "X-CSRF-Token: $CSRF_TOKEN" \
+            --data @"$RUNNER_TEMP/settle-body.json" \
+            "$BASE/api/research-lab/settle" > "$RUNNER_TEMP/daily-settlement.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'daily-settlement.json').read_text())
+          settlement=payload.get('settlement') or {}
+          consumed=int(settlement.get('credits_consumed') or 0)
+          cap=int(os.environ['MAX_CREDITS'])
+          if consumed > cap:
+              raise SystemExit(f'credit cap exceeded: {consumed}>{cap}')
+          print(json.dumps({
+              'due_events': settlement.get('due_events', 0),
+              'completed_seen': settlement.get('completed_seen', 0),
+              'results_imported': settlement.get('results_imported', 0),
+              'shadow_settled': settlement.get('settled', 0),
+              'credits_consumed': consumed,
+              'roi_policy_status': (payload.get('summary') or {}).get('roi_policy_status'),
+          }, ensure_ascii=False))
+          PY
+
+      - name: Upload settlement report
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-dual-sport-settlement
+          path: ${{ runner.temp }}/daily-settlement.json
+          retention-days: 90

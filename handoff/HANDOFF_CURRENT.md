@@ -1,13 +1,13 @@
 # HANDOFF CURRENT — Sports Prediction Lab
 
-Generated: `2026-08-03T19:39:39.988561+00:00`
+Generated: `2026-08-03T21:06:38.471998+00:00`
 
 ## Verified repository state
 
-- App version: **4.3.0**
+- App version: **4.4.0**
 - Git branch: `unknown`
 - Git commit: `unknown`
-- Release ID: `e833948ec49b968077a5`
+- Release ID: `0666ec6afaa39ebbd5a9`
 - Running/source commit detected locally: `unknown`
 - Artifact integrity: **OK**
 - Football model version: `3.4.0-fresh`
@@ -73,7 +73,7 @@ GitHub Actions
 ## Open gates
 
 - No profitability claim before a sufficiently large temporally valid sample.
-- Tennis remains experimental and uncalibrated.
+- Tennis remains experimental; a base-model abstention requires at least 30 settled tennis events before meta-model rehabilitation.
 - A green workflow is insufficient without /api/release post-deployment verification.
 - The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.
 - Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.

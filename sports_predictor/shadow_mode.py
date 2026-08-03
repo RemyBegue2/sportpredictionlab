@@ -211,6 +211,77 @@ def evaluate_football_shadow(
     }
 
 
+
+def _tennis_probability_vector(probabilities: Mapping[str, Any]) -> np.ndarray:
+    vector = np.asarray([
+        float(probabilities["player_1"]),
+        float(probabilities["player_2"]),
+    ], dtype=float)
+    if not np.isfinite(vector).all() or (vector < 0).any() or vector.sum() <= 0:
+        raise ValueError("Invalid tennis probabilities")
+    vector = vector / vector.sum()
+    return np.clip(vector, EPS, 1.0)
+
+
+def _tennis_selection_outcome(selection: str, fixture: Mapping[str, Any]) -> str | None:
+    normalized = selection.strip().casefold()
+    player_1 = str(fixture.get("player_1") or fixture.get("home_team") or "").strip().casefold()
+    player_2 = str(fixture.get("player_2") or fixture.get("away_team") or "").strip().casefold()
+    if normalized == player_1:
+        return "player_1"
+    if normalized == player_2:
+        return "player_2"
+    return None
+
+
+def evaluate_tennis_shadow(
+    *,
+    fixture: Mapping[str, Any],
+    probabilities: Mapping[str, Any],
+    market_analysis: Mapping[str, Any] | None,
+    decision: str,
+    player_1_score: int,
+    player_2_score: int,
+) -> dict[str, Any]:
+    if int(player_1_score) == int(player_2_score):
+        raise ValueError("A completed tennis match cannot end tied")
+    outcome = "player_1" if int(player_1_score) > int(player_2_score) else "player_2"
+    p = _tennis_probability_vector(probabilities)
+    index = 0 if outcome == "player_1" else 1
+    target = np.zeros(2, dtype=float)
+    target[index] = 1.0
+    log_loss = float(-math.log(float(p[index])))
+    brier = float(np.mean((p - target) ** 2))
+    predicted = "player_1" if p[0] >= p[1] else "player_2"
+
+    selected = _selected_market_item(market_analysis=market_analysis)
+    theoretical_return: float | None = None
+    selected_outcome: str | None = None
+    selected_odds: float | None = None
+    if decision == "candidat recherche" and selected:
+        selected_outcome = _tennis_selection_outcome(str(selected.get("selection") or ""), fixture)
+        try:
+            selected_odds = float(selected.get("decimal_odds"))
+        except (TypeError, ValueError):
+            selected_odds = None
+        if selected_outcome and selected_odds and selected_odds > 1.0:
+            theoretical_return = selected_odds - 1.0 if selected_outcome == outcome else -1.0
+
+    return {
+        "result_class": outcome,
+        "player_1_score": int(player_1_score),
+        "player_2_score": int(player_2_score),
+        "log_loss": log_loss,
+        "brier": brier,
+        "rps": None,
+        "correct_top_pick": predicted == outcome,
+        "predicted_class": predicted,
+        "selected_outcome": selected_outcome,
+        "selected_odds": selected_odds,
+        "theoretical_unit_return": theoretical_return,
+        "evaluation_mode": "flat_one_unit_research_only",
+    }
+
 def sample_maturity(n: int) -> dict[str, str]:
     if n < 100:
         return {"status": "anecdotal", "label": "anecdotique"}
@@ -244,12 +315,13 @@ def aggregate_shadow_evaluations(rows: list[Mapping[str, Any]]) -> dict[str, Any
         if item.get("theoretical_unit_return") is not None
     ]
     candidate_predictions = sum(str(row.get("decision")) == "candidat recherche" for row in rows)
+    rps_values = [float(item["rps"]) for item in evaluations if item.get("rps") is not None]
     return {
         "settled_predictions": n,
         "maturity": sample_maturity(n),
         "log_loss": float(np.mean([float(item["log_loss"]) for item in evaluations])),
         "brier": float(np.mean([float(item["brier"]) for item in evaluations])),
-        "rps": float(np.mean([float(item["rps"]) for item in evaluations])),
+        "rps": float(np.mean(rps_values)) if rps_values else None,
         "accuracy": float(np.mean([bool(item["correct_top_pick"]) for item in evaluations])),
         "candidate_predictions": int(candidate_predictions),
         "candidate_settled": len(candidate_returns),

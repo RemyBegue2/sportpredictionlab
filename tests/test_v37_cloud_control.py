@@ -150,7 +150,7 @@ def test_control_center_endpoint_and_frontend_contract() -> None:
     for element_id in ("controlOverall", "controlChecks", "controlWorkflows", "controlNextActions", "refreshControl"):
         assert f'id="{element_id}"' in html
         assert f"#{element_id}" in js
-    assert "app.js?v=4.3.0" in html
+    assert "app.js?v=4.4.0" in html
 
 
 def test_public_release_proof_contains_deployment_safety_contract() -> None:
@@ -160,7 +160,7 @@ def test_public_release_proof_contains_deployment_safety_contract() -> None:
         response = client.get("/api/release")
     assert response.status_code == 200, response.text
     payload = response.json()
-    assert payload["version"] == "4.3.0"
+    assert payload["version"] == "4.4.0"
     assert payload["automatic_model_promotion"] is False
     assert payload["profitability_claim"] is False
     assert payload["automatic_bet_placement"] is False

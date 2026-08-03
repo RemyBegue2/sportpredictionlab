@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V4.3 Daily Product Recovery</title>
+  <title>Sports Prediction Lab V4.4 Dual-Sport ROI Lab</title>
   <meta name="description" content="Application cloud privée centrée sur les matchs et probabilités du jour, avec mode modèle sans crédit et enrichissement marché facultatif.">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -11,7 +11,7 @@
   <header class="topbar">
     <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
     <nav>
-      <a href="#control">Pilotage</a><a href="#bets">Matchs du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#evidence">Preuves</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
+      <a href="#control">Pilotage</a><a href="#bets">Matchs du jour</a><a href="#research-lab">ROI simulé</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#evidence">Preuves</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
     </nav>
     <div class="top-actions"><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
   </header>
@@ -19,9 +19,9 @@
   <main>
     <section id="overview" class="hero">
       <div>
-        <p class="eyebrow">VERSION 4.3 · DAILY PRODUCT RECOVERY · ZÉRO CRÉDIT PAR DÉFAUT</p>
+        <p class="eyebrow">VERSION 4.4 · FOOTBALL + TENNIS · SIGNAUX SHADOW · ROI SIMULÉ</p>
         <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
-        <p class="lede">Une application privée qui affiche d’abord le calendrier et les probabilités du modèle. Les cotes payantes et les campagnes historiques sont désactivées par défaut et ne peuvent plus bloquer le produit quotidien.</p>
+        <p class="lede">Une application privée qui analyse le football et le tennis du jour, affiche les probabilités, isole les signaux de marché expérimentaux et simule des bankrolls sans jamais placer de pari réel.</p>
         <div class="actions"><a class="button primary" href="#bets">Voir les matchs du jour</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
       </div>
       <aside class="trust-card">
@@ -73,6 +73,29 @@
         <div id="upcomingSlate" class="daily-grid"><div class="slate-card loading-card">Chargement du calendrier à venir…</div></div>
       </div>
       <div class="policy-note"><b>Pare-feu de crédits :</b> le calendrier et les probabilités coûtent 0 crédit. Les appels de cotes sont désactivés par défaut, plafonnés et séparés des campagnes historiques. Aucun pari n’est transmis à un bookmaker.</div>
+    </section>
+
+    <section id="research-lab" class="workbench research-lab-section">
+      <div class="section-heading"><p class="eyebrow">FOOTBALL + TENNIS · SHADOW UNIQUEMENT</p><h2>Signaux expérimentaux et bankrolls simulées</h2><p>Cette vue lit uniquement le dernier rapport persisté. Elle ne déclenche aucun appel fournisseur. Les signaux ne sont ni des garanties, ni des instructions de mise.</p></div>
+      <div class="benchmark-grid">
+        <article class="benchmark-card"><small>FOOTBALL DU JOUR</small><h3 id="researchFootballCount">0</h3><p id="researchFootballDetail">Aucun snapshot marché.</p></article>
+        <article class="benchmark-card"><small>TENNIS DU JOUR</small><h3 id="researchTennisCount">0</h3><p id="researchTennisDetail">Aucun tournoi capturé.</p></article>
+        <article class="benchmark-card"><small>SIGNAUX SHADOW</small><h3 id="researchSignalCount">0</h3><p id="researchSignalDetail">Aucun signal expérimental.</p></article>
+        <article class="benchmark-card"><small>CRÉDITS DU RUN</small><h3 id="researchCredits">0</h3><p id="researchRunDetail">Capture non exécutée.</p></article>
+      </div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>PARIS INTÉRESSANTS — MODE RECHERCHE</small><h3>Écarts modèle–marché retenus</h3></div><button id="refreshResearchLab" class="button ghost" type="button">Actualiser</button></div>
+        <div id="researchSignals" class="daily-grid"><div class="slate-card loading-card">Chargement des signaux…</div></div>
+      </div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>BANKROLLS SIMULÉES</small><h3>Flat 1 %, flat 2 % et quart de Kelly plafonné</h3></div></div>
+        <div id="researchBankrolls" class="table-scroll"><p>Aucune simulation disponible.</p></div>
+      </div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>ENTRAÎNEMENT DE LA POLITIQUE ROI</small><h3>Validation chronologique et holdout intact</h3></div></div>
+        <div id="researchTraining" class="gate-grid"><p>Pas assez de résultats réglés.</p></div>
+      </div>
+      <div class="policy-note"><b>Règle ferme :</b> le modèle prédictif est entraîné pour produire des probabilités calibrées. Seule la politique de sélection est optimisée sur un ROI simulé hors échantillon, avec pénalités de drawdown et d’instabilité. Aucune mise réelle n’est recommandée.</div>
     </section>
 
     <section id="odds-api" class="workbench odds-api-section">
@@ -249,7 +272,7 @@
     </section>
 
     <section id="audit" class="audit-section">
-      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V3.7</h2></div>
+      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V4.4</h2></div>
       <div class="role-grid">
         <article><span>01</span><h3>Quant marchés</h3><p>Le shadow mode sépare la qualité du modèle, le prix Winamax et le consensus sans confondre signal et résultat financier.</p></article>
         <article><span>02</span><h3>Statisticien</h3><p>Chaque prédiction est figée avant match et l’échantillon est classé anecdotique, exploratoire ou évaluable.</p></article>
@@ -259,15 +282,15 @@
         <article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
       </div>
       <div class="audit-callout">
-        <div><b>Verdict</b><p>V3.7 = les opérations courantes sont déclenchées depuis GitHub Actions, vérifiées sur Railway et résumées par des actions compréhensibles. Les règles statistiques de la V3.6 restent inchangées.</p></div>
+        <div><b>Verdict</b><p>V4.4 = football et tennis du jour, signaux de marché shadow, bankrolls simulées et optimisation chronologique de la politique ROI. Aucun pari réel ou placement automatique.</p></div>
         <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
       </div>
       <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V4.3 Daily Product Recovery</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V4.4 Dual-Sport ROI Lab</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/app.js?v=4.3.0"></script>
+  <script src="/static/app.js?v=4.4.0"></script>
 </body>
 </html>

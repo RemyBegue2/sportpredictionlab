@@ -30,8 +30,10 @@ from sports_predictor.cloud_auth import (
 from sports_predictor.cloud_config import CloudSettings
 from sports_predictor.database import (
     database_summary,
+    due_shadow_events,
     init_database,
     persist_odds_rows,
+    persist_event_result,
     predictions_for_date,
     recent_predictions,
     recent_sync_runs,
@@ -49,6 +51,9 @@ from sports_predictor.database import (
     record_sync_run,
     record_model_decision,
     record_shadow_prediction,
+    record_benchmark_run,
+    record_data_quality_issue,
+    settle_shadow_predictions,
     register_model,
     register_release,
     set_model_status,
@@ -65,11 +70,12 @@ from sports_predictor.data_sources.the_odds_api import (
     OddsApiNetworkDisabled,
 )
 from sports_predictor.identity import football_model_name, normalize_identity
-from sports_predictor.odds_data import bookmaker_h2h_markets, consensus_h2h, normalize_odds_payload
+from sports_predictor.odds_data import bookmaker_h2h_markets, consensus_h2h, normalize_odds_payload, normalize_scores_payload
 from sports_predictor.market_benchmark import benchmark_summary
 from sports_predictor.champion_challenger import build_model_decision
 from sports_predictor.control_center import build_control_center
 from sports_predictor.shadow_mode import shadow_horizon
+from sports_predictor.roi_lab import SignalPolicy, build_roi_lab_report, score_roi_meta_model
 from sports_predictor.daily_product import (
     DailyFixtureError,
     DailyFixtureSource,
@@ -182,9 +188,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V4.3 Daily Product Recovery",
+    title="Sports Prediction Lab V4.4 Dual-Sport ROI Lab",
     version=APP_VERSION,
-    description="Daily model-first sports research product with zero-credit fixture discovery, explicit model diagnostics, optional market enrichment and strict credit controls.",
+    description="Dual-sport daily research product with football and tennis predictions, controlled market snapshots, shadow signals and simulated bankroll evaluation.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -310,6 +316,37 @@ class HistoricalEstimateRequest(BaseModel):
         if any(not SPORT_KEY_RE.fullmatch(str(value)) for value in values):
             raise ValueError("Only lowercase API tokens are accepted")
         return values
+
+
+class DailyResearchRefreshRequest(BaseModel):
+    date: str | None = None
+    max_credits: int = Field(default=3, ge=1, le=20)
+    tennis_limit: int = Field(default=2, ge=0, le=10)
+    tennis_sport_keys: list[str] = Field(default_factory=list, max_length=10)
+    confirmation: str = Field(min_length=1, max_length=64)
+
+    @field_validator("date")
+    @classmethod
+    def valid_date(cls, value: str | None):
+        if value is not None and not DATE_RE.fullmatch(value):
+            raise ValueError("date must use YYYY-MM-DD")
+        return value
+
+    @field_validator("tennis_sport_keys")
+    @classmethod
+    def valid_tennis_keys(cls, values: list[str]):
+        cleaned = []
+        for value in values:
+            token = str(value).strip()
+            if not SPORT_KEY_RE.fullmatch(token) or not token.startswith("tennis_"):
+                raise ValueError("tennis_sport_keys must contain valid tennis_* tokens")
+            cleaned.append(token)
+        return cleaned
+
+
+class DailyResearchSettleRequest(BaseModel):
+    max_credits: int = Field(default=3, ge=1, le=20)
+    confirmation: str = Field(min_length=1, max_length=64)
 
 
 @lru_cache(maxsize=1)
@@ -1398,6 +1435,266 @@ def _daily_slate_payload(
     }
 
 
+def _paris_event_date(value: Any) -> str | None:
+    parsed = pd.to_datetime(value, utc=True, errors="coerce")
+    if pd.isna(parsed):
+        return None
+    return parsed.tz_convert("Europe/Paris").date().isoformat()
+
+
+def _infer_tennis_surface(*, sport_key: str, title: str = "") -> str:
+    value = f"{sport_key} {title}".casefold()
+    grass = ("wimbledon", "queens", "queen's", "halle", "eastbourne", "s-hertogenbosch", "newport")
+    clay = (
+        "roland", "french_open", "monte_carlo", "madrid", "rome", "roma", "barcelona", "munich",
+        "hamburg", "kitzbuhel", "gstaad", "bastad", "umag", "geneva", "lyon", "estoril",
+    )
+    if any(token in value for token in grass):
+        return "grass"
+    if any(token in value for token in clay):
+        return "clay"
+    return "hard"
+
+
+def _safe_current_signal(
+    event: dict[str, Any], *, roi_lab: Mapping[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    analysis = event.get("market_analysis") or {}
+    selections = list(analysis.get("selections") or [])
+    if not selections:
+        return None
+    model = event.get("model") or {}
+    coverage = model.get("coverage_mode") or model.get("model_mode")
+    if coverage == "cold_start_league_priors":
+        return None
+
+    sport = str(model.get("sport") or ("tennis" if str(event.get("sport_key", "")).startswith("tennis_") else "football"))
+    optimisation = (roi_lab or {}).get("optimisation") or {}
+    policy_payload = optimisation.get("policy") or SignalPolicy().to_dict()
+    try:
+        policy = SignalPolicy(**policy_payload)
+    except (TypeError, ValueError):
+        policy = SignalPolicy()
+    meta = (roi_lab or {}).get("meta_model") or {}
+    meta_sport_events = int((meta.get("sport_event_counts") or {}).get(sport) or 0)
+    meta_ready = str(meta.get("status") or "") == "candidate" and meta_sport_events >= 30
+    if model.get("market_eligible") is False and not meta_ready:
+        return None
+
+    shortlist = {str(item) for item in (analysis.get("shortlist") or [])}
+    candidate_rows = [item for item in selections if str(item.get("selection")) in shortlist]
+    if not candidate_rows and meta_ready:
+        # A validated meta-model may rehabilitate a base model that abstained,
+        # but only after at least 30 settled events for the same sport.
+        candidate_rows = selections
+    if not candidate_rows:
+        return None
+
+    scored: list[dict[str, Any]] = []
+    for selected in candidate_rows:
+        try:
+            decimal_odds = float(selected["decimal_odds"])
+            base_probability = float(selected["model_probability"])
+            market_probability = float(selected["market_probability"])
+            base_edge = float(selected["edge"])
+            base_robust_return = float(selected["robust_expected_return"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        meta_probability = score_roi_meta_model(
+            model_probability=base_probability,
+            market_probability=market_probability,
+            edge=base_edge,
+            robust_expected_return=base_robust_return,
+            decimal_odds=decimal_odds,
+            sport=sport,
+            meta_model=meta if meta_ready else {},
+        )
+        effective_probability = meta_probability if meta_probability is not None else base_probability
+        effective_edge = effective_probability - market_probability
+        effective_robust_return = max(0.001, effective_probability - 0.05) * decimal_odds - 1.0
+        if effective_edge < policy.minimum_edge:
+            continue
+        if effective_robust_return < policy.minimum_robust_return:
+            continue
+        if decimal_odds > policy.maximum_decimal_odds:
+            continue
+        scored.append({
+            "selected": selected,
+            "decimal_odds": decimal_odds,
+            "base_probability": base_probability,
+            "market_probability": market_probability,
+            "base_edge": base_edge,
+            "base_robust_return": base_robust_return,
+            "meta_probability": meta_probability,
+            "effective_probability": effective_probability,
+            "effective_edge": effective_edge,
+            "effective_robust_return": effective_robust_return,
+        })
+    if not scored:
+        return None
+    best = max(scored, key=lambda row: (row["effective_robust_return"], row["effective_edge"]))
+    selected = best["selected"]
+    return {
+        "sport": sport,
+        "event_id": event.get("event_id"),
+        "commence_time": event.get("commence_time"),
+        "event": (
+            f"{event.get('model_home_team') or event.get('api_home_team')} – {event.get('model_away_team') or event.get('api_away_team')}"
+            if event.get("api_home_team")
+            else f"{event.get('model_player_1') or event.get('api_player_1')} – {event.get('model_player_2') or event.get('api_player_2')}"
+        ),
+        "selection": str(selected.get("selection") or ""),
+        "decimal_odds": best["decimal_odds"],
+        "model_probability": best["base_probability"],
+        "meta_probability": best["meta_probability"],
+        "effective_probability": best["effective_probability"],
+        "market_probability": best["market_probability"],
+        "edge": best["effective_edge"],
+        "robust_expected_return": best["effective_robust_return"],
+        "base_edge": best["base_edge"],
+        "base_robust_expected_return": best["base_robust_return"],
+        "status": "SHADOW_SIGNAL_META" if best["meta_probability"] is not None else "SHADOW_SIGNAL_PRE_MODEL",
+        "policy_source": "chronological_roi_policy" if optimisation.get("status") == "candidate" else "pre_registered_default",
+        "meta_sport_events": meta_sport_events,
+        "research_only": True,
+    }
+
+
+def _research_report_from_slates(
+    *, requested_date: str, football: dict[str, Any] | None,
+    tennis: list[dict[str, Any]], credits_consumed: int, errors: list[dict[str, str]],
+) -> dict[str, Any]:
+    football_events = [
+        item for item in ((football or {}).get("events") or [])
+        if _paris_event_date(item.get("commence_time")) == requested_date
+    ]
+    tennis_events: list[dict[str, Any]] = []
+    for slate in tennis:
+        tennis_events.extend(
+            item for item in (slate.get("events") or [])
+            if _paris_event_date(item.get("commence_time")) == requested_date
+        )
+    settled_rows = recent_shadow_predictions(10000, status="settled")
+    roi = build_roi_lab_report(settled_rows)
+    signals = [
+        signal for signal in (
+            _safe_current_signal(item, roi_lab=roi) for item in [*football_events, *tennis_events]
+        )
+        if signal is not None
+    ]
+    optimisation = roi.get("optimisation") or {}
+    training_status = optimisation.get("status") or "not_evaluable"
+    return {
+        "date": requested_date,
+        "mode": "dual_sport_shadow_research",
+        "football": {
+            "events": football_events,
+            "summary": (football or {}).get("summary") or {},
+            "from_cache": (football or {}).get("from_cache"),
+        },
+        "tennis": {
+            "events": tennis_events,
+            "tournaments": [
+                {
+                    "sport_key": slate.get("sport_key"),
+                    "surface": slate.get("surface"),
+                    "summary": slate.get("summary") or {},
+                    "from_cache": slate.get("from_cache"),
+                }
+                for slate in tennis
+            ],
+        },
+        "signals": signals,
+        "summary": {
+            "football_matches": len(football_events),
+            "tennis_matches": len(tennis_events),
+            "experimental_signals": len(signals),
+            "credits_consumed": int(credits_consumed),
+            "settled_market_events": int(roi.get("unique_events") or 0),
+            "roi_policy_status": training_status,
+        },
+        "roi_lab": roi,
+        "errors": errors,
+        "constraints": {
+            "automatic_bet_placement": False,
+            "real_money_stake_recommendation": False,
+            "signals_are_experimental": True,
+            "cold_start_market_signals_allowed": False,
+        },
+        "next_action": (
+            "Collect and settle at least 30 temporally valid market events before treating ROI optimisation as evaluable."
+            if training_status == "not_evaluable"
+            else "Keep the policy in shadow and review its untouched chronological holdout before any status change."
+        ),
+    }
+
+
+def _active_tennis_sports(*, requested: list[str], maximum: int) -> list[dict[str, str]]:
+    if maximum <= 0:
+        return []
+    if requested:
+        return [{"key": key, "title": key} for key in requested[:maximum]]
+    configured = list(SETTINGS.daily_tennis_sport_keys)
+    if configured:
+        return [{"key": key, "title": key} for key in configured[:maximum]]
+    response = odds_client().list_sports(
+        include_inactive=False,
+        allow_network=SETTINGS.daily_odds_enabled and SETTINGS.daily_odds_max_credits >= 1,
+    )
+    candidates = []
+    for item in response.payload if isinstance(response.payload, list) else []:
+        key = str(item.get("key") or "")
+        group = str(item.get("group") or "")
+        title = str(item.get("title") or key)
+        lowered = f"{key} {title}".casefold()
+        if not key.startswith("tennis_") or group.casefold() != "tennis":
+            continue
+        if any(token in lowered for token in ("winner", "outright", "doubles")):
+            continue
+        candidates.append({"key": key, "title": title})
+    candidates.sort(key=lambda item: ("atp" not in item["key"], "wta" not in item["key"], item["title"]))
+    return candidates[:maximum]
+
+
+def _latest_research_payload() -> dict[str, Any]:
+    latest = latest_benchmark_run("dual_sport_daily")
+    if latest and latest.get("report"):
+        return {
+            **dict(latest["report"]),
+            "run": {
+                "id": latest.get("id"),
+                "status": latest.get("status"),
+                "started_at": latest.get("started_at"),
+                "finished_at": latest.get("finished_at"),
+            },
+        }
+    settled_rows = recent_shadow_predictions(10000, status="settled")
+    return {
+        "date": datetime.now(ZoneInfo("Europe/Paris")).date().isoformat(),
+        "mode": "dual_sport_shadow_research",
+        "football": {"events": [], "summary": {}},
+        "tennis": {"events": [], "tournaments": []},
+        "signals": [],
+        "summary": {
+            "football_matches": 0,
+            "tennis_matches": 0,
+            "experimental_signals": 0,
+            "credits_consumed": 0,
+            "settled_market_events": 0,
+            "roi_policy_status": "not_evaluable",
+        },
+        "roi_lab": build_roi_lab_report(settled_rows),
+        "errors": [],
+        "constraints": {
+            "automatic_bet_placement": False,
+            "real_money_stake_recommendation": False,
+            "signals_are_experimental": True,
+        },
+        "next_action": "Run the controlled daily market workflow after enabling a small credit cap.",
+        "run": None,
+    }
+
+
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
     if not SETTINGS.auth_required or request.session.get("authenticated"):
@@ -1754,6 +2051,224 @@ def daily_slate(
     if horizon_days is not None and not 0 <= horizon_days <= 31:
         raise HTTPException(status_code=422, detail="horizon_days must be between 0 and 31")
     return _daily_slate_payload(requested, horizon_days=horizon_days, refresh=refresh)
+
+
+
+@app.get("/api/research-lab")
+def research_lab() -> dict[str, Any]:
+    """Return the latest persisted dual-sport market research report.
+
+    This endpoint never calls the paid provider. Only the explicit POST refresh
+    endpoint or its protected workflow may create a new market snapshot.
+    """
+    return _latest_research_payload()
+
+
+@app.post("/api/research-lab/optimise")
+def optimise_research_policy() -> dict[str, Any]:
+    settled = settle_shadow_predictions()
+    rows = recent_shadow_predictions(10000, status="settled")
+    roi = build_roi_lab_report(rows)
+    previous = _latest_research_payload()
+    report = {
+        **previous,
+        "roi_lab": roi,
+        "summary": {
+            **(previous.get("summary") or {}),
+            "settled_market_events": int(roi.get("unique_events") or 0),
+            "roi_policy_status": str((roi.get("optimisation") or {}).get("status") or "not_evaluable"),
+        },
+        "settlement": settled,
+    }
+    status = "completed" if (roi.get("optimisation") or {}).get("status") == "candidate" else "not_evaluable"
+    run_id = record_benchmark_run(
+        sport_key="dual_sport_daily",
+        model_version=APP_VERSION,
+        status=status,
+        config={"mode": "roi_policy_optimisation", "provider_calls": 0},
+        report=report,
+        summary=report.get("summary"),
+    )
+    return {**report, "run": {"id": run_id, "status": status}}
+
+
+@app.post("/api/research-lab/refresh")
+def refresh_research_lab(req: DailyResearchRefreshRequest) -> dict[str, Any]:
+    if req.confirmation != "CAPTURE_DAILY_MARKET":
+        raise HTTPException(status_code=409, detail="confirmation must equal CAPTURE_DAILY_MARKET")
+    if not SETTINGS.daily_odds_enabled:
+        raise HTTPException(status_code=409, detail="DAILY_ODDS_ENABLED is false")
+    if SETTINGS.daily_odds_max_credits < 1:
+        raise HTTPException(status_code=409, detail="DAILY_ODDS_MAX_CREDITS must be at least 1")
+    if not SETTINGS.shadow_enabled:
+        raise HTTPException(
+            status_code=409,
+            detail="SHADOW_MODE_ENABLED must be true so every paid snapshot becomes training evidence",
+        )
+    hard_cap = min(int(req.max_credits), int(SETTINGS.daily_odds_max_credits))
+    requested_date = req.date or datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
+    credits_consumed = 0
+    errors: list[dict[str, str]] = []
+    football_slate: dict[str, Any] | None = None
+    tennis_slates: list[dict[str, Any]] = []
+
+    # One h2h region/bookmaker-group request is reserved for football. Cached
+    # responses consume zero provider credits.
+    if hard_cap >= 1:
+        try:
+            football_slate = _football_odds_slate("soccer_epl", "E0", force_refresh=False)
+            if not football_slate.get("from_cache"):
+                credits_consumed += int((football_slate.get("quota") or {}).get("last_cost") or 1)
+        except HTTPException as exc:
+            errors.append({"scope": "football", "error": str(exc.detail)})
+
+    remaining = max(0, hard_cap - credits_consumed)
+    tennis_limit = min(int(req.tennis_limit), int(SETTINGS.daily_tennis_max_tournaments), remaining)
+    sports: list[dict[str, str]] = []
+    if tennis_limit:
+        try:
+            sports = _active_tennis_sports(requested=req.tennis_sport_keys, maximum=tennis_limit)
+        except (OddsApiError, OddsApiNotConfigured, OddsApiNetworkDisabled) as exc:
+            errors.append({"scope": "tennis_discovery", "error": type(exc).__name__})
+    for item in sports:
+        if credits_consumed >= hard_cap:
+            break
+        key = item["key"]
+        surface = _infer_tennis_surface(sport_key=key, title=item.get("title", ""))
+        try:
+            slate = _tennis_odds_slate(key, surface, force_refresh=False)
+            tennis_slates.append(slate)
+            if not slate.get("from_cache"):
+                credits_consumed += int((slate.get("quota") or {}).get("last_cost") or 1)
+        except HTTPException as exc:
+            errors.append({"scope": key, "error": str(exc.detail)})
+        if credits_consumed > hard_cap:
+            errors.append({"scope": key, "error": "provider_cost_exceeded_daily_cap"})
+            break
+
+    if credits_consumed > hard_cap:
+        raise HTTPException(status_code=503, detail="Provider reported a cost above the authorised daily cap")
+    settlement = settle_shadow_predictions()
+    report = _research_report_from_slates(
+        requested_date=requested_date,
+        football=football_slate,
+        tennis=tennis_slates,
+        credits_consumed=credits_consumed,
+        errors=errors,
+    )
+    report["settlement"] = settlement
+    report["credit_cap"] = hard_cap
+    report["shadow_recording_enabled"] = SETTINGS.shadow_enabled
+    status = "completed" if not errors else "completed_with_warnings"
+    run_id = record_benchmark_run(
+        sport_key="dual_sport_daily",
+        model_version=APP_VERSION,
+        status=status,
+        config={
+            "mode": "daily_live_market_shadow",
+            "date": requested_date,
+            "max_credits": hard_cap,
+            "tennis_limit": tennis_limit,
+            "tennis_sport_keys": [item["key"] for item in sports],
+        },
+        report=report,
+        summary=report.get("summary"),
+        error_message=(json.dumps(errors, ensure_ascii=False)[:1000] if errors else None),
+    )
+    return {**report, "run": {"id": run_id, "status": status}}
+
+
+@app.post("/api/research-lab/settle")
+def settle_research_lab(req: DailyResearchSettleRequest) -> dict[str, Any]:
+    if req.confirmation != "SETTLE_DAILY_MARKET":
+        raise HTTPException(status_code=409, detail="confirmation must equal SETTLE_DAILY_MARKET")
+    if not SETTINGS.daily_odds_enabled:
+        raise HTTPException(status_code=409, detail="DAILY_ODDS_ENABLED is false")
+    hard_cap = min(int(req.max_credits), int(SETTINGS.daily_odds_max_credits))
+    if hard_cap < 1:
+        raise HTTPException(status_code=409, detail="DAILY_ODDS_MAX_CREDITS must be at least 1")
+
+    due = due_shadow_events(limit=500)
+    grouped: dict[str, list[str]] = {}
+    for item in due:
+        grouped.setdefault(str(item["sport_key"]), []).append(str(item["provider_event_id"]))
+    credits_consumed = 0
+    imported = 0
+    completed_seen = 0
+    errors: list[dict[str, str]] = []
+    for sport_key in sorted(grouped):
+        if credits_consumed >= hard_cap:
+            break
+        try:
+            response = odds_client().scores(
+                sport_key,
+                days_from=None,
+                event_ids=grouped[sport_key],
+                force_refresh=False,
+            )
+            if not response.from_cache:
+                credits_consumed += int(response.quota.last_cost or 1)
+            rows = normalize_scores_payload(response.payload)
+            completed = rows[
+                rows["completed"] & rows["home_score"].notna() & rows["away_score"].notna()
+            ] if not rows.empty else rows
+            completed_seen += len(completed)
+            for row in completed.to_dict(orient="records"):
+                try:
+                    persist_event_result(
+                        provider_event_id=str(row["event_id"]),
+                        home_score=int(row["home_score"]),
+                        away_score=int(row["away_score"]),
+                        completed_at=row.get("last_update") or row["commence_time"],
+                        source="the_odds_api_scores",
+                    )
+                    imported += 1
+                except ValueError as exc:
+                    record_data_quality_issue(
+                        issue_type="score_without_known_event",
+                        severity="warning",
+                        provider_event_id=str(row.get("event_id") or "") or None,
+                        details={"sport_key": sport_key, "reason": str(exc)},
+                    )
+        except (OddsApiError, OddsApiNotConfigured) as exc:
+            errors.append({"scope": sport_key, "error": type(exc).__name__})
+        if credits_consumed > hard_cap:
+            raise HTTPException(status_code=503, detail="Provider reported a result-sync cost above the authorised cap")
+
+    settlement = settle_shadow_predictions()
+    rows = recent_shadow_predictions(10000, status="settled")
+    roi = build_roi_lab_report(rows)
+    previous = _latest_research_payload()
+    summary = {
+        **(previous.get("summary") or {}),
+        "credits_consumed": int(credits_consumed),
+        "settled_market_events": int(roi.get("unique_events") or 0),
+        "roi_policy_status": str((roi.get("optimisation") or {}).get("status") or "not_evaluable"),
+    }
+    report = {
+        **previous,
+        "summary": summary,
+        "roi_lab": roi,
+        "settlement": {
+            **settlement,
+            "due_events": len(due),
+            "completed_seen": int(completed_seen),
+            "results_imported": int(imported),
+            "credits_consumed": int(credits_consumed),
+        },
+        "errors": [*(previous.get("errors") or []), *errors],
+    }
+    status = "completed" if not errors else "completed_with_warnings"
+    run_id = record_benchmark_run(
+        sport_key="dual_sport_daily",
+        model_version=APP_VERSION,
+        status=status,
+        config={"mode": "daily_result_settlement", "max_credits": hard_cap},
+        report=report,
+        summary=summary,
+        error_message=(json.dumps(errors, ensure_ascii=False)[:1000] if errors else None),
+    )
+    return {**report, "run": {"id": run_id, "status": status}}
 
 
 @app.get("/api/bets/today")

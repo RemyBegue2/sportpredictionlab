@@ -108,7 +108,7 @@ function renderControlCenter(data){
   $('#controlSummary').textContent=`${summary.ok||0} OK · ${summary.pending||0} en attente · ${summary.attention||0} attention · ${summary.blocked||0} bloqué`;
   $('#controlChecks').innerHTML=(data.checks||[]).map(check=>`<article class="control-check ${esc(check.status)}"><div><small>${esc(labels[check.status]||check.status)}</small><h3>${esc(check.label)}</h3></div><p>${esc(check.detail)}</p><footer><b>Action :</b> ${esc(check.action)}${check.workflow?`<code>${esc(check.workflow)}</code>`:''}</footer></article>`).join('')||'<p>Aucun contrôle disponible.</p>';
   $('#controlNextActions').innerHTML=(data.next_actions||[]).map(item=>`<article><span>${item.priority}</span><div><b>${esc(item.label)}</b><p>${esc(item.action)}</p>${item.workflow?`<code>Actions → ${esc(item.workflow)}</code>`:''}</div></article>`).join('')||'<article><span>✓</span><div><b>Aucune action urgente</b><p>Les contrôles cloud sont cohérents.</p></div></article>';
-  const riskLabels={read_only:'Lecture seule',controlled:'Contrôlé',consumes_api_credits:'Consomme des crédits API',read_only_production:'Lecture production',destructive:'Destructif'};
+  const riskLabels={zero_credit:'Zéro crédit',read_only:'Lecture seule',controlled:'Contrôlé',consumes_api_credits:'Consomme des crédits API',read_only_production:'Lecture production',destructive:'Destructif'};
   $('#controlWorkflows').innerHTML=(data.workflows||[]).map(flow=>`<article class="workflow-card"><div><small>${esc(riskLabels[flow.risk]||flow.risk)}</small><h3>${esc(flow.name)}</h3></div><p>${esc(flow.purpose)}</p><code>${esc(flow.file)}</code>${flow.confirmation?`<span>Confirmation : ${esc(flow.confirmation)}</span>`:''}</article>`).join('')||'<p>Aucun workflow déclaré.</p>';
 }
 
@@ -408,6 +408,49 @@ function renderDaily(data){
   if(data.model_diagnostics) renderModelDiagnostics(data.model_diagnostics);
 }
 
+
+function researchSignalCard(signal){
+  const eventTime=signal.commence_time?new Date(signal.commence_time).toLocaleString('fr-FR'):'horaire inconnu';
+  const edge=Number(signal.edge);
+  const robust=Number(signal.robust_expected_return);
+  const odds=Number(signal.decimal_odds);
+  const meta=signal.meta_probability===null||signal.meta_probability===undefined?'':`<div class="odds-line"><span>Probabilité méta-modèle</span><b>${pct(signal.meta_probability)}</b></div>`;
+  const source=signal.policy_source==='chronological_roi_policy'?'politique candidate évaluée chronologiquement':'seuils pré-enregistrés';
+  return `<article class="slate-card"><div class="slate-top"><span>${esc(signal.sport||'sport')} · shadow</span><b class="decision candidat recherche">signal expérimental</b></div><h3>${esc(signal.event||'Événement')}</h3><p>${esc(eventTime)}</p><div class="odds-line"><span>Sélection</span><b>${esc(signal.selection||'—')}</b></div><div class="odds-line"><span>Cote</span><b>${Number.isFinite(odds)?odds.toFixed(2):'—'}</b></div><div class="odds-line"><span>Probabilité modèle</span><b>${pct(signal.model_probability)}</b></div>${meta}<div class="odds-line"><span>Probabilité marché</span><b>${pct(signal.market_probability)}</b></div><div class="odds-line"><span>Edge retenu</span><b>${Number.isFinite(edge)?signed(edge):'—'}</b></div><div class="odds-line"><span>EV robuste</span><b>${Number.isFinite(robust)?signed(robust):'—'}</b></div><small>${esc(source)} · recherche uniquement · aucune instruction de mise</small></article>`;
+}
+
+function renderResearchLab(data){
+  const summary=data.summary||{};
+  $('#researchFootballCount').textContent=summary.football_matches??0;
+  $('#researchFootballDetail').textContent=`${data.football?.summary?.research_candidates??0} candidat(s) recherche dans le snapshot football`;
+  $('#researchTennisCount').textContent=summary.tennis_matches??0;
+  $('#researchTennisDetail').textContent=`${data.tennis?.tournaments?.length??0} tournoi(s) capturé(s)`;
+  $('#researchSignalCount').textContent=summary.experimental_signals??0;
+  $('#researchSignalDetail').textContent=(summary.experimental_signals??0)>0?'Signaux shadow, non exécutables':'Aucun edge robuste retenu';
+  $('#researchCredits').textContent=summary.credits_consumed??0;
+  const run=data.run||{};
+  $('#researchRunDetail').textContent=run.id?`Run #${run.id} · ${run.status||'—'}`:'Aucune capture marché persistée';
+  const signals=data.signals||[];
+  $('#researchSignals').innerHTML=signals.map(researchSignalCard).join('')||'<div class="slate-card"><h3>Aucun signal expérimental</h3><p>Le marché peut être absent, les cotes trop anciennes, le modèle en cold-start ou l’edge insuffisant.</p></div>';
+
+  const simulations=data.roi_lab?.simulations||[];
+  const simulationRows=simulations.map(row=>`<tr><td>${Number(row.starting_bankroll).toFixed(0)}</td><td>${esc(row.strategy)}</td><td>${row.bets??0}</td><td>${Number(row.ending_bankroll).toFixed(2)}</td><td>${Number(row.profit).toFixed(2)}</td><td>${row.roi_on_turnover===null?'—':pct(row.roi_on_turnover)}</td><td>${pct(row.maximum_drawdown)}</td></tr>`).join('');
+  $('#researchBankrolls').innerHTML=simulationRows?`<table class="market-table"><thead><tr><th>Bankroll</th><th>Stratégie simulée</th><th>Paris</th><th>Finale</th><th>Profit</th><th>ROI turnover</th><th>Drawdown max</th></tr></thead><tbody>${simulationRows}</tbody></table>`:'<p>Aucun résultat réglé : la simulation ne peut pas encore être évaluée.</p>';
+
+  const optimisation=data.roi_lab?.optimisation||{};
+  const meta=data.roi_lab?.meta_model||{};
+  const policy=optimisation.policy||{};
+  const holdout=optimisation.holdout||{};
+  const status=optimisation.status||'not_evaluable';
+  const metaHoldout=meta.holdout||{};
+  $('#researchTraining').innerHTML=`<article class="gate-card"><small>STATUT POLITIQUE</small><h3>${esc(status)}</h3><p>${esc(optimisation.reason||'aucune optimisation')}</p></article><article class="gate-card"><small>ÉCHANTILLON</small><h3>${optimisation.settled_events??0}</h3><p>Événements marché réglés · politique min. 30 · méta-modèle min. 60</p></article><article class="gate-card"><small>POLITIQUE</small><h3>edge ${pct(policy.minimum_edge)}</h3><p>EV robuste ${pct(policy.minimum_robust_return)} · cote max ${policy.maximum_decimal_odds??'—'} · ${policy.maximum_bets_per_day??'—'} pari(s)/jour</p></article><article class="gate-card"><small>HOLDOUT ROI</small><h3>${holdout.bets??0} pari(s)</h3><p>ROI ${holdout.roi_on_turnover===null||holdout.roi_on_turnover===undefined?'—':pct(holdout.roi_on_turnover)} · drawdown ${holdout.maximum_drawdown===undefined?'—':pct(holdout.maximum_drawdown)}</p></article><article class="gate-card"><small>MÉTA-MODÈLE</small><h3>${esc(meta.status||'not_evaluable')}</h3><p>${metaHoldout.log_loss===undefined?'Pas assez de données':`log-loss holdout ${Number(metaHoldout.log_loss).toFixed(3)} · Brier ${Number(metaHoldout.brier).toFixed(3)}`}</p></article>`;
+}
+
+async function refreshResearchLab(){
+  try{ renderResearchLab(await jsonFetch('/api/research-lab')); }
+  catch(error){ toast(`Laboratoire ROI indisponible : ${error.message}`); }
+}
+
 async function init(){
   try{
     const health=await jsonFetch('/api/health');
@@ -437,6 +480,7 @@ async function init(){
     const requests={
       audit:jsonFetch('/api/metrics'),
       slate:jsonFetch('/api/daily/slate'),
+      research:jsonFetch('/api/research-lab'),
       modelDiagnostics:jsonFetch('/api/model-diagnostics'),
       provider:jsonFetch('/api/odds/status'),
       history:jsonFetch('/api/history/predictions?limit=20'),
@@ -458,6 +502,7 @@ async function init(){
     });
     if(loaded.audit) $('#metrics').textContent=JSON.stringify(loaded.audit,null,2);
     if(loaded.slate) renderDaily(loaded.slate);
+    if(loaded.research) renderResearchLab(loaded.research);
     if(loaded.modelDiagnostics) renderModelDiagnostics(loaded.modelDiagnostics);
     if(loaded.provider) renderProviderStatus(loaded.provider);
     if(loaded.history) renderHistory(loaded.history);
@@ -544,6 +589,8 @@ $('#refreshDecision').addEventListener('click',refreshDecision);
 $('#logoutButton').addEventListener('click',async()=>{
   try{ await jsonFetch('/api/auth/logout',{method:'POST'}); window.location.assign('/login'); }catch(error){ toast(error.message); }
 });
+
+$('#refreshResearchLab').addEventListener('click',refreshResearchLab);
 
 init();
 

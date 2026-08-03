@@ -1,65 +1,73 @@
-# Sports Prediction Lab V4.3 — Daily Product Recovery & Credit Firewall
+# Sports Prediction Lab V4.4 — Dual-Sport ROI Lab
 
-La V4.3 remet le produit quotidien au premier plan. Le calendrier, les probabilités du modèle, son état de santé et les raisons d’absence de shortlist sont disponibles sans appel payant à The Odds API.
+La V4.4 présente les matchs de football et de tennis du jour dans une vue unique, ajoute des signaux de marché strictement expérimentaux, simule plusieurs bankrolls fictives et entraîne une politique de sélection avec validation chronologique.
 
-## Fonctionnement par défaut
+## Parcours simple
 
 ```text
-Calendrier gratuit mis en cache
-→ normalisation des équipes
-→ prédictions 1N2 du modèle
-→ stockage idempotent PostgreSQL
-→ affichage quotidien et matchs à venir
+Matchs du jour
+→ probabilités football / tennis
+→ cotes live sous plafond facultatif
+→ signal shadow ou abstention expliquée
+→ règlement du résultat
+→ bankrolls simulées
+→ politique ROI et méta-modèle sur holdout
 ```
 
-Les cotes et les campagnes historiques sont suspendues par défaut :
+## Mode sûr par défaut
 
 ```text
 DAILY_ODDS_ENABLED=false
 DAILY_ODDS_MAX_CREDITS=0
-HISTORICAL_EVIDENCE_ENABLED=false
 SHADOW_MODE_ENABLED=false
+HISTORICAL_EVIDENCE_ENABLED=false
 ```
 
-## Endpoints principaux
+Le calendrier et les probabilités modèle seules restent disponibles sans crédit. Une capture live payante exige un plafond, le mode shadow et une confirmation humaine.
+
+## Endpoints
 
 ```text
 /api/daily/slate
+/api/research-lab
+/api/research-lab/refresh
+/api/research-lab/settle
+/api/research-lab/optimise
 /api/model-diagnostics
 /api/credit-firewall
 /api/release
 /api/ready
 ```
 
-## Workflows principaux
+## Workflows
 
 ```text
-Deploy production
 Refresh daily product
+Capture daily football and tennis research
+Settle daily football and tennis research
+Optimise simulated ROI policy
+Deploy production
 Verify production
-Generate handoff package
 ```
-
-Les workflows evidence restent disponibles pour audit et recomputation, mais les modes payants exigent une réactivation explicite du pare-feu et leur confirmation humaine.
 
 ## Garanties
 
-- zéro crédit pour le calendrier et les probabilités modèle seules ;
-- aucune shortlist forcée ;
-- aucune recommandation de mise ;
+- aucun appel fournisseur déclenché par l'ouverture du dashboard ;
+- aucune mise réelle ou personnalisée ;
 - aucun placement automatique ;
-- aucune promotion automatique ;
-- panne des sources de calendrier affichée explicitement sans rendre l’application indisponible ;
-- cotes facultatives, désactivées et plafonnées par défaut.
+- politiques choisies sur blocs chronologiques et holdout ;
+- une seule observation par événement pour le méta-modèle ;
+- tennis normalement en abstention tant qu'une preuve spécifique au sport est insuffisante ;
+- aucun ROI simulé présenté comme une rentabilité future.
 
-Documents V4.3 :
+Documents V4.4 :
 
-- `UPGRADE_V4_3.md`
-- `AUDIT_MULTI_ROLES_V4_3.md`
-- `RESULTATS_V4_3.md`
-- `KNOWN_ISSUES_AND_GATES_V4_3.md`
-- `OPERATIONS_RUNBOOK_V4_3.md`
-- `VALIDATION_V4_3.json`
+- `UPGRADE_V4_4.md`
+- `AUDIT_MULTI_ROLES_V4_4.md`
+- `RESULTATS_V4_4.md`
+- `KNOWN_ISSUES_AND_GATES_V4_4.md`
+- `OPERATIONS_RUNBOOK_V4_4.md`
+- `VALIDATION_V4_4.json`
 
 ---
 # Sports Prediction Lab V3.7 — Cloud Control Center

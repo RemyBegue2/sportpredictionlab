@@ -1,36 +1,27 @@
-# Sports Prediction Lab — point de reprise V4.3.0
+# Sports Prediction Lab — point de reprise V4.4.0
 
 ## État préparé
 
-- Version : **4.3.0 — Daily Product Recovery & Credit Firewall**.
-- Exploitation : GitHub Actions + Railway, sans Python local.
-- Produit principal : calendrier et probabilités Premier League sans cotes payantes.
-- Modèle football chargé : `3.4.0-fresh`, statut de recherche opérationnel, pas validé pour une shortlist marché.
-- Cotes quotidiennes : désactivées par défaut.
-- Evidence historique payante : suspendue par défaut.
+- Version : **4.4.0 — Dual-Sport ROI Lab**.
+- Produit : football et tennis du jour, probabilités, signaux shadow et bankrolls simulées.
+- Modèle football : opérationnel pour la recherche.
+- Modèle tennis : Elo non calibré ; signal bloqué jusqu'à preuve spécifique suffisante ou méta-modèle validé.
+- Dépenses live : manuelles, plafonnées et conditionnées au shadow.
+- Evidence historique : désactivée.
 
 ## Première action
 
-1. Déployer V4.3.0.
-2. Vérifier `/api/ready`, `/api/release`, `/api/model-diagnostics` et `/api/credit-firewall`.
-3. Lancer **Refresh daily product**.
-4. Confirmer `credits_consumed=0`.
-5. Vérifier les matchs, probabilités et raisons d’absence de shortlist dans l’interface.
-
-## Variables recommandées
-
-```text
-DAILY_ODDS_ENABLED=false
-DAILY_ODDS_MAX_CREDITS=0
-HISTORICAL_EVIDENCE_ENABLED=false
-SHADOW_MODE_ENABLED=false
-DAILY_FIXTURE_HORIZON_DAYS=31
-DAILY_FIXTURE_CACHE_HOURS=6
-```
+1. Déployer V4.4.0.
+2. Vérifier `/api/ready`, `/api/release`, `/api/daily/slate` et `/api/research-lab`.
+3. Confirmer que le dashboard fonctionne sans appel fournisseur.
+4. Pour une expérience limitée, suivre `OPERATIONS_RUNBOOK_V4_4.md` avec un plafond de trois crédits.
+5. Régler les résultats puis lancer l'optimisation zéro crédit.
 
 ## Règles
 
-- ne pas relancer de préflight ou backfill payant sans justification et approbation humaine ;
-- ne pas interpréter une probabilité modèle comme un pari ;
-- ne pas forcer une shortlist lorsqu’aucun avantage live n’est validé ;
-- aucune mise, connexion bookmaker, promotion ou exécution automatique.
+- un signal est expérimental, pas une recommandation ;
+- aucune mise ou exécution automatique ;
+- aucune modification des seuils après observation sans nouvelle version ;
+- moins de 30 résultats : politique ROI non évaluable ;
+- moins de 60 résultats : méta-modèle non évaluable ;
+- aucun ROI historique n'est une promesse de rentabilité.

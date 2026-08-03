@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "version": {
+    "app_version": "4.4.0",
+    "package_version": "0.4.4.0"
+  },
+  "tests": {
+    "collected": 219,
+    "passed": 219,
+    "failed": 0,
+    "execution_mode": "seven_disjoint_batches",
+    "batches": [
+      20,
+      12,
+      24,
+      29,
+      50,
+      46,
+      38
+    ],
+    "monolithic_run": "timed_out_in_audit_environment_after_partial_progress"
+  },
+  "technical_validation": {
+    "python_compileall": "passed",
+    "javascript_syntax": "passed",
+    "workflow_yaml_files": 16,
+    "configuration_files_validated": 19,
+    "railway_ci_streaming_mode_forbidden": true,
+    "release_registry_includes_v44_components": true
+  },
+  "v44_contracts": {
+    "dual_sport_daily_view": true,
+    "manual_credit_capped_capture": true,
+    "shadow_required_before_paid_capture": true,
+    "football_and_tennis_settlement": true,
+    "simulated_bankrolls": [
+      100,
+      500,
+      1000
+    ],
+    "simulation_strategies": [
+      "flat_1pct",
+      "flat_2pct",
+      "quarter_kelly_capped_2pct"
+    ],
+    "chronological_policy_grid_candidates": 144,
+    "policy_minimum_settled_events": 30,
+    "meta_model_minimum_settled_events": 60,
+    "sport_specific_meta_rehabilitation_minimum": 30,
+    "one_training_row_per_event": true,
+    "dashboard_provider_calls": false,
+    "automatic_bet_placement": false,
+    "real_money_stake_recommendation": false
+  },
+  "external_actions": {
+    "the_odds_api_calls": 0,
+    "provider_credits_consumed": 0,
+    "railway_deployed_from_audit_environment": false
+  },
+  "limitations": [
+    "No live settled V4.4 sample exists in the preparation environment.",
+    "The bundled tennis model is Elo-only and uncalibrated until sport-specific shadow evidence is sufficient.",
+    "Historical simulated ROI is not a profitability claim."
+  ]
+}

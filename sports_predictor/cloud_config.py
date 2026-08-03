@@ -53,6 +53,8 @@ class CloudSettings:
     daily_fixture_cache_hours: int = 6
     daily_odds_enabled: bool = False
     daily_odds_max_credits: int = 0
+    daily_tennis_max_tournaments: int = 2
+    daily_tennis_sport_keys: tuple[str, ...] = ()
     historical_evidence_enabled: bool = False
 
     @classmethod
@@ -99,6 +101,10 @@ class CloudSettings:
             daily_odds_max_credits = max(0, min(10000, int(os.getenv("DAILY_ODDS_MAX_CREDITS", "0"))))
         except ValueError:
             daily_odds_max_credits = 0
+        try:
+            daily_tennis_max_tournaments = max(0, min(10, int(os.getenv("DAILY_TENNIS_MAX_TOURNAMENTS", "2"))))
+        except ValueError:
+            daily_tennis_max_tournaments = 2
         return cls(
             environment=environment,
             auth_required=auth_required,
@@ -117,6 +123,8 @@ class CloudSettings:
             daily_fixture_cache_hours=daily_fixture_cache_hours,
             daily_odds_enabled=_truthy(os.getenv("DAILY_ODDS_ENABLED"), default=False),
             daily_odds_max_credits=daily_odds_max_credits,
+            daily_tennis_max_tournaments=daily_tennis_max_tournaments,
+            daily_tennis_sport_keys=_csv(os.getenv("DAILY_TENNIS_SPORT_KEYS"), ()),
             historical_evidence_enabled=_truthy(os.getenv("HISTORICAL_EVIDENCE_ENABLED"), default=False),
         )
 

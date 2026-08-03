@@ -407,7 +407,7 @@ def test_v386_planner_is_database_independent_even_with_legacy_flag(tmp_path: Pa
 
     assert planner.main() == 0
     summary = json.loads((output_dir / "plan.json").read_text(encoding="utf-8"))
-    assert summary["version"] == "4.3.0"
+    assert summary["version"] == "4.4.0"
     assert summary["database_job_registration"] == "disabled_file_only"
 
 

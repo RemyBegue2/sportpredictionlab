@@ -58,7 +58,7 @@ permissions:
   contents: write
 
 env:
-  EXPECTED_VERSION: '4.3.0'
+  EXPECTED_VERSION: '4.4.0'
   THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
   INPUT_START_DATE: ${{ inputs.start_date }}
   INPUT_END_DATE: ${{ inputs.end_date }}
@@ -102,8 +102,8 @@ jobs:
           [ -n "${THE_ODDS_API_KEY:-}" ] || { echo 'missing repository secret: THE_ODDS_API_KEY'; exit 2; }
           python - <<'PY'
           from sports_predictor.version import APP_VERSION
-          if APP_VERSION != '4.3.0':
-              raise SystemExit(f'expected 4.3.0, found {APP_VERSION}')
+          if APP_VERSION != '4.4.0':
+              raise SystemExit(f'expected 4.4.0, found {APP_VERSION}')
           PY
       - name: Run V4.2 regression tests
         run: pytest -q tests/test_v42_coverage_preflight.py

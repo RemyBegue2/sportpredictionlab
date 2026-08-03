@@ -378,9 +378,9 @@ vm.runInContext(`renderDaily({
   summary: {fixtures_today: 1, model_predictions: 1, research_candidates: 0, upcoming_predictions: 1, credits_consumed: 0},
   credit_firewall: {daily_odds_enabled: false, daily_odds_max_credits: 0},
   no_shortlist_reasons: ['cotes payantes désactivées'],
-  model_diagnostics: {status: 'operational_research', model_version: '4.3.0', metrics: {n_test: 380, log_loss: 1.06}, freshness: {age_days: 70}},
-  events: [{sport: 'football', competition: 'E0', event: 'Arsenal — Chelsea', date: '2026-08-03', decision: 'probabilités seulement', model_version: '4.3.0', probabilities: {home: 0.47, draw: 0.27, away: 0.26}, probability_diagnostics: {valid: true}, reasons: ['cotes non demandées'], winamax_odds: false}],
-  upcoming_events: [{sport: 'football', competition: 'E0', event: 'Liverpool — Man City', date: '2026-08-05', decision: 'probabilités seulement', model_version: '4.3.0', probabilities: {home: 0.40, draw: 0.28, away: 0.32}, probability_diagnostics: {valid: true}, reasons: [], winamax_odds: false}]
+  model_diagnostics: {status: 'operational_research', model_version: '4.4.0', metrics: {n_test: 380, log_loss: 1.06}, freshness: {age_days: 70}},
+  events: [{sport: 'football', competition: 'E0', event: 'Arsenal — Chelsea', date: '2026-08-03', decision: 'probabilités seulement', model_version: '4.4.0', probabilities: {home: 0.47, draw: 0.27, away: 0.26}, probability_diagnostics: {valid: true}, reasons: ['cotes non demandées'], winamax_odds: false}],
+  upcoming_events: [{sport: 'football', competition: 'E0', event: 'Liverpool — Man City', date: '2026-08-05', decision: 'probabilités seulement', model_version: '4.4.0', probabilities: {home: 0.40, draw: 0.28, away: 0.32}, probability_diagnostics: {valid: true}, reasons: [], winamax_odds: false}]
 })`, context);
 if (elements.get('#dailyPredictionCount').textContent !== 1) process.exit(2);
 if (!elements.get('#dailySlate').innerHTML.includes('47.0 %')) process.exit(3);

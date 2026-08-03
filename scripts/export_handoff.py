@@ -47,7 +47,17 @@ def build_handoff() -> dict[str, Any]:
     report = read_json("artifacts/fresh_rebuild_report.json")
     artifact_manifest = read_json("artifacts/artifact_manifest.json")
     release_manifest = read_json("artifacts/release_manifest.json")
-    integration_status = read_json("artifacts/integration_status_v3_9.json") or read_json("artifacts/integration_status_v3_8.json") or read_json("artifacts/integration_status_v3_7.json") or read_json("artifacts/integration_status_v3_6.json") or read_json("artifacts/integration_status_v3_5.json")
+    validation = read_json("VALIDATION_V4_4.json")
+    integration_status = ({
+        "status": "ready_for_controlled_deploy",
+        "version": APP_VERSION,
+        "validation": validation,
+        "required_user_actions": [
+            "Deploy production version 4.4.0",
+            "Verify the dual-sport ROI lab renders in Chromium",
+            "Keep paid capture disabled until a small shadow experiment is explicitly approved",
+        ],
+    } if validation else None)
     security_scan = read_json("artifacts/security_scan_v3_9.json") or read_json("artifacts/security_scan_v3_8.json") or read_json("artifacts/security_scan_v3_7.json") or read_json("artifacts/security_scan_v3_6.json") or read_json("artifacts/security_scan_v3_5.json")
     evidence_bundle = read_json("artifacts/champion_challenger_v3_6.json")
     evidence_report = read_json("artifacts/evidence_report_v3_9.json") or read_json("artifacts/evidence_report_v3_8.json")
@@ -81,14 +91,18 @@ def build_handoff() -> dict[str, Any]:
         "deployment": {
             "platform": "Railway",
             "services": ["sportpredictionlab", "daily-product-cron", "Postgres"],
-            "cloud_jobs": ["GitHub Actions daily product refresh", "paid evidence disabled by default"],
+            "cloud_jobs": [
+                "GitHub Actions daily product refresh",
+                "manual dual-sport market capture and settlement",
+                "zero-credit ROI policy optimisation",
+            ],
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Deploy V4.3, verify the model and credit firewall, then run Refresh daily product at zero provider cost.",
+        "next_priority": "Deploy V4.4, verify the dual-sport ROI lab, then run only a manually approved shadow capture under a three-credit cap.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
-            "Tennis remains experimental and uncalibrated.",
+            "Tennis remains experimental; a base-model abstention requires at least 30 settled tennis events before meta-model rehabilitation.",
             "A green workflow is insufficient without /api/release post-deployment verification.",
             "The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.",
             "Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.",
@@ -221,12 +235,12 @@ def active_model_card(payload: dict[str, Any]) -> str:
 
 def next_actions(payload: dict[str, Any]) -> str:
     decision = payload.get("model_decision") or {}
-    action = "Deploy V4.3, verify /api/ready, /api/release and /api/model-diagnostics, then run Refresh daily product with zero provider credits."
+    action = "Deploy V4.4, verify /api/ready, /api/release and /api/research-lab, then keep paid capture closed until a three-credit shadow experiment is approved."
     return f"""# NEXT ACTIONS
 
 1. {action}
-2. Confirm `/api/credit-firewall` keeps daily odds and historical evidence disabled.
-3. Observe several daily model-only refreshes before authorizing any market-data expense.
+2. Confirm `/api/credit-firewall` keeps daily odds and historical evidence disabled by default.
+3. Follow `OPERATIONS_RUNBOOK_V4_4.md` for any manual live capture and settlement.
 4. Use GitHub Actions → Generate handoff package, then attach the downloaded ZIP in the next conversation.
 
 No secret is exported.
