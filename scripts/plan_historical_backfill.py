@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--full", action="store_true", help="Plan every event; full execution will require exact plan approval.")
     parser.add_argument("--output-dir", default="data/odds_api/backfill")
     parser.add_argument("--register-job", action="store_true")
+    parser.add_argument("--plan-request-json", help="Optional zero-credit request plan to link to this immutable provider plan.")
     return parser.parse_args()
 
 
@@ -61,7 +62,7 @@ def main() -> int:
     plan.requests.to_csv(output / "requests.csv", index=False)
     plan.targets.to_csv(output / "targets.csv", index=False)
     summary = {
-        "version": "3.7.0",
+        "version": "3.8.0",
         "sport_keys": sorted(plan.requests["sport_key"].astype(str).unique().tolist()),
         "available_event_count": int(available_events),
         "event_count": int(events["event_id"].nunique()),
@@ -76,6 +77,11 @@ def main() -> int:
         "safe_to_execute": bool(plan.estimated_credits <= args.max_credits),
         "full_execution_requires_exact_plan_approval": bool(args.full),
     }
+    if args.plan_request_json:
+        request_plan_path = ROOT / args.plan_request_json
+        request_plan = json.loads(request_plan_path.read_text(encoding="utf-8"))
+        summary["plan_request_id"] = request_plan.get("plan_request_id")
+        summary["plan_request_sha256"] = __import__("hashlib").sha256(request_plan_path.read_bytes()).hexdigest()
     summary.update(build_plan_identity(summary, plan.requests, plan.targets))
     job_id = None
     if args.register_job:

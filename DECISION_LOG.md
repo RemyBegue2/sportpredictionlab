@@ -12,3 +12,11 @@
 8. Les rollbacks exigent un commit Git source connu et la confirmation exacte `ROLLBACK`.
 9. Les critères champion–challenger V3.6 ne sont pas assouplis.
 10. Aucun pari ou staking automatique n’est ajouté.
+
+## V3.8 — Cloud Evidence Run
+
+- Décision : séparer estimation gratuite et exécution approuvée avec identifiant `REQ-...` déterministe.
+- Décision : conserver l'exécution historique dans un job GitHub Actions isolé plutôt que créer un troisième service Railway.
+- Motif : réduire les erreurs de ciblage de service tout en gardant une exploitation 100 % cloud.
+- Décision : publier le rapport de qualité même lorsque la porte est bloquée, puis faire échouer le workflow explicitement.
+- Décision : aucun changement du champion ni promotion automatique.

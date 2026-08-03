@@ -25,3 +25,9 @@ Métriques principales : log-loss, Brier, RPS, ECE, stabilité par folds chronol
 ## Limites
 
 Aucun benchmark historique réel n’a été exécuté dans le paquet V3.7 livré. Les seuils sont des portes de gouvernance, pas une garantie de performance future.
+
+## V3.8 — usage de la preuve
+
+La V3.8 ne modifie pas le modèle football. Elle ajoute un protocole de collecte et de qualité destiné à déterminer si le modèle mérite une analyse plus large.
+
+Une porte `technical_validation` indique seulement que la chaîne fonctionne sur un petit échantillon. Elle ne signifie ni avantage statistique ni rentabilité.

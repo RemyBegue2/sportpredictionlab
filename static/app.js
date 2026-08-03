@@ -144,6 +144,31 @@ function renderBenchmark(data){
 }
 
 
+function renderEvidence(data){
+  const report=data.report||data||{};
+  const gate=report.quality_gate||{};
+  const counts=report.counts||{};
+  const rates=report.rates||{};
+  const labels={not_run:'Non exécutée',blocked:'Bloquée',technical_validation:'Validation technique',exploratory:'Exploratoire',analysis_ready:'Prête pour analyse'};
+  $('#evidenceGate').textContent=labels[gate.status]||gate.status||'Non exécutée';
+  $('#evidenceReason').textContent=gate.reason||data.required_next_step||'Aucun rapport historique publié.';
+  $('#evidenceCoverage').textContent=Number.isFinite(Number(rates.event_coverage))?`${(100*Number(rates.event_coverage)).toFixed(1)} %`:'0 %';
+  $('#evidenceWinamax').textContent=Number.isFinite(Number(rates.winamax_coverage))?`${(100*Number(rates.winamax_coverage)).toFixed(1)} %`:'0 %';
+  $('#evidenceCredits').textContent=report.consumed_credits??0;
+  $('#evidencePlan').textContent=report.plan_request_id?`Plan ${report.plan_request_id}`:'Aucun plan exécuté.';
+  $('#evidenceCounts').textContent=`${counts.events_with_odds??0}/${counts.planned_events??0} événements · ${counts.accepted_rows??0} lignes acceptées`;
+  const items=[];
+  (report.blockers||[]).forEach(value=>items.push({kind:'blocked',label:'Blocage',value}));
+  (report.warnings||[]).forEach(value=>items.push({kind:'attention',label:'Avertissement',value}));
+  if(!items.length) items.push({kind:'passed',label:'Contrôle',value:report.generated_at?'Aucune anomalie bloquante détectée.':'Aucun rapport publié.'});
+  $('#evidenceIssues').innerHTML=items.map(item=>`<article class="gate-card ${esc(item.kind)}"><small>${esc(item.label)}</small><h3>${esc(String(item.value).replaceAll('_',' '))}</h3><p>Les détails complets sont conservés dans l’artefact GitHub V3.8.</p></article>`).join('');
+}
+
+async function refreshEvidence(){
+  try{ renderEvidence(await jsonFetch('/api/evidence')); }
+  catch(error){ toast(`Rapport de preuve indisponible : ${error.message}`); }
+}
+
 function renderDecision(data){
   const decision=(data||{}).decision||{};
   const status=decision.status||'not_evaluable';
@@ -295,6 +320,7 @@ async function init(){
       provider:jsonFetch('/api/odds/status'),
       history:jsonFetch('/api/history/predictions?limit=20'),
       benchmark:jsonFetch('/api/benchmark/summary'),
+      evidence:jsonFetch('/api/evidence'),
       decision:jsonFetch('/api/model-decision'),
       shadow:jsonFetch('/api/shadow/summary'),
       shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
@@ -312,6 +338,7 @@ async function init(){
     if(loaded.provider) renderProviderStatus(loaded.provider);
     if(loaded.history) renderHistory(loaded.history);
     if(loaded.benchmark) renderBenchmark(loaded.benchmark);
+    if(loaded.evidence) renderEvidence(loaded.evidence);
     if(loaded.decision) renderDecision(loaded.decision);
     if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
     if(loaded.system) renderSystem(loaded.system);
@@ -386,3 +413,5 @@ $('#logoutButton').addEventListener('click',async()=>{
 });
 
 init();
+
+$('#refreshEvidence')?.addEventListener('click',refreshEvidence);

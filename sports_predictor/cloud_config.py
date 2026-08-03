@@ -17,21 +17,6 @@ def _csv(value: str | None, default: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(item.strip() for item in value.split(",") if item.strip())
 
 
-def cloud_runtime_detected() -> bool:
-    """Return True only inside a cloud service runtime.
-
-    Deployment workflows also use variables such as RAILWAY_ENVIRONMENT to
-    target a remote environment. That variable alone must not make a GitHub
-    Actions runner behave as if it were the deployed Railway service.
-    """
-    return bool(
-        os.getenv("RAILWAY_SERVICE_ID")
-        or os.getenv("RAILWAY_ENVIRONMENT_ID")
-        or os.getenv("RENDER_SERVICE_ID")
-        or os.getenv("RENDER")
-    )
-
-
 @dataclass(frozen=True)
 class CloudSettings:
     environment: str
@@ -52,7 +37,7 @@ class CloudSettings:
     def from_env(cls, root: Path | None = None) -> "CloudSettings":
         base = root or Path.cwd()
         environment = os.getenv("APP_ENV", "development").strip().lower()
-        cloud_detected = cloud_runtime_detected()
+        cloud_detected = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RENDER"))
         auth_required = _truthy(os.getenv("APP_AUTH_REQUIRED"), default=cloud_detected)
         session_secret = os.getenv("APP_SESSION_SECRET", "")
         if not session_secret and not auth_required:
@@ -89,7 +74,7 @@ class CloudSettings:
             database_url=raw_db,
             odds_sync_sports=_csv(os.getenv("ODDS_SYNC_SPORTS"), ("soccer_epl",)),
             odds_stale_minutes=stale,
-            model_version=os.getenv("MODEL_VERSION", "3.7.0"),
+            model_version=os.getenv("MODEL_VERSION", "3.8.0"),
             shadow_enabled=_truthy(os.getenv("SHADOW_MODE_ENABLED"), default=True),
             shadow_max_events=shadow_max_events,
             shadow_quota_floor=shadow_quota_floor,

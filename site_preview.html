@@ -69,7 +69,7 @@
   <main>
     <section id="overview" class="hero">
       <div>
-        <p class="eyebrow">VERSION 3.7.0 · CLOUD CONTROL CENTER · ZÉRO PYTHON LOCAL</p>
+        <p class="eyebrow">VERSION 3.8.0 · CLOUD EVIDENCE RUN · ZÉRO PYTHON LOCAL</p>
         <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
         <p class="lede">Une application privée pilotée depuis GitHub Actions et Railway : déploiement vérifié, tâches historiques plafonnées et pack de reprise téléchargeable sans Python sur votre ordinateur.</p>
         <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
@@ -270,13 +270,13 @@
 
 <script>
 const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
-setText('health','API ok · v3.7.0'); document.getElementById('health')?.classList.add('ok');
+setText('health','API ok · v3.8.0'); document.getElementById('health')?.classList.add('ok');
 setText('footballRows','1 828'); setText('tennisRows','3 600'); setText('dailyCandidates','0');
 setText('oddsApiState','configuré'); setText('dbSnapshots','128'); setText('shadowState','84');
 setText('controlOverall','ACTION NÉCESSAIRE');
 setText('controlSummary','3 contrôles opérationnels · 2 en attente · 1 action à examiner · 0 blocage');
 const checks=[
- ['Production','ok','Version 3.7.0 · commit et modèle vérifiés'],
+ ['Production','ok','Version 3.8.0 · commit et modèle vérifiés'],
  ['Base PostgreSQL','ok','Connectée · journal des prédictions disponible'],
  ['Registre des modèles','attention','Champion absent : modèles conservés en shadow'],
  ['Cycle shadow','ok','Dernier cycle terminé il y a 3,0 h'],
@@ -284,18 +284,18 @@ const checks=[
  ['Collecte historique','pending','Aucun lot historique réel enregistré']
 ];
 const cc=document.getElementById('controlChecks'); if(cc)cc.innerHTML=checks.map(([l,s,d])=>`<article class="control-check ${s}"><div><small>${s.toUpperCase()}</small><h3>${l}</h3></div><p>${d}</p></article>`).join('');
-const na=document.getElementById('controlNextActions'); if(na)na.innerHTML='<article><small>PRIORITÉ 1</small><b>Lancer Historical validation sample en mode plan_only</b><p>Aucun crédit API consommé.</p></article><article><small>PRIORITÉ 2</small><b>Continuer la collecte shadow</b><p>Aucune promotion automatique.</p></article>';
-const workflows=['Deploy production','Verify production','Generate handoff package','Historical validation sample','Backup and verify database','Rollback model release','Rebuild fresh football model'];
+const na=document.getElementById('controlNextActions'); if(na)na.innerHTML='<article><small>PRIORITÉ 1</small><b>Lancer Estimate historical sample sans crédit</b><p>Aucun crédit API consommé.</p></article><article><small>PRIORITÉ 2</small><b>Continuer la collecte shadow</b><p>Aucune promotion automatique.</p></article>';
+const workflows=['Deploy production','Verify production','Generate handoff package','Estimate historical sample','Run historical sample','Backup and verify database','Rollback model release','Rebuild fresh football model'];
 const wf=document.getElementById('controlWorkflows'); if(wf)wf.innerHTML=workflows.map(x=>`<article class="workflow-card"><small>GITHUB ACTIONS</small><h3>${x}</h3><p>Actions → ${x} → Run workflow</p></article>`).join('');
 setText('providerStatus','Configuré'); setText('providerQuota','Quota disponible : exemple de prévisualisation');
 setText('cloudAuth','Privée'); setText('cloudDatabase','PostgreSQL connecté'); setText('cloudReady','Prêt');
-setText('systemRelease','3.7.0'); setText('systemCommit','Commit vérifié : a12bc34'); setText('systemModel','football-fresh');
+setText('systemRelease','3.8.0'); setText('systemCommit','Commit vérifié : a12bc34'); setText('systemModel','football-fresh');
 setText('systemDataset','Dataset et hash vérifiés'); setText('systemIntegrity','OK'); setText('systemContract','Version, commit et artefacts cohérents');
 setText('shadowLastCycle','success · 02/08/2026 21:15'); setText('shadowCycleMeta','Durée 4,8 s · verrou acquis');
 setText('benchmarkVerdict','Non évaluable'); setText('benchmarkReason','Échantillon réel encore insuffisant.'); setText('benchmarkRows','0');
 setText('decisionStatus','Continuer le shadow'); setText('decisionReason','Seuils historiques et live non atteints.'); setText('decisionChampion','football-1n2-shadow');
 setText('decisionHistorical','0 / 1 000'); setText('decisionLive','84 / 200');
-setText('metrics',JSON.stringify({version:'3.7.0',local_python_required:false,automatic_bet_placement:false,automatic_model_promotion:false},null,2));
+setText('metrics',JSON.stringify({version:'3.8.0',local_python_required:false,automatic_bet_placement:false,automatic_model_promotion:false},null,2));
 </script>
 
 </body>

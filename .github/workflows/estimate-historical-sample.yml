@@ -1,0 +1,74 @@
+name: Estimate historical sample
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: Start date YYYY-MM-DD
+        required: true
+        type: string
+      end_date:
+        description: End date YYYY-MM-DD (maximum 31 discovery days)
+        required: true
+        type: string
+      sample_events:
+        description: Event cap (1 to 30)
+        required: true
+        type: number
+        default: 30
+      max_discovery_calls:
+        description: Discovery-call cap (1 to 31)
+        required: true
+        type: number
+        default: 14
+      max_odds_credits:
+        description: Historical-odds credit cap (1 to 200)
+        required: true
+        type: number
+        default: 120
+
+permissions:
+  contents: read
+
+jobs:
+  estimate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Build immutable zero-credit request plan
+        run: |
+          python -m scripts.estimate_historical_sample \
+            --start '${{ inputs.start_date }}' \
+            --end '${{ inputs.end_date }}' \
+            --sample-events '${{ inputs.sample_events }}' \
+            --max-discovery-calls '${{ inputs.max_discovery_calls }}' \
+            --max-odds-credits '${{ inputs.max_odds_credits }}'
+      - name: Upload request plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-sample-estimate-${{ github.run_id }}
+          path: artifacts/historical_sample_request.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Zero-credit summary
+        shell: bash
+        run: |
+          PLAN_ID=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['plan_request_id'])")
+          CALLS=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['estimated_discovery_calls'])")
+          SNAPSHOTS=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['estimated_snapshot_requests_upper_bound'])")
+          {
+            echo '### Historical sample estimate'
+            echo
+            echo "- Plan request ID: \`${PLAN_ID}\`"
+            echo "- Discovery calls: at most \`${CALLS}\`"
+            echo "- Snapshot requests upper bound: \`${SNAPSHOTS}\`"
+            echo "- Historical-odds credit cap: \`${{ inputs.max_odds_credits }}\`"
+            echo '- Provider API calls executed: **0**'
+            echo '- Copy the Plan request ID into **Run historical sample** with the same parameters.'
+          } >> "$GITHUB_STEP_SUMMARY"

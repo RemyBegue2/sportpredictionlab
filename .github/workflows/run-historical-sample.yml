@@ -1,0 +1,242 @@
+name: Run historical sample
+
+on:
+  workflow_dispatch:
+    inputs:
+      plan_request_id:
+        description: Exact REQ-... identifier produced by Estimate historical sample
+        required: true
+        type: string
+      start_date:
+        description: Same start date used for the estimate
+        required: true
+        type: string
+      end_date:
+        description: Same end date used for the estimate
+        required: true
+        type: string
+      sample_events:
+        description: Same event cap used for the estimate
+        required: true
+        type: number
+        default: 30
+      max_discovery_calls:
+        description: Same discovery-call cap used for the estimate
+        required: true
+        type: number
+        default: 14
+      max_odds_credits:
+        description: Same historical-odds credit cap used for the estimate
+        required: true
+        type: number
+        default: 120
+      confirmation:
+        description: Type EXECUTE_APPROVED_SAMPLE
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: historical-sample
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
+      RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      EXPECTED_VERSION: '3.8.0'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Validate secrets and explicit confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ '${{ inputs.confirmation }}' = 'EXECUTE_APPROVED_SAMPLE' ] || { echo 'Confirmation must equal EXECUTE_APPROVED_SAMPLE'; exit 2; }
+          [ -n "${THE_ODDS_API_KEY:-}" ] || { echo 'THE_ODDS_API_KEY secret is missing'; exit 2; }
+          [ -n "${DATABASE_URL:-}" ] || { echo 'DATABASE_URL secret is missing'; exit 2; }
+          [ -n "${RAILWAY_TOKEN:-}" ] || { echo 'RAILWAY_TOKEN secret is missing'; exit 2; }
+          [ -n "${RAILWAY_PROJECT_ID:-}" ] || { echo 'RAILWAY_PROJECT_ID secret is missing'; exit 2; }
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL variable is missing'; exit 2; }
+      - name: Rebuild and verify the zero-credit request plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m scripts.estimate_historical_sample \
+            --start '${{ inputs.start_date }}' \
+            --end '${{ inputs.end_date }}' \
+            --sample-events '${{ inputs.sample_events }}' \
+            --max-discovery-calls '${{ inputs.max_discovery_calls }}' \
+            --max-odds-credits '${{ inputs.max_odds_credits }}'
+          ACTUAL=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['plan_request_id'])")
+          [ "$ACTUAL" = '${{ inputs.plan_request_id }}' ] || { echo "Plan request mismatch: expected $ACTUAL"; exit 3; }
+      - name: Discover provider events within the hard cap
+        run: |
+          python -m scripts.discover_historical_events \
+            --sport-key soccer_epl \
+            --start '${{ inputs.start_date }}' \
+            --end '${{ inputs.end_date }}' \
+            --max-calls '${{ inputs.max_discovery_calls }}' \
+            --output data/odds_api/historical/events.csv \
+            --execute
+      - name: Build immutable provider plan and register checkpoint job
+        run: |
+          python -m scripts.plan_historical_backfill \
+            --events-csv data/odds_api/historical/events.csv \
+            --horizons 1 \
+            --max-credits '${{ inputs.max_odds_credits }}' \
+            --sample-events '${{ inputs.sample_events }}' \
+            --plan-request-json artifacts/historical_sample_request.json \
+            --output-dir data/odds_api/backfill \
+            --register-job
+      - name: Execute resumable immutable sample
+        shell: bash
+        run: |
+          JOB_ID=$(python -c "import json; print(json.load(open('data/odds_api/backfill/plan.json'))['database_job_id'])")
+          python -m scripts.run_historical_backfill \
+            --plan-dir data/odds_api/backfill \
+            --max-credits '${{ inputs.max_odds_credits }}' \
+            --job-id "$JOB_ID" \
+            --execute
+      - name: Prepare leakage-safe model and market comparison
+        id: prepare_benchmark
+        shell: bash
+        run: |
+          set +e
+          python -m scripts.prepare_market_benchmark \
+            --results-csv data/real/football_active.csv \
+            --events-csv data/odds_api/historical/events.csv \
+            --odds-csv data/odds_api/backfill/historical_odds_long.csv \
+            --stage t-1h \
+            --output-dir data/benchmark
+          PREPARE_CODE=$?
+          if [ -s data/benchmark/evaluation_t-1h.csv ]; then
+            python -m scripts.run_market_benchmark \
+              --input data/benchmark/evaluation_t-1h.csv \
+              --minimum-predictions 1000 \
+              --exploratory-predictions 100 \
+              --minimum-train 30 \
+              --folds 5 \
+              --output artifacts/market_benchmark_v3_8.json \
+              --persist
+            BENCHMARK_CODE=$?
+          else
+            BENCHMARK_CODE=4
+          fi
+          set -e
+          echo "prepare_code=$PREPARE_CODE" >> "$GITHUB_OUTPUT"
+          echo "benchmark_code=$BENCHMARK_CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Build quality and evidence report
+        id: quality
+        shell: bash
+        run: |
+          set +e
+          python -m scripts.build_evidence_report \
+            --matches-csv data/benchmark/event_mapping.csv \
+            --benchmark-json artifacts/market_benchmark_v3_8.json
+          CODE=$?
+          set -e
+          ACCEPTED=$(python -c "import json; print(str(json.load(open('artifacts/evidence_report_v3_8.json'))['quality_gate']['accepted']).lower())")
+          STATUS=$(python -c "import json; print(json.load(open('artifacts/evidence_report_v3_8.json'))['quality_gate']['status'])")
+          echo "accepted=$ACCEPTED" >> "$GITHUB_OUTPUT"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "report_exit_code=$CODE" >> "$GITHUB_OUTPUT"
+      - name: Commit evidence report
+        id: evidence_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'sports-prediction-bot'
+          git config user.email 'sports-prediction-bot@users.noreply.github.com'
+          git add artifacts/evidence_report_v3_8.json
+          if git diff --cached --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            git commit -m 'chore: publish V3.8 historical evidence report'
+            git push
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Generate release proof for the evidence commit
+        env:
+          SOURCE_COMMIT: ${{ steps.evidence_commit.outputs.head_sha }}
+        run: python -m scripts.generate_release_manifest
+      - name: Install Railway CLI
+        run: npm install --global @railway/cli
+      - name: Deploy evidence dashboard to Railway
+        run: |
+          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
+            --service "$RAILWAY_WEB_SERVICE" --message "V3.8 evidence ${{ steps.evidence_commit.outputs.head_sha }}"
+      - name: Verify deployed release
+        shell: bash
+        run: |
+          MODEL_SHA=$(python -c "import json; print(json.load(open('artifacts/release_manifest.json'))['football_model']['artifact_sha256'] or '')")
+          python -m scripts.post_deploy_verify \
+            --base-url "$APP_PUBLIC_URL" \
+            --expected-version "$EXPECTED_VERSION" \
+            --expected-commit '${{ steps.evidence_commit.outputs.head_sha }}' \
+            --expected-model-sha256 "$MODEL_SHA" \
+            --attempts 30 --delay-seconds 10
+      - name: Upload complete sample evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-sample-evidence-${{ github.run_id }}
+          path: |
+            artifacts/historical_sample_request.json
+            artifacts/evidence_report_v3_8.json
+            artifacts/market_benchmark_v3_8.json
+            data/benchmark/event_mapping.csv
+            data/benchmark/evaluation_t-1h.csv
+            data/benchmark/preparation_report.json
+            data/odds_api/historical/event_discovery_plan.json
+            data/odds_api/historical/events.csv
+            data/odds_api/backfill/plan.json
+            data/odds_api/backfill/state.json
+            data/odds_api/backfill/requests.csv
+            data/odds_api/backfill/targets.csv
+            data/odds_api/backfill/historical_odds_long.csv
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Workflow summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### V3.8 historical sample'
+            echo
+            echo "- Request plan: \`${{ inputs.plan_request_id }}\`"
+            echo "- Quality status: \`${{ steps.quality.outputs.status }}\`"
+            echo "- Quality accepted: \`${{ steps.quality.outputs.accepted }}\`"
+            echo "- Evidence commit: \`${{ steps.evidence_commit.outputs.head_sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -f artifacts/evidence_report_v3_8.json ]; then
+            echo "- Historical rows: \`$(jq -r '.counts.historical_odds_rows // 0' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Accepted rows: \`$(jq -r '.counts.accepted_rows // 0' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Temporal violations: \`$(jq -r '.counts.quarantined_temporal_rows // 0' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Event coverage: \`$(jq -r '((.rates.event_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Winamax coverage: \`$(jq -r '((.rates.winamax_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Enforce quality gate after publishing the diagnostic
+        if: ${{ steps.quality.outputs.accepted != 'true' }}
+        run: |
+          echo 'The evidence report was published, but the data-quality gate is blocked.'
+          exit 4

@@ -1,0 +1,11 @@
+{
+  "version": "3.8.0",
+  "scope": "application source, scripts, frontend and GitHub workflows",
+  "probable_secret_findings": [],
+  "passed": true,
+  "notes": [
+    "Tests, documentation and .env.example are excluded because they intentionally contain variable names and placeholders.",
+    "No model binary or real data file is included in the V3.8 upgrade archive.",
+    "GitHub secrets are referenced only through ${{ secrets.* }} expressions."
+  ]
+}

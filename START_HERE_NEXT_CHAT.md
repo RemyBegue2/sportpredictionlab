@@ -1,38 +1,26 @@
-# START HERE — Sports Prediction Lab V3.7
+# START HERE — Sports Prediction Lab V3.8
 
-## État de référence
+## État attendu
 
-- Version : **3.7.0 Cloud Control Center**
-- Hébergement : Railway
-- Automatisation : GitHub Actions
-- Exploitation locale : **aucun Python requis**
-- Modèle football : champion/challengers en shadow avec preuves V3.6
+- Version : **3.8.0 Cloud Evidence Run**
+- Exploitation : GitHub Actions + Railway uniquement
+- Python local : non requis
 - Paris automatiques : désactivés
 - Promotion automatique : désactivée
 
-## Nouveautés V3.7
+## Première action
 
-- `/api/control-center` ;
-- page Pilotage ;
-- déploiement vérifié version/commit/hash ;
-- smoke test Chromium authentifié ;
-- benchmark historique plafonné depuis GitHub ;
-- sauvegarde restaurée automatiquement avant publication ;
-- rollback depuis un commit Git connu, protégé par confirmation ;
-- ZIP de reprise généré par GitHub Actions.
+1. Vérifier `/api/release` et le badge `v3.8.0`.
+2. Ouvrir GitHub Actions → `Estimate historical sample`.
+3. Lancer un plan de 30 événements maximum.
+4. Copier le `REQ-...`.
+5. Ouvrir `Run historical sample` avec les mêmes paramètres.
+6. Lire l'artefact et la section **Preuves et benchmark**.
 
-## Prochaine action
+## Fichiers prioritaires à joindre en cas de nouvelle conversation
 
-Ouvrir **Actions → Historical validation sample → plan_only**, choisir une courte période EPL et télécharger l’artefact. Ne passer à `execute_sample` qu’après lecture des plafonds.
-
-## Vérité statistique
-
-Aucune preuve suffisante ne permet encore d’affirmer que le modèle bat Winamax ou le consensus.
-
-## Fichiers prioritaires
-
-1. `handoff/HANDOFF_CURRENT.md`
-2. `handoff/HANDOFF_CURRENT.json`
-3. `handoff/NEXT_ACTIONS.md`
-4. `AUDIT_MULTI_ROLES_V3_7.md`
-5. `RESULTATS_V3_7.md`
+- ce fichier ;
+- `handoff/HANDOFF_CURRENT.md` ;
+- `handoff/HANDOFF_CURRENT.json` ;
+- `artifacts/evidence_report_v3_8.json` s'il existe ;
+- le log GitHub Actions en cas d'échec.

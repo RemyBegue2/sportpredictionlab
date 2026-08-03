@@ -35,13 +35,22 @@ WORKFLOW_CATALOG: tuple[dict[str, Any], ...] = (
         "required_configuration": [],
     },
     {
-        "id": "historical-validation",
-        "name": "Historical validation sample",
-        "file": "historical-validation.yml",
-        "purpose": "Planifier ou exécuter un petit lot historique plafonné à 30 événements.",
+        "id": "estimate-historical-sample",
+        "name": "Estimate historical sample",
+        "file": "estimate-historical-sample.yml",
+        "purpose": "Créer un identifiant de plan immuable et estimer le lot sans appeler le fournisseur.",
+        "risk": "read_only",
+        "confirmation": None,
+        "required_configuration": [],
+    },
+    {
+        "id": "run-historical-sample",
+        "name": "Run historical sample",
+        "file": "run-historical-sample.yml",
+        "purpose": "Exécuter le plan approuvé sous plafonds, publier le rapport qualité et redéployer le dashboard.",
         "risk": "consumes_api_credits",
-        "confirmation": "EXECUTE_SAMPLE",
-        "required_configuration": ["THE_ODDS_API_KEY", "DATABASE_URL"],
+        "confirmation": "EXECUTE_APPROVED_SAMPLE",
+        "required_configuration": ["THE_ODDS_API_KEY", "DATABASE_URL", "RAILWAY_TOKEN", "RAILWAY_PROJECT_ID", "APP_PUBLIC_URL"],
     },
     {
         "id": "backup-database",
@@ -209,7 +218,7 @@ def build_control_center(
         evidence_status,
         f"Verdict : {decision_status} · {evaluated} observation(s) historiques évaluées.",
         evidence_action,
-        "historical-validation" if decision_status in {"not_evaluable", "continue_shadow"} else None,
+        "estimate-historical-sample" if decision_status in {"not_evaluable", "continue_shadow"} else None,
     ))
 
     latest_backfill = backfills[0] if backfills else None
@@ -236,7 +245,7 @@ def build_control_center(
         backfill_status,
         backfill_detail,
         backfill_action,
-        "historical-validation" if backfill_status != "ok" else None,
+        "run-historical-sample" if latest_backfill else "estimate-historical-sample",
     ))
 
     overall = _overall(checks)

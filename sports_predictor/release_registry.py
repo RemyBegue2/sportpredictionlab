@@ -11,7 +11,7 @@ import subprocess
 
 from .artifacts import sha256_file, verify_artifact_manifest
 
-APP_VERSION = "3.7.0"
+APP_VERSION = "3.8.0"
 RELEASE_SCHEMA_VERSION = "1.0"
 SENSITIVE_MARKERS = (
     "password",
@@ -140,6 +140,10 @@ def build_release_evidence(root: str | Path, *, version: str = APP_VERSION) -> d
         ".github/workflows/deploy-production.yml",
         ".github/workflows/verify-production.yml",
         ".github/workflows/generate-handoff.yml",
+        ".github/workflows/estimate-historical-sample.yml",
+        ".github/workflows/run-historical-sample.yml",
+        "sports_predictor/evidence_quality.py",
+        "sports_predictor/sample_plan.py",
         "Dockerfile",
         "railway.toml",
         "railway.cron.toml",

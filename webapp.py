@@ -160,9 +160,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V3.7 Cloud Control Center",
+    title="Sports Prediction Lab V3.8 Cloud Evidence Run",
     version=APP_VERSION,
-    description="Cloud-first edition operated from GitHub Actions and Railway, with deployment proof, controlled historical jobs and secret-free handoff artifacts.",
+    description="Cloud-first evidence edition operated from GitHub Actions and Railway, with zero-credit estimates, capped historical samples, data-quality gates and secret-free handoff artifacts.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -315,7 +315,7 @@ def resources() -> dict[str, Any]:
     fresh_rebuild_path = artifact_dir / "fresh_rebuild_report.json"
     fresh_rebuild = json.loads(fresh_rebuild_path.read_text(encoding="utf-8")) if fresh_rebuild_path.exists() else None
     football_model_version = (
-        f"{fresh_rebuild.get('version', '3.7.0')}-fresh"
+        f"{fresh_rebuild.get('version', '3.8.0')}-fresh"
         if fresh_rebuild and fresh_rebuild.get("promoted")
         else "3.3.0-snapshot"
     )
@@ -1117,7 +1117,7 @@ def _system_status_payload() -> dict[str, Any]:
         "continuity": {
             "operation": "GitHub Actions → Generate handoff package → Run workflow",
             "workflow": "generate-handoff.yml",
-            "artifact": "sports-prediction-handoff-v3.7",
+            "artifact": "sports-prediction-handoff-v3.8",
             "local_python_required": False,
             "files": [
                 "START_HERE_NEXT_CHAT.md",
@@ -1347,6 +1347,30 @@ def market_benchmark_summary(sport_key: str = "soccer_epl") -> dict[str, Any]:
             "required_next_step": "Run the historical backfill and benchmark worker with a reviewed credit cap.",
         }
     return {"source": "postgresql", "summary": run.get("summary") or benchmark_summary(run.get("report")), "report": run.get("report"), "run": {k: v for k, v in run.items() if k != "report"}}
+
+
+@app.get("/api/evidence")
+def evidence_report() -> dict[str, Any]:
+    artifact = ROOT / "artifacts" / "evidence_report_v3_8.json"
+    if not artifact.exists():
+        return {
+            "source": "none",
+            "report": {
+                "app_version": APP_VERSION,
+                "quality_gate": {"status": "not_run", "accepted": False, "reason": "no historical evidence report has been published"},
+                "counts": {},
+                "rates": {},
+                "blockers": [],
+                "warnings": [],
+                "responsible_use": {"profitability_claim": False, "stake_recommendation": False, "automatic_bet_placement": False},
+            },
+            "required_next_step": "GitHub Actions → Estimate historical sample → Run workflow.",
+        }
+    try:
+        report = json.loads(artifact.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=503, detail=f"Evidence report unreadable: {type(exc).__name__}") from exc
+    return {"source": "artifact", "report": report}
 
 
 @app.get("/api/admin/data-quality")

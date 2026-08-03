@@ -56,6 +56,19 @@ def main() -> None:
             ) from exc
 
         control = page.locator("#controlOverall").inner_text().strip()
+        try:
+            page.wait_for_function(
+                """() => {
+                    const element = document.querySelector('#evidenceGate');
+                    if (!element) return false;
+                    const value = (element.textContent || '').trim();
+                    return value.length > 0 && value !== '—';
+                }""",
+                timeout=args.timeout_ms,
+            )
+        except Exception as exc:
+            raise SystemExit("Browser smoke test failed: evidence dashboard did not render") from exc
+        evidence = page.locator("#evidenceGate").inner_text().strip()
         browser.close()
 
     expected = f"v{args.expected_version}"
@@ -64,6 +77,8 @@ def main() -> None:
         problems.append(f"health badge mismatch: {health!r}")
     if not control or control == "—":
         problems.append("control center did not render")
+    if not evidence or evidence == "—":
+        problems.append("evidence dashboard did not render")
     known_noise = ("favicon.ico",)
     console_errors = [item for item in console_errors if not any(noise in item for noise in known_noise)]
     if console_errors:
@@ -72,7 +87,7 @@ def main() -> None:
         problems.append("page errors: " + " | ".join(page_errors))
     if problems:
         raise SystemExit("Browser smoke test failed: " + "; ".join(problems))
-    print(json.dumps({"status": "ok", "health": health, "control_center": control}, ensure_ascii=False))
+    print(json.dumps({"status": "ok", "health": health, "control_center": control, "evidence": evidence}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

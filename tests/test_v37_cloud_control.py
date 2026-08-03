@@ -34,7 +34,7 @@ def test_control_center_turns_cloud_state_into_actions() -> None:
     assert payload["local_python_required"] is False
     assert payload["operation_mode"] == "github_actions_and_railway"
     assert payload["overall_status"] == "attention"
-    assert any(item["workflow"] == "historical-validation" for item in payload["next_actions"])
+    assert any(item["workflow"] == "estimate-historical-sample" for item in payload["next_actions"])
     assert {item["id"] for item in payload["workflows"]} >= {
         "deploy-production", "verify-production", "generate-handoff", "backup-database"
     }
@@ -57,7 +57,7 @@ def test_control_center_blocks_unproven_release_and_database() -> None:
 
 def test_workflow_catalog_is_cloud_only_and_guarded() -> None:
     workflows = {item["id"]: item for item in WORKFLOW_CATALOG}
-    assert workflows["historical-validation"]["confirmation"] == "EXECUTE_SAMPLE"
+    assert workflows["run-historical-sample"]["confirmation"] == "EXECUTE_APPROVED_SAMPLE"
     assert workflows["rollback-production"]["confirmation"] == "ROLLBACK"
     assert workflows["generate-handoff"]["required_configuration"] == []
 
@@ -98,7 +98,7 @@ def test_all_cloud_workflows_are_manual_and_write_readable_summaries() -> None:
     root = Path(__file__).resolve().parents[1]
     expected = {
         "deploy-production.yml", "verify-production.yml", "generate-handoff.yml",
-        "historical-validation.yml", "backup-database.yml", "rollback-production.yml",
+        "estimate-historical-sample.yml", "run-historical-sample.yml", "historical-validation.yml", "backup-database.yml", "rollback-production.yml",
         "rebuild-fresh-football.yml",
     }
     found = {path.name for path in (root / ".github" / "workflows").glob("*.yml")}
@@ -107,9 +107,9 @@ def test_all_cloud_workflows_are_manual_and_write_readable_summaries() -> None:
         text = (root / ".github" / "workflows" / name).read_text(encoding="utf-8")
         assert "workflow_dispatch:" in text
         assert "GITHUB_STEP_SUMMARY" in text
-    historical = (root / ".github" / "workflows" / "historical-validation.yml").read_text(encoding="utf-8")
-    assert "EXECUTE_SAMPLE" in historical
-    assert "sample_events }}' -gt 30" in historical
+    historical = (root / ".github" / "workflows" / "run-historical-sample.yml").read_text(encoding="utf-8")
+    assert "EXECUTE_APPROVED_SAMPLE" in historical
+    assert "scripts.estimate_historical_sample" in historical
 
 
 def test_control_center_endpoint_and_frontend_contract() -> None:
@@ -128,7 +128,7 @@ def test_control_center_endpoint_and_frontend_contract() -> None:
     for element_id in ("controlOverall", "controlChecks", "controlWorkflows", "controlNextActions", "refreshControl"):
         assert f'id="{element_id}"' in html
         assert f"#{element_id}" in js
-    assert "app.js?v=3.7.0" in html
+    assert "app.js?v=3.8.0" in html
 
 
 def test_public_release_proof_contains_deployment_safety_contract() -> None:
@@ -138,7 +138,7 @@ def test_public_release_proof_contains_deployment_safety_contract() -> None:
         response = client.get("/api/release")
     assert response.status_code == 200, response.text
     payload = response.json()
-    assert payload["version"] == "3.7.0"
+    assert payload["version"] == "3.8.0"
     assert payload["automatic_model_promotion"] is False
     assert payload["profitability_claim"] is False
     assert payload["automatic_bet_placement"] is False
@@ -147,9 +147,9 @@ def test_public_release_proof_contains_deployment_safety_contract() -> None:
 def test_cloud_workflow_caps_and_rollback_are_operational() -> None:
     root = Path(__file__).resolve().parents[1]
     workflows = root / ".github" / "workflows"
-    historical = (workflows / "historical-validation.yml").read_text(encoding="utf-8")
-    assert "max_discovery_calls }}' -gt 31" in historical
-    assert "max_odds_credits }}' -gt 200" in historical
+    historical = (workflows / "run-historical-sample.yml").read_text(encoding="utf-8")
+    assert "EXECUTE_APPROVED_SAMPLE" in historical
+    assert "--max-odds-credits" in historical
 
     rollback = (workflows / "rollback-production.yml").read_text(encoding="utf-8")
     assert "source_commit" in rollback

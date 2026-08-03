@@ -34,9 +34,10 @@ def build_handoff() -> dict[str, Any]:
     report = read_json("artifacts/fresh_rebuild_report.json")
     artifact_manifest = read_json("artifacts/artifact_manifest.json")
     release_manifest = read_json("artifacts/release_manifest.json")
-    integration_status = read_json("artifacts/integration_status_v3_7.json") or read_json("artifacts/integration_status_v3_6.json") or read_json("artifacts/integration_status_v3_5.json")
-    security_scan = read_json("artifacts/security_scan_v3_7.json") or read_json("artifacts/security_scan_v3_6.json") or read_json("artifacts/security_scan_v3_5.json")
+    integration_status = read_json("artifacts/integration_status_v3_8.json") or read_json("artifacts/integration_status_v3_7.json") or read_json("artifacts/integration_status_v3_6.json") or read_json("artifacts/integration_status_v3_5.json")
+    security_scan = read_json("artifacts/security_scan_v3_8.json") or read_json("artifacts/security_scan_v3_7.json") or read_json("artifacts/security_scan_v3_6.json") or read_json("artifacts/security_scan_v3_5.json")
     evidence_bundle = read_json("artifacts/champion_challenger_v3_6.json")
+    evidence_report = read_json("artifacts/evidence_report_v3_8.json")
     return {
         "schema_version": "1.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -54,15 +55,16 @@ def build_handoff() -> dict[str, Any]:
         "integration_status": integration_status,
         "security_scan": security_scan,
         "champion_challenger": evidence_bundle,
+        "historical_evidence": evidence_report,
         "model_decision": (evidence_bundle or {}).get("decision") if evidence_bundle else None,
         "deployment": {
             "platform": "Railway",
             "services": ["sportpredictionlab", "shadow-cron", "Postgres"],
-            "reserved_services": ["historical-worker"],
+            "cloud_jobs": ["GitHub Actions historical sample"],
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Use GitHub Actions → Historical validation sample. Start with plan_only, then execute_sample only after reviewing the caps.",
+        "next_priority": "Use GitHub Actions → Estimate historical sample, copy the REQ identifier, then run the approved capped sample.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
             "Tennis remains experimental and uncalibrated.",
@@ -111,14 +113,14 @@ Generated: `{payload['generated_at_utc']}`
 Railway
 ├── sportpredictionlab  FastAPI + private web UI
 ├── shadow-cron         champion + market baselines + blend → results → settlement
-├── historical-worker   reserved for future long-running backfills
 └── Postgres            audit records, model/release registry, metrics and decisions
 
 GitHub Actions
 ├── deploy-production.yml       tests → Railway deploy → API proof → Chromium smoke
 ├── verify-production.yml       read-only production proof
 ├── rebuild-fresh-football.yml  rebuild → tests → deploy → proof
-├── historical-validation.yml   zero-credit plan or capped sample execution
+├── estimate-historical-sample.yml  immutable zero-credit request plan
+├── run-historical-sample.yml       capped execution → quality report → Railway dashboard
 ├── backup-database.yml         backup → temporary restore verification
 ├── rollback-production.yml     restore from known Git commit → tests → deploy → proof
 └── generate-handoff.yml        downloadable secret-free conversation bundle
@@ -137,11 +139,12 @@ GitHub Actions
 ## Evidence engine
 
 - Champion–challenger artifact: `artifacts/champion_challenger_v3_6.json`
+- Historical quality artifact: `artifacts/evidence_report_v3_8.json`
 - Cloud control endpoint: `/api/control-center`
 - Local Python required for operations: **no**
 - Authenticated deterministic verdict: `/api/model-decision`
-- Validation backfill default: at most 30 events
-- Full backfill: exact `plan_id` approval required
+- Controlled sample: at most 30 events, 31 discovery calls and 200 odds credits
+- Execution requires the exact `REQ-...` identifier produced by the zero-credit estimate
 - Automatic model promotion: **disabled**
 
 ## Open gates
@@ -179,7 +182,7 @@ def active_model_card(payload: dict[str, Any]) -> str:
 
 def next_actions(payload: dict[str, Any]) -> str:
     decision = payload.get("model_decision") or {}
-    action = decision.get("next_action") or "Open GitHub Actions → Historical validation sample → plan_only, review the artifact, then use execute_sample with explicit caps."
+    action = decision.get("next_action") or "Open GitHub Actions → Estimate historical sample, copy the REQ identifier, then open Run historical sample with the same caps and explicit confirmation."
     return f"""# NEXT ACTIONS
 
 1. {action}

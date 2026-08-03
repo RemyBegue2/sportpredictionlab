@@ -58,3 +58,16 @@
 - test Chromium authentifié ;
 - résumés d’actions lisibles ;
 - pack de continuité téléchargeable.
+
+## 3.8.0 — Cloud Evidence Run & Data Quality Gate
+
+- estimation historique sans appel fournisseur ;
+- identifiant de demande immuable `REQ-...` ;
+- exécution plafonnée et explicitement confirmée ;
+- audit temporel et quarantaine ;
+- couverture événements et Winamax ;
+- tentative de benchmark modèle/Winamax/consensus ;
+- endpoint `/api/evidence` ;
+- dashboard Preuves et benchmark ;
+- pack de reprise V3.8 ;
+- test navigateur étendu au dashboard de preuve.

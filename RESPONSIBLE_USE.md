@@ -13,3 +13,7 @@ Le système doit pouvoir conclure chaque jour :
 Le modèle football actuel est trop ancien pour une utilisation opérationnelle et le modèle tennis n’est pas calibré. Ces deux limitations déclenchent un veto dans l’application.
 
 Évitez d’utiliser l’outil pour augmenter la fréquence de jeu, poursuivre des pertes ou fixer un objectif de gains. Le shadow mode doit rester une phase d’observation sans mise.
+
+## V3.8 — interprétation des preuves
+
+Un lot de moins de 100 observations valide uniquement le fonctionnement technique. Il est interdit d'en déduire un « pari sûr », une rentabilité ou une taille de mise. Le rapport conserve explicitement `profitability_claim=false`, `stake_recommendation=false` et `automatic_bet_placement=false`.

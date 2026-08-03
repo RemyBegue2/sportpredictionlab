@@ -1,0 +1,46 @@
+{
+  "version": "3.8.0",
+  "generated_for": "source validation; not deployed from this environment",
+  "tests": {
+    "passed": 117,
+    "failed": 0,
+    "warnings": 5
+  },
+  "coverage_percent": 82.7475181110813,
+  "python_compile": true,
+  "javascript_syntax": true,
+  "yaml_workflows_valid": true,
+  "workflow_count": 9,
+  "workflows": [
+    "backup-database.yml",
+    "deploy-production.yml",
+    "estimate-historical-sample.yml",
+    "generate-handoff.yml",
+    "historical-validation.yml",
+    "rebuild-fresh-football.yml",
+    "rollback-production.yml",
+    "run-historical-sample.yml",
+    "verify-production.yml"
+  ],
+  "new_endpoints": [
+    "/api/evidence"
+  ],
+  "new_workflows": [
+    "estimate-historical-sample.yml",
+    "run-historical-sample.yml"
+  ],
+  "provider_calls_executed": 0,
+  "historical_credits_consumed": 0,
+  "railway_deployed": false,
+  "safety": {
+    "automatic_bet_placement": false,
+    "automatic_model_promotion": false,
+    "profitability_claim": false
+  },
+  "limitations": [
+    "No live The Odds API sample was executed in this environment.",
+    "No Railway deployment was triggered.",
+    "The first real sample may be blocked by coverage, matching or temporal quality gates."
+  ],
+  "legacy_workflow": "historical-validation.yml is a zero-credit redirect only"
+}

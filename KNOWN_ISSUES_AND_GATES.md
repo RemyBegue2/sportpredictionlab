@@ -1,34 +1,25 @@
-# Risques et portes V3.7
+# Risques et portes — V3.8
 
-## Configuration nécessaire dans le vrai dépôt
+## Portes bloquantes
 
-- `RAILWAY_TOKEN` et `RAILWAY_PROJECT_ID` pour les déploiements ;
-- `APP_PUBLIC_URL` pour les preuves post-déploiement ;
-- `APP_PASSWORD` pour le test Chromium authentifié ;
-- `THE_ODDS_API_KEY` et `DATABASE_URL` pour le benchmark historique ;
-- `DATABASE_URL` et `BACKUP_ENCRYPTION_PASSPHRASE` pour la sauvegarde cloud chiffrée.
+- zéro ligne historique ;
+- snapshot à l'heure du match ou après ;
+- plus de 1 % de doublons ;
+- couverture événementielle inférieure à 95 % ;
+- matching fiable inférieur à 95 % lorsqu'un mapping est disponible ;
+- backfill non terminé ;
+- coût déclaré supérieur au plafond.
 
-## Portes opérationnelles
+## Avertissements non bloquants
 
-- ne pas considérer un déploiement réussi si `/api/release` diverge ;
-- garder `verify_browser=true` pour les déploiements normaux ; l’absence de `APP_PASSWORD` doit alors bloquer le run ;
-- ne pas lancer `execute_sample` sans avoir lu le plan `plan_only` ;
-- ne jamais dépasser 30 événements, 31 appels de découverte ou 200 crédits dans le workflow de validation ;
-- ne lancer un rollback qu’avec le SHA d’un commit dont les artefacts ont déjà été exploités ou examinés ;
-- ne pas considérer une sauvegarde valide si la restauration temporaire échoue ;
-- conserver la phrase de chiffrement hors du dépôt et hors des conversations.
+- couverture Winamax inférieure à 70 % ;
+- quelques doublons sous le seuil de 1 % ;
+- benchmark impossible faute de résultats ou de lignes complètes ;
+- moins de 100 observations : validation technique uniquement.
 
-## Dette technique connue
+## Limites connues
 
-- cinq `ResourceWarning` SQLite subsistent dans les tests historiques ;
-- le benchmark court s’exécute sur un runner GitHub, tandis que `historical-worker` reste réservé aux travaux futurs plus longs ;
-- le smoke test contre Railway doit encore être exécuté après l’intégration réelle ;
-- la sauvegarde est logique et portable, pas une sauvegarde physique PostgreSQL point-in-time.
-
-## Portes statistiques
-
-- aucun avantage rentable démontré ;
-- aucune promotion automatique ;
-- 1 000 observations historiques et 200 résultats live restent les seuils de première revue sérieuse ;
-- zéro violation temporelle acceptée ;
-- stabilité par fold, calibration et CLV restent obligatoires.
+- le petit lot ne démontre pas la rentabilité ;
+- le coût réel reste confirmé par les en-têtes quota du fournisseur ;
+- la publication automatique du rapport suppose que le bot GitHub puisse pousser sur la branche ;
+- aucune recommandation de mise n'est produite.

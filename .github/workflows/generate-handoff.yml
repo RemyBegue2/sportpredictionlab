@@ -25,13 +25,13 @@ jobs:
       - name: Generate release manifest and handoff ZIP
         run: |
           python -m scripts.generate_release_manifest
-          python -m scripts.build_handoff_bundle --output dist/sports-prediction-handoff-v3.7.zip
+          python -m scripts.build_handoff_bundle --output dist/sports-prediction-handoff-v3.8.zip
 
       - name: Upload handoff artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sports-prediction-handoff-v3.7
-          path: dist/sports-prediction-handoff-v3.7.zip
+          name: sports-prediction-handoff-v3.8
+          path: dist/sports-prediction-handoff-v3.8.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -40,6 +40,6 @@ jobs:
           {
             echo '### Handoff package ready'
             echo
-            echo 'Download **sports-prediction-handoff-v3.7** from the Artifacts section of this workflow run.'
+            echo 'Download **sports-prediction-handoff-v3.8** from the Artifacts section of this workflow run.'
             echo 'The bundle is designed to be attached directly to a new conversation and contains no environment variables or secrets.'
           } >> "$GITHUB_STEP_SUMMARY"

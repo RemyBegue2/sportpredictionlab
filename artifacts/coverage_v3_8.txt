@@ -1,0 +1,75 @@
+........................................................................ [ 61%]
+.............................................                            [100%]
+=============================== warnings summary ===============================
+tests/test_v33_shadow_mode.py::test_shadow_cycle_orchestration_and_quota_guard
+  /opt/pyvenv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py:419: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f6fc01131f0>
+    ctr = cls.__dict__.get("__init__", False)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_v36_evidence_engine.py::test_model_decision_is_deterministic_and_never_auto_promotes
+  /opt/pyvenv/lib/python3.13/site-packages/pandas/core/internals/blocks.py:800: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f6fc01113f0>
+    return type(self)(values, placement=self._mgr_locs, ndim=self.ndim, refs=refs)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_v36_evidence_engine.py::test_model_decision_is_deterministic_and_never_auto_promotes
+  /opt/pyvenv/lib/python3.13/site-packages/pandas/core/internals/blocks.py:800: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f6fbb3616c0>
+    return type(self)(values, placement=self._mgr_locs, ndim=self.ndim, refs=refs)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_v36_evidence_engine.py::test_model_decision_is_deterministic_and_never_auto_promotes
+  /opt/pyvenv/lib/python3.13/site-packages/pandas/core/internals/blocks.py:800: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f6fc01125c0>
+    return type(self)(values, placement=self._mgr_locs, ndim=self.ndim, refs=refs)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_v36_evidence_engine.py::test_model_decision_is_deterministic_and_never_auto_promotes
+  /opt/pyvenv/lib/python3.13/site-packages/pandas/core/internals/blocks.py:800: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f6fc02f98a0>
+    return type(self)(values, placement=self._mgr_locs, ndim=self.ndim, refs=refs)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.5-final-0 ________________
+
+Name                                              Stmts   Miss  Cover
+---------------------------------------------------------------------
+sports_predictor/__init__.py                          3      0   100%
+sports_predictor/artifacts.py                        38      2    95%
+sports_predictor/audit.py                            90     47    48%
+sports_predictor/backfill_control.py                 48      1    98%
+sports_predictor/backtest.py                        158     12    92%
+sports_predictor/betting.py                         113     14    88%
+sports_predictor/champion_challenger.py             109     15    86%
+sports_predictor/cloud_auth.py                       73     16    78%
+sports_predictor/cloud_config.py                     75     13    83%
+sports_predictor/common.py                          140     22    84%
+sports_predictor/control_center.py                   83     18    78%
+sports_predictor/data_sources/__init__.py             4      0   100%
+sports_predictor/data_sources/football_data.py       78     29    63%
+sports_predictor/data_sources/provenance.py          29      9    69%
+sports_predictor/data_sources/tennis_archive.py      62     28    55%
+sports_predictor/data_sources/the_odds_api.py       227     68    70%
+sports_predictor/database.py                        636     69    89%
+sports_predictor/demo_data.py                        47      0   100%
+sports_predictor/event_matching.py                   97     15    85%
+sports_predictor/evidence_quality.py                114     31    73%
+sports_predictor/football.py                        201      8    96%
+sports_predictor/fresh_rebuild.py                   130     62    52%
+sports_predictor/historical_benchmark.py            105     44    58%
+sports_predictor/identity.py                         12      0   100%
+sports_predictor/market.py                           16      7    56%
+sports_predictor/market_benchmark.py                175     10    94%
+sports_predictor/odds_backtest.py                    77      5    94%
+sports_predictor/odds_data.py                       137     22    84%
+sports_predictor/release_registry.py                179     22    88%
+sports_predictor/sample_plan.py                      70     13    81%
+sports_predictor/shadow_mode.py                     137     19    86%
+sports_predictor/tennis.py                          264     22    92%
+---------------------------------------------------------------------
+TOTAL                                              3727    643    83%
+Coverage JSON written to file artifacts/coverage_v3_8.json
+117 passed, 5 warnings in 29.69s

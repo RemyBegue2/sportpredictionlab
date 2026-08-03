@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V3.7 Cloud Control Center</title>
+  <title>Sports Prediction Lab V3.8 Cloud Evidence Run</title>
   <meta name="description" content="Application cloud privée avec prédictions pré-match immuables, règlement automatique des résultats et validation en shadow mode.">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -11,7 +11,7 @@
   <header class="topbar">
     <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
     <nav>
-      <a href="#control">Pilotage</a><a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
+      <a href="#control">Pilotage</a><a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#evidence">Preuves</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
     </nav>
     <div class="top-actions"><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
   </header>
@@ -19,9 +19,9 @@
   <main>
     <section id="overview" class="hero">
       <div>
-        <p class="eyebrow">VERSION 3.7.0 · CLOUD CONTROL CENTER · ZÉRO PYTHON LOCAL</p>
+        <p class="eyebrow">VERSION 3.8.0 · CLOUD EVIDENCE RUN · ZÉRO PYTHON LOCAL</p>
         <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
-        <p class="lede">Une application privée pilotée depuis GitHub Actions et Railway : déploiement vérifié, tâches historiques plafonnées et pack de reprise téléchargeable sans Python sur votre ordinateur.</p>
+        <p class="lede">Une application privée pilotée depuis GitHub Actions et Railway : estimation historique sans crédit, exécution plafonnée, contrôle de qualité et preuve publiée sans Python sur votre ordinateur.</p>
         <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
       </div>
       <aside class="trust-card">
@@ -139,6 +139,21 @@
       <div class="policy-note"><b>Règle de promotion :</b> le ROI seul ne suffit pas. La décision exige des scores probabilistes, des folds chronologiques, un intervalle bootstrap par blocs, une identité d’événement fiable et une absence de fuite temporelle.</div>
     </section>
 
+    <section id="evidence" class="workbench benchmark-section">
+      <div class="section-heading"><p class="eyebrow">QUALITÉ DES DONNÉES</p><h2>Preuves et benchmark</h2><p>Cette vue sépare la validation technique de la preuve statistique. Une ligne temporellement invalide, dupliquée ou mal rapprochée est mise en quarantaine plutôt que réparée silencieusement.</p></div>
+      <div class="benchmark-grid">
+        <article class="benchmark-card"><small>PORTE QUALITÉ</small><h3 id="evidenceGate">Non exécutée</h3><p id="evidenceReason">Lancez d’abord Estimate historical sample depuis GitHub Actions.</p></article>
+        <article class="benchmark-card"><small>COUVERTURE ÉVÉNEMENTS</small><h3 id="evidenceCoverage">0 %</h3><p id="evidenceCounts">0 événement exploitable.</p></article>
+        <article class="benchmark-card"><small>COUVERTURE WINAMAX</small><h3 id="evidenceWinamax">0 %</h3><p>Une absence de Winamax ne doit jamais être remplacée par une cote inventée.</p></article>
+        <article class="benchmark-card"><small>CRÉDITS CONSOMMÉS</small><h3 id="evidenceCredits">0</h3><p id="evidencePlan">Aucun plan exécuté.</p></article>
+      </div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>ANOMALIES ET QUARANTAINE</small><h3>État du lot historique</h3></div><button id="refreshEvidence" class="button ghost" type="button">Actualiser</button></div>
+        <div id="evidenceIssues" class="gate-grid"><p>Aucun rapport publié.</p></div>
+      </div>
+      <div class="policy-note"><b>Lecture correcte :</b> moins de 100 observations valide uniquement la chaîne technique. Le système ne produit aucune recommandation de mise et aucune affirmation de rentabilité.</div>
+    </section>
+
     <section id="decision" class="workbench decision-section">
       <div class="section-heading"><p class="eyebrow">CHAMPION–CHALLENGER</p><h2>Décision modèle</h2><p>Le verdict est produit par des règles déterministes. Aucun challenger n’est promu automatiquement et aucune performance passée n’est présentée comme une garantie de rentabilité.</p></div>
       <div class="benchmark-grid">
@@ -214,8 +229,8 @@
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V3.7 Cloud Control Center</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V3.8 Cloud Evidence Run</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/app.js?v=3.7.0"></script>
+  <script src="/static/app.js?v=3.8.0"></script>
 </body>
 </html>

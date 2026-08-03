@@ -11,7 +11,7 @@ La V3.7 rend l’exploitation **100 % navigateur** : GitHub Actions exécute les
 - prochaines actions reliées au workflow GitHub exact à lancer ;
 - workflow **Deploy production** : tests, déploiement Railway, preuve `/api/release`, puis test Chromium authentifié ;
 - workflow **Verify production** sans redéploiement ;
-- workflow **Historical validation sample** avec mode zéro crédit et exécution plafonnée à 30 événements ;
+- workflows **Estimate historical sample** et **Run historical sample** avec estimation zéro crédit puis exécution plafonnée à 30 événements ;
 - workflow **Backup and verify database** avec restauration de contrôle ;
 - workflow **Rollback model release** restaurant les artefacts depuis un commit Git connu et protégé par confirmation explicite ;
 - workflow **Generate handoff package** produisant un ZIP directement joignable dans une nouvelle conversation ;
@@ -36,7 +36,7 @@ Workflows disponibles :
 Deploy production
 Verify production
 Rebuild fresh football model
-Historical validation sample
+Estimate historical sample puis Run historical sample
 Backup and verify database
 Rollback model release
 Generate handoff package
@@ -76,7 +76,7 @@ Les workflows expliquent précisément la configuration manquante lorsqu’une o
 
 ## Premier benchmark historique
 
-1. Ouvrir **Actions → Historical validation sample**.
+1. Ouvrir **Actions → Estimate historical sample**.
 2. Choisir `plan_only` : aucun crédit API n’est consommé.
 3. Télécharger et lire l’artefact de planification.
 4. Relancer avec `execute_sample`, un maximum de 30 événements et la confirmation `EXECUTE_SAMPLE`.
@@ -88,7 +88,7 @@ Les workflows expliquent précisément la configuration manquante lorsqu’une o
 Actions
 → Generate handoff package
 → Run workflow
-→ télécharger sports-prediction-handoff-v3.7
+→ télécharger sports-prediction-handoff-v3.8
 → joindre le ZIP dans la nouvelle conversation
 ```
 
@@ -102,3 +102,29 @@ Le ZIP exclut les variables d’environnement, clés, tokens, mots de passe, coo
 - aucune connexion à un compte Winamax ;
 - aucun pari automatique ;
 - le tennis reste expérimental et non calibré.
+
+## V3.8 — Cloud Evidence Run
+
+La V3.8 ajoute une chaîne entièrement cloud pour produire les premières preuves historiques sans Python local :
+
+```text
+GitHub Actions → Estimate historical sample
+→ REQ-... sans appel fournisseur
+→ Run historical sample avec plafonds identiques
+→ collecte et checkpoints PostgreSQL
+→ contrôle temporel et qualité
+→ benchmark modèle / Winamax / consensus lorsque possible
+→ rapport publié
+→ dashboard Railway redéployé
+```
+
+Endpoints :
+
+```text
+/api/evidence
+/api/benchmark/summary
+/api/model-decision
+/api/release
+```
+
+La V3.8 ne place aucun pari et ne promeut aucun modèle automatiquement.
