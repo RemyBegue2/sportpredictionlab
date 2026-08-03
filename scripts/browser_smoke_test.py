@@ -36,115 +36,71 @@ def main() -> None:
         page.wait_for_selector("#health.ok", timeout=args.timeout_ms)
         health = page.locator("#health").inner_text()
 
-        # Le badge santé est rendu avant les appels secondaires. Attendre le
-        # contenu réel du centre de contrôle évite un faux négatif de course.
+        # V4.5 starts in a simple view and defers expert endpoints until the
+        # operator explicitly opens them.
         try:
             page.wait_for_function(
                 """() => {
-                    const element = document.querySelector('#controlOverall');
-                    if (!element) return false;
-                    const value = (element.textContent || '').trim();
-                    return value.length > 0 && value !== '—';
-                }""",
-                timeout=args.timeout_ms,
-            )
-        except Exception as exc:
-            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
-            raise SystemExit(
-                "Browser smoke test failed: control center did not render"
-                + (f"; interface message: {toast}" if toast else "")
-            ) from exc
-
-        control = page.locator("#controlOverall").inner_text().strip()
-        try:
-            page.wait_for_function(
-                """() => {
-                    const element = document.querySelector('#dailyModelStatus');
-                    if (!element) return false;
-                    const value = (element.textContent || '').trim();
-                    return value.length > 0 && value !== 'Chargement…' && value !== '—';
-                }""",
-                timeout=args.timeout_ms,
-            )
-        except Exception as exc:
-            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
-            raise SystemExit(
-                "Browser smoke test failed: daily model diagnostics did not render"
-                + (f"; interface message: {toast}" if toast else "")
-            ) from exc
-        daily_model = page.locator("#dailyModelStatus").inner_text().strip()
-        daily_count = page.locator("#dailyPredictionCount").inner_text().strip()
-        try:
-            page.wait_for_function(
-                """() => {
+                    const model = document.querySelector('#dailyModelStatus');
                     const detail = document.querySelector('#dailyPredictionDetail');
                     const today = document.querySelector('#dailySlate');
                     const upcoming = document.querySelector('#upcomingSlate');
-                    if (!detail || !today || !upcoming) return false;
-                    return !(detail.textContent || '').includes('Aucun calendrier chargé')
-                      && !today.querySelector('.loading-card')
-                      && !upcoming.querySelector('.loading-card');
-                }""",
-                timeout=args.timeout_ms,
-            )
-        except Exception as exc:
-            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
-            raise SystemExit(
-                "Browser smoke test failed: daily slate did not finish rendering"
-                + (f"; interface message: {toast}" if toast else "")
-            ) from exc
-        try:
-            page.wait_for_function(
-                """() => {
-                    const element = document.querySelector('#evidenceGate');
-                    if (!element) return false;
-                    const value = (element.textContent || '').trim();
-                    return value.length > 0 && value !== '—';
-                }""",
-                timeout=args.timeout_ms,
-            )
-        except Exception as exc:
-            raise SystemExit("Browser smoke test failed: evidence dashboard did not render") from exc
-        evidence = page.locator("#evidenceGate").inner_text().strip()
-        try:
-            page.wait_for_function(
-                """() => {
-                    const element = document.querySelector('#preflightDecision');
-                    if (!element) return false;
-                    const value = (element.textContent || '').trim();
-                    return value.length > 0 && value !== '—';
-                }""",
-                timeout=args.timeout_ms,
-            )
-        except Exception as exc:
-            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
-            raise SystemExit(
-                "Browser smoke test failed: coverage preflight did not render"
-                + (f"; interface message: {toast}" if toast else "")
-            ) from exc
-        preflight = page.locator("#preflightDecision").inner_text().strip()
-        try:
-            page.wait_for_function(
-                """() => {
-                    const count = document.querySelector('#researchSignalCount');
                     const signals = document.querySelector('#researchSignals');
-                    const bankrolls = document.querySelector('#researchBankrolls');
-                    const training = document.querySelector('#researchTraining');
-                    if (!count || !signals || !bankrolls || !training) return false;
-                    return (count.textContent || '').trim().length > 0
+                    const learning = document.querySelector('#learningAction');
+                    if (!model || !detail || !today || !upcoming || !signals || !learning) return false;
+                    return !['', '—', 'Chargement…'].includes((model.textContent || '').trim())
+                      && !(detail.textContent || '').includes('Aucun calendrier chargé')
+                      && !today.querySelector('.loading-card')
+                      && !upcoming.querySelector('.loading-card')
                       && !signals.querySelector('.loading-card')
-                      && (training.textContent || '').trim().length > 0;
+                      && !(learning.textContent || '').includes('Évaluation des portes en cours');
                 }""",
                 timeout=args.timeout_ms,
             )
         except Exception as exc:
             toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
             raise SystemExit(
-                "Browser smoke test failed: dual-sport ROI lab did not render"
+                "Browser smoke test failed: dual-sport ROI lab did not render in simple daily view"
                 + (f"; interface message: {toast}" if toast else "")
             ) from exc
+
+        daily_model = page.locator("#dailyModelStatus").inner_text().strip()
+        daily_count = page.locator("#dailyPredictionCount").inner_text().strip()
         research_signals = page.locator("#researchSignalCount").inner_text().strip()
         research_training = page.locator("#researchTraining").inner_text().strip()
+        learning_status = page.locator("#learningChallenger").inner_text().strip()
+        mode_label = page.locator("#interfaceMode").inner_text().strip()
+        if mode_label != "Mode expert":
+            raise SystemExit(f"Browser smoke test failed: simple mode is not the default ({mode_label!r})")
+        if page.locator("#control").is_visible():
+            raise SystemExit("Browser smoke test failed: expert controls are visible in simple mode")
+
+        # Toggle expert mode and prove that deferred diagnostics load on demand.
+        page.click("#interfaceMode")
+        page.wait_for_function("() => document.body.classList.contains('expert-mode')", timeout=args.timeout_ms)
+        try:
+            page.wait_for_function(
+                """() => {
+                    const control = document.querySelector('#controlOverall');
+                    const evidence = document.querySelector('#evidenceGate');
+                    const preflight = document.querySelector('#preflightDecision');
+                    if (!control || !evidence || !preflight) return false;
+                    const value = (control.textContent || '').trim();
+                    return value.length > 0 && value !== '—'
+                      && !['', '—'].includes((evidence.textContent || '').trim())
+                      && !['', '—'].includes((preflight.textContent || '').trim());
+                }""",
+                timeout=args.timeout_ms,
+            )
+        except Exception as exc:
+            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
+            raise SystemExit(
+                "Browser smoke test failed: deferred expert view did not render"
+                + (f"; interface message: {toast}" if toast else "")
+            ) from exc
+        control = page.locator("#controlOverall").inner_text().strip()
+        evidence = page.locator("#evidenceGate").inner_text().strip()
+        preflight = page.locator("#preflightDecision").inner_text().strip()
         toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
         browser.close()
 
@@ -152,20 +108,22 @@ def main() -> None:
     problems: list[str] = []
     if expected not in health:
         problems.append(f"health badge mismatch: {health!r}")
-    if not control or control == "—":
-        problems.append("control center did not render")
     if not daily_model or daily_model in {"—", "Chargement…"}:
         problems.append("daily model diagnostics did not render")
     if not daily_count:
         problems.append("daily prediction count did not render")
-    if not evidence or evidence == "—":
-        problems.append("evidence dashboard did not render")
-    if not preflight or preflight == "—":
-        problems.append("coverage preflight did not render")
     if not research_signals:
         problems.append("dual-sport research signal count did not render")
     if not research_training:
         problems.append("dual-sport ROI training status did not render")
+    if not learning_status or learning_status == "Chargement…":
+        problems.append("champion/challenger learning status did not render")
+    if not control or control == "—":
+        problems.append("control center did not render after expert toggle")
+    if not evidence or evidence == "—":
+        problems.append("evidence dashboard did not render after expert toggle")
+    if not preflight or preflight == "—":
+        problems.append("coverage preflight did not render after expert toggle")
     if toast.startswith("Interface partiellement chargée"):
         problems.append("partial interface error: " + toast)
     known_noise = ("favicon.ico",)
@@ -179,13 +137,16 @@ def main() -> None:
     print(json.dumps({
         "status": "ok",
         "health": health,
-        "control_center": control,
         "daily_model": daily_model,
         "daily_predictions": daily_count,
-        "evidence": evidence,
-        "preflight": preflight,
         "research_signals": research_signals,
         "research_training_rendered": bool(research_training),
+        "learning_status": learning_status,
+        "simple_mode_default": True,
+        "expert_mode_lazy_loaded": True,
+        "control_center": control,
+        "evidence": evidence,
+        "preflight": preflight,
     }, ensure_ascii=False))
 
 

@@ -56,6 +56,11 @@ class CloudSettings:
     daily_tennis_max_tournaments: int = 2
     daily_tennis_sport_keys: tuple[str, ...] = ()
     historical_evidence_enabled: bool = False
+    automated_shadow_enabled: bool = False
+    research_promotion_min_events: int = 100
+    research_promotion_min_holdout_signals: int = 20
+    research_promotion_min_events_per_sport: int = 60
+    research_promotion_max_drawdown: float = 0.25
 
     @classmethod
     def from_env(cls, root: Path | None = None) -> "CloudSettings":
@@ -105,6 +110,23 @@ class CloudSettings:
             daily_tennis_max_tournaments = max(0, min(10, int(os.getenv("DAILY_TENNIS_MAX_TOURNAMENTS", "2"))))
         except ValueError:
             daily_tennis_max_tournaments = 2
+        try:
+            research_promotion_min_events = max(30, min(10000, int(os.getenv("RESEARCH_PROMOTION_MIN_EVENTS", "100"))))
+        except ValueError:
+            research_promotion_min_events = 100
+        try:
+            research_promotion_min_holdout_signals = max(5, min(1000, int(os.getenv("RESEARCH_PROMOTION_MIN_HOLDOUT_SIGNALS", "20"))))
+        except ValueError:
+            research_promotion_min_holdout_signals = 20
+        try:
+            research_promotion_min_events_per_sport = max(20, min(10000, int(os.getenv("RESEARCH_PROMOTION_MIN_EVENTS_PER_SPORT", "60"))))
+        except ValueError:
+            research_promotion_min_events_per_sport = 60
+        try:
+            research_promotion_max_drawdown = float(os.getenv("RESEARCH_PROMOTION_MAX_DRAWDOWN", "0.25"))
+            research_promotion_max_drawdown = max(0.01, min(0.95, research_promotion_max_drawdown))
+        except ValueError:
+            research_promotion_max_drawdown = 0.25
         return cls(
             environment=environment,
             auth_required=auth_required,
@@ -126,6 +148,11 @@ class CloudSettings:
             daily_tennis_max_tournaments=daily_tennis_max_tournaments,
             daily_tennis_sport_keys=_csv(os.getenv("DAILY_TENNIS_SPORT_KEYS"), ()),
             historical_evidence_enabled=_truthy(os.getenv("HISTORICAL_EVIDENCE_ENABLED"), default=False),
+            automated_shadow_enabled=_truthy(os.getenv("AUTOMATED_SHADOW_ENABLED"), default=False),
+            research_promotion_min_events=research_promotion_min_events,
+            research_promotion_min_holdout_signals=research_promotion_min_holdout_signals,
+            research_promotion_min_events_per_sport=research_promotion_min_events_per_sport,
+            research_promotion_max_drawdown=research_promotion_max_drawdown,
         )
 
     @property

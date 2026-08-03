@@ -3,48 +3,49 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V4.4 Dual-Sport ROI Lab</title>
+  <title>Sports Prediction Lab V4.5 Simple Shadow Learning</title>
   <meta name="description" content="Application cloud privée centrée sur les matchs et probabilités du jour, avec mode modèle sans crédit et enrichissement marché facultatif.">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
-<body>
+<body class="simple-mode">
   <header class="topbar">
     <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
-    <nav>
-      <a href="#control">Pilotage</a><a href="#bets">Matchs du jour</a><a href="#research-lab">ROI simulé</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#evidence">Preuves</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
+    <nav aria-label="Navigation principale">
+      <a href="#bets">Aujourd’hui</a><a href="#research-lab">Signaux</a><a href="#learning">Apprentissage</a>
+      <span class="expert-nav"><a href="#control">Pilotage</a><a href="#odds-api">Cotes</a><a href="#cloud">Cloud</a><a href="#audit">Audit</a></span>
     </nav>
-    <div class="top-actions"><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
+    <div class="top-actions"><button id="interfaceMode" class="mode-button" type="button" aria-pressed="false">Mode expert</button><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
   </header>
 
   <main>
-    <section id="overview" class="hero">
+    <section id="overview" class="hero" data-view="primary">
       <div>
-        <p class="eyebrow">VERSION 4.4 · FOOTBALL + TENNIS · SIGNAUX SHADOW · ROI SIMULÉ</p>
-        <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
-        <p class="lede">Une application privée qui analyse le football et le tennis du jour, affiche les probabilités, isole les signaux de marché expérimentaux et simule des bankrolls sans jamais placer de pari réel.</p>
-        <div class="actions"><a class="button primary" href="#bets">Voir les matchs du jour</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
+        <p class="eyebrow">VERSION 4.5 · VUE SIMPLE PAR DÉFAUT</p>
+        <h1>Les matchs, les signaux,<br><span>et la prochaine action.</span></h1>
+        <p class="lede">Football et tennis du jour, prédictions, signaux expérimentaux, bankrolls fictives et apprentissage shadow — les détails techniques restent disponibles en mode expert.</p>
+        <div class="actions"><a class="button primary" href="#bets">Voir aujourd’hui</a><a class="button ghost" href="#learning">Suivre l’apprentissage</a></div>
       </div>
       <aside class="trust-card">
-        <div class="trust-title">Chaîne de décision</div>
+        <div class="trust-title">Lecture rapide</div>
         <ol>
-          <li><b>Probabilité modèle</b><span>Pré-match uniquement</span></li>
-          <li><b>Cote horodatée</b><span>Winamax via API ou saisie</span></li>
-          <li><b>Consensus</b><span>Marchés dévigés</span></li>
-          <li><b>Closing line</b><span>Contrôle hors temps</span></li>
-          <li><b>Abstention possible</b><span>Aucun pari forcé</span></li>
+          <li><b>Matchs</b><span>Football + tennis</span></li>
+          <li><b>Prédictions</b><span>Probabilités pré-match</span></li>
+          <li><b>Signaux</b><span>Shadow uniquement</span></li>
+          <li><b>Simulation</b><span>Bankroll fictive</span></li>
+          <li><b>Décision</b><span>Champion manuel</span></li>
         </ol>
       </aside>
     </section>
 
-    <section class="stats" aria-label="Résumé des données">
+    <section class="stats" data-view="primary" aria-label="Résumé des données">
       <article><span id="footballRows">—</span><small>matchs football embarqués</small></article>
       <article><span id="tennisRows">—</span><small>matchs tennis embarqués</small></article>
       <article><span id="dailyCandidates">—</span><small>prédictions modèle aujourd’hui</small></article>
-      <article><span id="oddsApiState">—</span><small>connexion The Odds API</small></article><article><span id="dbSnapshots">—</span><small>snapshots persistés</small></article>
-      <article><span id="shadowState">—</span><small>prédictions shadow réglées</small></article>
+      <article data-detail="expert"><span id="oddsApiState">—</span><small>connexion The Odds API</small></article><article data-detail="expert"><span id="dbSnapshots">—</span><small>snapshots persistés</small></article>
+      <article data-detail="expert"><span id="shadowState">—</span><small>prédictions shadow réglées</small></article>
     </section>
 
-    <section id="control" class="workbench control-section">
+    <section id="control" data-view="expert" class="workbench control-section">
       <div class="section-heading"><p class="eyebrow">PILOTAGE CLOUD</p><h2>Centre de contrôle</h2><p>Cette vue transforme l’état technique en actions concrètes. Toutes les opérations sont prévues pour GitHub Actions et Railway ; aucun Python local n’est requis.</p></div>
       <div class="control-overview">
         <article class="control-hero-card"><small>ÉTAT GLOBAL</small><h3 id="controlOverall">—</h3><p id="controlSummary">Chargement des contrôles…</p><button id="refreshControl" class="button ghost" type="button">Actualiser</button></article>
@@ -58,15 +59,15 @@
       <div class="policy-note"><b>Garde-fous :</b> aucune promotion automatique de modèle, aucune mise conseillée et aucun pari transmis à Winamax.</div>
     </section>
 
-    <section id="bets" class="workbench bets-section">
-      <div class="section-heading"><p class="eyebrow">PRODUIT QUOTIDIEN · MODÈLE D’ABORD</p><h2>Matchs et probabilités du jour</h2><p>Le calendrier et les probabilités du modèle sont affichés sans appeler le fournisseur de cotes. Une shortlist de marché n’apparaît que si des cotes fraîches ont été explicitement autorisées et qu’un avantage robuste est validé.</p></div>
+    <section id="bets" data-view="primary" class="workbench bets-section">
+      <div class="section-heading"><p class="eyebrow">PRODUIT QUOTIDIEN · MODÈLE D’ABORD</p><h2>Matchs et probabilités du jour</h2><p>Le calendrier et les probabilités du modèle sont affichés sans appeler le fournisseur de cotes. Un signal de marché n’apparaît que si des cotes fraîches ont été explicitement autorisées et qu’un avantage robuste est validé.</p></div>
       <div class="benchmark-grid">
         <article class="benchmark-card"><small>ÉTAT DU MODÈLE</small><h3 id="dailyModelStatus">Chargement…</h3><p id="dailyModelDetail">Diagnostic en cours.</p></article>
         <article class="benchmark-card"><small>PRÉDICTIONS DU JOUR</small><h3 id="dailyPredictionCount">0</h3><p id="dailyPredictionDetail">Aucun calendrier chargé.</p></article>
-        <article class="benchmark-card"><small>SHORTLIST MARCHÉ</small><h3 id="dailyShortlistCount">0</h3><p id="dailyShortlistDetail">Aucune sélection forcée.</p></article>
+        <article class="benchmark-card"><small>SIGNAUX MARCHÉ</small><h3 id="dailyShortlistCount">0</h3><p id="dailyShortlistDetail">Aucun signal forcé.</p></article>
         <article class="benchmark-card"><small>CRÉDITS AUJOURD’HUI</small><h3 id="dailyCredits">0</h3><p id="dailyCreditDetail">Mode modèle seul.</p></article>
       </div>
-      <div id="dailyNoShortlist" class="policy-note"><b>Lecture :</b> chargement des raisons d’absence de shortlist…</div>
+      <div id="dailyNoShortlist" class="policy-note"><b>Lecture :</b> chargement des raisons d’absence de signal…</div>
       <div id="dailySlate" class="daily-grid"><div class="slate-card loading-card">Chargement des matchs du jour…</div></div>
       <div class="history-panel">
         <div class="history-heading"><div><small>PROCHAINS MATCHS COUVERTS</small><h3>À venir dans l’horizon quotidien</h3></div></div>
@@ -75,30 +76,49 @@
       <div class="policy-note"><b>Pare-feu de crédits :</b> le calendrier et les probabilités coûtent 0 crédit. Les appels de cotes sont désactivés par défaut, plafonnés et séparés des campagnes historiques. Aucun pari n’est transmis à un bookmaker.</div>
     </section>
 
-    <section id="research-lab" class="workbench research-lab-section">
-      <div class="section-heading"><p class="eyebrow">FOOTBALL + TENNIS · SHADOW UNIQUEMENT</p><h2>Signaux expérimentaux et bankrolls simulées</h2><p>Cette vue lit uniquement le dernier rapport persisté. Elle ne déclenche aucun appel fournisseur. Les signaux ne sont ni des garanties, ni des instructions de mise.</p></div>
-      <div class="benchmark-grid">
-        <article class="benchmark-card"><small>FOOTBALL DU JOUR</small><h3 id="researchFootballCount">0</h3><p id="researchFootballDetail">Aucun snapshot marché.</p></article>
-        <article class="benchmark-card"><small>TENNIS DU JOUR</small><h3 id="researchTennisCount">0</h3><p id="researchTennisDetail">Aucun tournoi capturé.</p></article>
-        <article class="benchmark-card"><small>SIGNAUX SHADOW</small><h3 id="researchSignalCount">0</h3><p id="researchSignalDetail">Aucun signal expérimental.</p></article>
-        <article class="benchmark-card"><small>CRÉDITS DU RUN</small><h3 id="researchCredits">0</h3><p id="researchRunDetail">Capture non exécutée.</p></article>
+    <section id="research-lab" data-view="primary" class="workbench research-lab-section">
+      <div class="section-heading"><p class="eyebrow">SIGNAL EXPÉRIMENTAL · SHADOW UNIQUEMENT</p><h2>Ce qui mérite ton attention</h2><p>La vue simple montre seulement les matchs analysés, les signaux retenus et le coût. Les métriques détaillées sont repliées.</p></div>
+      <div id="researchAction" class="action-card"><small>ACTION DU JOUR</small><h3>Chargement…</h3><p>Analyse du dernier run en cours.</p></div>
+      <div class="simple-summary-grid">
+        <article><small>MATCHS ANALYSÉS</small><h3><span id="researchFootballCount">0</span> foot · <span id="researchTennisCount">0</span> tennis</h3><p><span id="researchFootballDetail">Aucun snapshot marché.</span> <span id="researchTennisDetail">Aucun tournoi capturé.</span></p></article>
+        <article><small>SIGNAUX SHADOW</small><h3 id="researchSignalCount">0</h3><p id="researchSignalDetail">Aucun signal expérimental.</p></article>
+        <article><small>CRÉDITS DU JOUR</small><h3 id="researchCredits">0</h3><p id="researchRunDetail">Capture non exécutée.</p></article>
       </div>
       <div class="history-panel">
-        <div class="history-heading"><div><small>PARIS INTÉRESSANTS — MODE RECHERCHE</small><h3>Écarts modèle–marché retenus</h3></div><button id="refreshResearchLab" class="button ghost" type="button">Actualiser</button></div>
+        <div class="history-heading"><div><small>SIGNAUX DU DERNIER RUN</small><h3>Écarts modèle–marché retenus</h3></div><button id="refreshResearchLab" class="button ghost" type="button">Actualiser</button></div>
+        <div class="signal-filters" role="group" aria-label="Filtrer les signaux"><button class="signal-filter active" data-sport="all" type="button">Tous</button><button class="signal-filter" data-sport="football" type="button">Football</button><button class="signal-filter" data-sport="tennis" type="button">Tennis</button></div>
         <div id="researchSignals" class="daily-grid"><div class="slate-card loading-card">Chargement des signaux…</div></div>
       </div>
-      <div class="history-panel">
-        <div class="history-heading"><div><small>BANKROLLS SIMULÉES</small><h3>Flat 1 %, flat 2 % et quart de Kelly plafonné</h3></div></div>
+      <details class="progressive-details">
+        <summary><span>Bankrolls simulées</span><small>Voir les stratégies et drawdowns</small></summary>
         <div id="researchBankrolls" class="table-scroll"><p>Aucune simulation disponible.</p></div>
-      </div>
-      <div class="history-panel">
-        <div class="history-heading"><div><small>ENTRAÎNEMENT DE LA POLITIQUE ROI</small><h3>Validation chronologique et holdout intact</h3></div></div>
+      </details>
+      <details class="progressive-details">
+        <summary><span>Détails de l’entraînement</span><small>Politique, holdout et méta-modèle</small></summary>
         <div id="researchTraining" class="gate-grid"><p>Pas assez de résultats réglés.</p></div>
-      </div>
+      </details>
       <div class="policy-note"><b>Règle ferme :</b> le modèle prédictif est entraîné pour produire des probabilités calibrées. Seule la politique de sélection est optimisée sur un ROI simulé hors échantillon, avec pénalités de drawdown et d’instabilité. Aucune mise réelle n’est recommandée.</div>
     </section>
 
-    <section id="odds-api" class="workbench odds-api-section">
+
+    <section id="learning" class="workbench learning-section" data-view="primary">
+      <div class="section-heading"><p class="eyebrow">APPRENTISSAGE SHADOW</p><h2>Champion, challenger, prochaine étape</h2><p>Le système collecte, règle et entraîne automatiquement lorsqu’il est explicitement activé. La promotion du champion reste toujours manuelle.</p></div>
+      <div id="learningAction" class="action-card"><small>PROCHAINE ÉTAPE</small><h3>Chargement…</h3><p>Évaluation des portes en cours.</p></div>
+      <div class="learning-summary-grid">
+        <article><small>ÉVÉNEMENTS RÉGLÉS</small><h3 id="learningEvents">0</h3><p id="learningSports">Football 0 · Tennis 0</p></article>
+        <article><small>CHAMPION</small><h3 id="learningChampion">Aucun</h3><p>Promotion manuelle uniquement.</p></article>
+        <article><small>CHALLENGER</small><h3 id="learningChallenger">Collecte</h3><p id="learningCandidate">Candidat non évaluable.</p></article>
+        <article><small>BUDGET DU JOUR</small><h3 id="learningBudget">0 / 0</h3><p id="learningAutomation">Automatisation désactivée.</p></article>
+      </div>
+      <div class="learning-progress" aria-label="Progression vers la revue du challenger"><div><span id="learningProgressBar"></span></div><p id="learningProgressText">0 % de la porte d’échantillon.</p></div>
+      <details class="progressive-details">
+        <summary><span>Voir toutes les portes</span><small>Échantillon, stabilité, drawdown et holdout</small></summary>
+        <div id="learningGates" class="gate-grid"><p>Chargement des portes…</p></div>
+      </details>
+      <div class="policy-note"><b>Important :</b> le système peut entraîner un challenger automatiquement, mais il ne le promeut jamais tout seul et ne place aucun pari.</div>
+    </section>
+
+    <section id="odds-api" data-view="expert" class="workbench odds-api-section">
       <div class="section-heading"><p class="eyebrow">WINAMAX + CONSENSUS</p><h2>Flux de cotes</h2><p>La clé reste exclusivement sur le serveur. Les appels payants sont désactivés par défaut ; cette section ne devient active qu’après configuration explicite d’un plafond quotidien.</p></div>
       <div class="provider-grid">
         <article class="provider-card"><small>État du connecteur</small><h3 id="providerStatus">Chargement…</h3><p id="providerQuota">Quota inconnu</p><code>THE_ODDS_API_KEY</code></article>
@@ -119,7 +139,7 @@
     </section>
 
 
-    <section id="cloud" class="workbench cloud-section">
+    <section id="cloud" data-view="expert" class="workbench cloud-section">
       <div class="section-heading"><p class="eyebrow">CLOUD & TRAÇABILITÉ</p><h2>État de la plateforme</h2><p>La version cloud sépare liveness, readiness, stockage et historique. Une prédiction n’est considérée exploitable que si les modèles sont chargés et si son journal peut être écrit en base.</p></div>
       <div class="cloud-grid">
         <article class="cloud-card"><small>Authentification</small><h3 id="cloudAuth">—</h3><p>Session privée et protection CSRF pour les actions d’écriture.</p></article>
@@ -141,7 +161,7 @@
     </section>
 
 
-    <section id="shadow" class="workbench shadow-section">
+    <section id="shadow" data-view="expert" class="workbench shadow-section">
       <div class="section-heading"><p class="eyebrow">OBSERVATION EN CONDITIONS RÉELLES</p><h2>Shadow mode</h2><p>Le shadow marché est suspendu par défaut par le pare-feu de crédits. Il ne peut être relancé qu’avec une autorisation explicite et un plafond quotidien ; le produit modèle seul continue, lui, sans appel payant.</p></div>
       <div class="benchmark-grid">
         <article class="benchmark-card"><small>Prédictions figées</small><h3 id="shadowTotal">0</h3><p>Enregistrements immuables et dédupliqués par empreinte SHA-256.</p></article>
@@ -162,7 +182,7 @@
     </section>
 
 
-    <section id="benchmark" class="workbench benchmark-section">
+    <section id="benchmark" data-view="expert" class="workbench benchmark-section">
       <div class="section-heading"><p class="eyebrow">PREUVE HORS ÉCHANTILLON</p><h2>Validation marché</h2><p>Le benchmark compare séparément le modèle, Winamax, le consensus dévigé et une combinaison apprise uniquement sur les périodes antérieures. Les lignes temporellement invalides sont rejetées, jamais réparées silencieusement.</p></div>
       <div class="benchmark-grid">
         <article class="benchmark-card"><small>Verdict actuel</small><h3 id="benchmarkVerdict">Non exécuté</h3><p id="benchmarkReason">Le cloud fonctionne, mais aucun historique réel suffisant n’a encore été évalué.</p></article>
@@ -173,7 +193,7 @@
       <div class="policy-note"><b>Règle de promotion :</b> le ROI seul ne suffit pas. La décision exige des scores probabilistes, des folds chronologiques, un intervalle bootstrap par blocs, une identité d’événement fiable et une absence de fuite temporelle.</div>
     </section>
 
-    <section id="evidence" class="workbench benchmark-section">
+    <section id="evidence" data-view="expert" class="workbench benchmark-section">
       <div class="section-heading"><p class="eyebrow">FIABILITÉ DES DONNÉES</p><h2>Preuves, couverture et funnel</h2><p>La V4.2 exige un préflight de couverture avant toute campagne payante, sur-échantillonne pour atteindre le nombre de matchs benchmark-ready et conserve les portes de qualité et de budget.</p></div>
       <div class="benchmark-grid">
         <article class="benchmark-card"><small>PRÉFLIGHT COUVERTURE</small><h3 id="preflightDecision">Non exécuté</h3><p id="preflightReason">Estimez la disponibilité des bookmakers avant tout backfill complet.</p></article>
@@ -214,7 +234,7 @@
       <div class="policy-note"><b>Lecture correcte :</b> la couverture fournisseur utilise seulement les cibles exécutées. Winamax et le consensus ont des portes séparées. Moins de 100 événements ne justifie aucune affirmation de rentabilité ni recommandation de mise.</div>
     </section>
 
-    <section id="decision" class="workbench decision-section">
+    <section id="decision" data-view="expert" class="workbench decision-section">
       <div class="section-heading"><p class="eyebrow">CHAMPION–CHALLENGER</p><h2>Décision modèle</h2><p>Le verdict est produit par des règles déterministes. Aucun challenger n’est promu automatiquement et aucune performance passée n’est présentée comme une garantie de rentabilité.</p></div>
       <div class="benchmark-grid">
         <article class="benchmark-card"><small>Verdict</small><h3 id="decisionStatus">Non évaluable</h3><p id="decisionReason">Aucun benchmark champion–challenger complet.</p></article>
@@ -233,7 +253,7 @@
       <div class="policy-note"><b>Règle ferme :</b> un statut « promotion_review » déclenche uniquement une revue humaine. Il ne change jamais automatiquement le modèle actif et ne produit aucune taille de mise.</div>
     </section>
 
-    <section id="football" class="workbench alt">
+    <section id="football" data-view="expert" class="workbench alt">
       <div class="section-heading"><p class="eyebrow">MODÈLE 1N2 + COTES</p><h2>Football</h2><p>Poisson, correction Dixon–Coles et Elo. Les trois cotes Winamax sont facultatives, mais doivent être saisies ensemble pour calculer la marge et comparer le marché complet.</p></div>
       <div class="panel-grid">
         <form id="footballForm" class="control-panel">
@@ -252,7 +272,7 @@
       </div>
     </section>
 
-    <section id="tennis" class="workbench">
+    <section id="tennis" data-view="expert" class="workbench">
       <div class="section-heading"><p class="eyebrow">ELO GLOBAL + SURFACE</p><h2>Tennis</h2><p>Orientation symétrique et Elo par surface. Le snapshot ATP embarqué reste non calibré : même avec des cotes, le comparateur doit conclure à l’abstention.</p></div>
       <div class="panel-grid">
         <form id="tennisForm" class="control-panel">
@@ -271,8 +291,8 @@
       </div>
     </section>
 
-    <section id="audit" class="audit-section">
-      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V4.4</h2></div>
+    <section id="audit" data-view="expert" class="audit-section">
+      <div class="section-heading"><p class="eyebrow">REVUE CONTRADICTOIRE</p><h2>Les rôles qui ont arbitré la V4.5</h2></div>
       <div class="role-grid">
         <article><span>01</span><h3>Quant marchés</h3><p>Le shadow mode sépare la qualité du modèle, le prix Winamax et le consensus sans confondre signal et résultat financier.</p></article>
         <article><span>02</span><h3>Statisticien</h3><p>Chaque prédiction est figée avant match et l’échantillon est classé anecdotique, exploratoire ou évaluable.</p></article>
@@ -282,15 +302,15 @@
         <article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
       </div>
       <div class="audit-callout">
-        <div><b>Verdict</b><p>V4.4 = football et tennis du jour, signaux de marché shadow, bankrolls simulées et optimisation chronologique de la politique ROI. Aucun pari réel ou placement automatique.</p></div>
+        <div><b>Verdict</b><p>V4.5 = boucle shadow automatisée, champion–challenger contrôlé et interface progressive. Aucun pari réel, aucune promotion automatique.</p></div>
         <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
       </div>
       <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V4.4 Dual-Sport ROI Lab</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V4.5 Automated Shadow Learning</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/app.js?v=4.4.0"></script>
+  <script src="/static/app.js?v=4.5.0"></script>
 </body>
 </html>

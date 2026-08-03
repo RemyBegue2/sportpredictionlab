@@ -1,0 +1,85 @@
+name: Promote approved research champion
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_id:
+        description: Current RCH-* challenger identifier
+        required: true
+        type: string
+      note:
+        description: Human review note
+        required: true
+        type: string
+      confirmation:
+        description: Must equal PROMOTE_RESEARCH_CHAMPION
+        required: true
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: research-champion-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+      CANDIDATE_ID: ${{ inputs.candidate_id }}
+      REVIEW_NOTE: ${{ inputs.note }}
+      CONFIRMATION: ${{ inputs.confirmation }}
+    steps:
+      - name: Validate manual approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "${CONFIRMATION:-}" = 'PROMOTE_RESEARCH_CHAMPION' ] || { echo 'Invalid confirmation'; exit 2; }
+          [[ "${CANDIDATE_ID:-}" =~ ^RCH-[A-F0-9]{20}$ ]] || { echo 'Invalid candidate_id'; exit 2; }
+          [ ${#REVIEW_NOTE} -ge 3 ] || { echo 'Review note is too short'; exit 2; }
+
+      - name: Authenticate and record the manual champion decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${APP_PUBLIC_URL%/}"
+          COOKIE_JAR="$RUNNER_TEMP/champion.cookies"
+          python - <<'PY' > "$RUNNER_TEMP/login.json.body"
+          import json, os
+          print(json.dumps({'password': os.environ['APP_PASSWORD']}))
+          PY
+          curl --fail --silent --show-error --cookie-jar "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' \
+            --data @"$RUNNER_TEMP/login.json.body" "$BASE/api/auth/login" > "$RUNNER_TEMP/login.json"
+          CSRF_TOKEN=$(python - <<'PY'
+          import json, os
+          from pathlib import Path
+          print(json.loads((Path(os.environ['RUNNER_TEMP'])/'login.json').read_text()).get('csrf_token') or '')
+          PY
+          )
+          export CSRF_TOKEN
+          python - <<'PY' > "$RUNNER_TEMP/promotion.json.body"
+          import json, os
+          print(json.dumps({
+              'candidate_id': os.environ['CANDIDATE_ID'],
+              'note': os.environ['REVIEW_NOTE'],
+              'confirmation': os.environ['CONFIRMATION'],
+          }))
+          PY
+          curl --fail --silent --show-error --cookie "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' --header "X-CSRF-Token: $CSRF_TOKEN" \
+            --data @"$RUNNER_TEMP/promotion.json.body" "$BASE/api/research-lab/champion/promote" > "$RUNNER_TEMP/promotion.json"
+          cat "$RUNNER_TEMP/promotion.json"
+
+      - name: Upload promotion decision
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-champion-promotion
+          path: ${{ runner.temp }}/promotion.json
+          retention-days: 365

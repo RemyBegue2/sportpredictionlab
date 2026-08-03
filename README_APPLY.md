@@ -1,7 +1,24 @@
-# Application du hotfix V3.4.4
+# Application de la V4.5.0
 
-Copier le contenu de cette archive à la racine du dépôt GitHub en remplaçant les fichiers existants.
+Depuis un dépôt V4.4.0 propre :
 
-Ne supprimer ni `artifacts/` ni `data/real/`: ils contiennent le modèle frais produit par le workflow.
+```bash
+git apply sportpredictionlab-v4.5.0.patch
+git add .
+git commit -m "Add automated shadow learning and simple UI"
+git push
+```
 
-Puis commit/push et déployer le dernier commit dans Railway pour `sportpredictionlab` et `shadow-cron`.
+Déployer ensuite avec **Deploy production** et conserver `verify_browser=true`.
+
+Au premier déploiement, garder fermés :
+
+```text
+DAILY_ODDS_ENABLED=false
+DAILY_ODDS_MAX_CREDITS=0
+SHADOW_MODE_ENABLED=false
+AUTOMATED_SHADOW_ENABLED=false
+HISTORICAL_EVIDENCE_ENABLED=false
+```
+
+Aucun modèle ni fichier de données ne doit être supprimé lors de l’application du patch.

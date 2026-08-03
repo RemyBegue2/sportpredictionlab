@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
+import hashlib
+import json
 import math
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -246,6 +248,51 @@ def simulate_bankroll_grid(
         for bankroll in bankrolls
         for strategy in strategies
     ]
+
+
+def simulate_bankroll_path(
+    opportunities: Sequence[ResearchOpportunity], *, policy: SignalPolicy,
+    starting_bankroll: float = 1000.0, strategy: str = "flat_1pct",
+) -> list[dict[str, Any]]:
+    """Return an auditable paper-bankroll time series.
+
+    The path is deliberately derived only from pre-match frozen opportunities
+    and settled results. It is a research trace, not a staking instruction.
+    """
+    if not math.isfinite(float(starting_bankroll)) or starting_bankroll <= 0:
+        raise ValueError("starting_bankroll must be positive")
+    selected = select_policy_opportunities(opportunities, policy)
+    bankroll = float(starting_bankroll)
+    peak = bankroll
+    path: list[dict[str, Any]] = []
+    for item in selected:
+        fraction = _stake_fraction(item, strategy)
+        stake = min(bankroll, bankroll * fraction)
+        if stake <= 0:
+            continue
+        before = bankroll
+        profit = stake * (item.decimal_odds - 1.0) if item.won else -stake
+        bankroll = max(0.0, bankroll + profit)
+        peak = max(peak, bankroll)
+        drawdown = (peak - bankroll) / peak if peak > 0 else 0.0
+        path.append({
+            "event_id": item.event_id,
+            "sport": item.sport,
+            "date": item.date,
+            "commence_time": item.commence_time,
+            "selection": item.selection,
+            "decimal_odds": float(item.decimal_odds),
+            "won": bool(item.won),
+            "bankroll_before": float(before),
+            "simulated_stake": float(stake),
+            "profit": float(profit),
+            "bankroll_after": float(bankroll),
+            "drawdown": float(drawdown),
+            "strategy": strategy,
+        })
+        if bankroll <= 1e-9:
+            break
+    return path
 
 
 def _policy_grid() -> list[SignalPolicy]:
@@ -564,6 +611,164 @@ def score_roi_meta_model(
     logit = max(-40.0, min(40.0, logit))
     return float(1.0 / (1.0 + math.exp(-logit)))
 
+def _candidate_fingerprint(*, optimisation: Mapping[str, Any], meta_model: Mapping[str, Any]) -> str:
+    payload = {
+        "policy": optimisation.get("policy"),
+        "development_dates": optimisation.get("development_dates"),
+        "holdout_dates": optimisation.get("holdout_dates"),
+        "meta_parameters": meta_model.get("portable_parameters"),
+        "meta_holdout_dates": meta_model.get("holdout_dates"),
+        "settled_events": optimisation.get("settled_events"),
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+    return "RCH-" + hashlib.sha256(encoded).hexdigest()[:20].upper()
+
+
+def build_champion_challenger_report(
+    roi_report: Mapping[str, Any], *, champion: Mapping[str, Any] | None = None,
+    minimum_events: int = 100, minimum_holdout_signals: int = 20,
+    maximum_drawdown: float = 0.25, minimum_events_per_sport: int = 60,
+) -> dict[str, Any]:
+    """Evaluate a research challenger without ever auto-promoting it.
+
+    Promotion gates are intentionally stricter than the training gates. A model
+    may be trainable at 30/60 events while still being far from eligible to
+    replace the approved research champion.
+    """
+    optimisation = dict(roi_report.get("optimisation") or {})
+    meta_model = dict(roi_report.get("meta_model") or {})
+    holdout = dict(optimisation.get("holdout") or {})
+    cross_validation = dict(optimisation.get("cross_validation") or {})
+    unique_events = int(roi_report.get("unique_events") or 0)
+    sport_events = {
+        str(k): int(v) for k, v in (meta_model.get("sport_event_counts") or {}).items()
+    }
+    holdout_bets = int(holdout.get("bets") or 0)
+    holdout_roi = holdout.get("roi_on_turnover")
+    holdout_drawdown = holdout.get("maximum_drawdown")
+    folds = list(cross_validation.get("folds") or [])
+    evaluable_folds = [row for row in folds if row.get("roi_on_turnover") is not None]
+    non_negative_folds = sum(float(row["roi_on_turnover"]) >= 0 for row in evaluable_folds)
+
+    candidate_id = _candidate_fingerprint(optimisation=optimisation, meta_model=meta_model)
+    gates = {
+        "minimum_total_events": {
+            "passed": unique_events >= int(minimum_events),
+            "actual": unique_events,
+            "required": int(minimum_events),
+        },
+        "minimum_holdout_signals": {
+            "passed": holdout_bets >= int(minimum_holdout_signals),
+            "actual": holdout_bets,
+            "required": int(minimum_holdout_signals),
+        },
+        "policy_candidate": {
+            "passed": optimisation.get("status") == "candidate",
+            "actual": optimisation.get("status") or "not_evaluable",
+            "required": "candidate",
+        },
+        "meta_model_candidate": {
+            "passed": meta_model.get("status") == "candidate",
+            "actual": meta_model.get("status") or "not_evaluable",
+            "required": "candidate",
+        },
+        "football_sample": {
+            "passed": int(sport_events.get("football", 0)) >= int(minimum_events_per_sport),
+            "actual": int(sport_events.get("football", 0)),
+            "required": int(minimum_events_per_sport),
+        },
+        "tennis_sample": {
+            "passed": int(sport_events.get("tennis", 0)) >= int(minimum_events_per_sport),
+            "actual": int(sport_events.get("tennis", 0)),
+            "required": int(minimum_events_per_sport),
+        },
+        "holdout_drawdown": {
+            "passed": holdout_drawdown is not None and float(holdout_drawdown) <= float(maximum_drawdown),
+            "actual": holdout_drawdown,
+            "required": float(maximum_drawdown),
+        },
+        "chronological_stability": {
+            "passed": len(evaluable_folds) >= 3 and non_negative_folds >= max(2, math.ceil(len(evaluable_folds) * 0.60)),
+            "actual": {"evaluable_folds": len(evaluable_folds), "non_negative_folds": non_negative_folds},
+            "required": "at least 3 folds and 60% non-negative",
+        },
+    }
+
+    champion_decision = (champion or {}).get("decision") or {}
+    champion_candidate = champion_decision.get("candidate") or {}
+    champion_id = str((champion or {}).get("champion") or "") or None
+    comparison = {
+        "champion_id": champion_id,
+        "champion_holdout_roi": champion_candidate.get("holdout_roi"),
+        "champion_holdout_drawdown": champion_candidate.get("holdout_drawdown"),
+        "challenger_holdout_roi": holdout_roi,
+        "challenger_holdout_drawdown": holdout_drawdown,
+    }
+    if champion_id:
+        gates["new_challenger"] = {
+            "passed": candidate_id != champion_id,
+            "actual": candidate_id,
+            "required": f"different from current champion {champion_id}",
+        }
+        champion_roi = champion_candidate.get("holdout_roi")
+        champion_dd = champion_candidate.get("holdout_drawdown")
+        not_worse = (
+            holdout_roi is not None
+            and (champion_roi is None or float(holdout_roi) >= float(champion_roi) - 0.01)
+            and holdout_drawdown is not None
+            and (champion_dd is None or float(holdout_drawdown) <= float(champion_dd) + 0.03)
+        )
+        gates["not_worse_than_champion"] = {
+            "passed": bool(not_worse),
+            "actual": comparison,
+            "required": "ROI no worse by >1pp and drawdown no worse by >3pp",
+        }
+
+    passed = all(bool(item.get("passed")) for item in gates.values())
+    sample_gate_names = {"minimum_total_events", "minimum_holdout_signals", "football_sample", "tennis_sample"}
+    collecting = any(not gates[name]["passed"] for name in sample_gate_names)
+    if passed:
+        status = "review_required"
+        next_action = "Review the challenger and promote it manually only after checking the audit report."
+    elif collecting:
+        status = "collecting"
+        next_action = "Keep collecting and settling shadow events; do not change thresholds mid-sample."
+    else:
+        status = "hold"
+        next_action = "Keep the current champion. Investigate failed gates before training another challenger."
+
+    return {
+        "status": status,
+        "candidate_id": candidate_id,
+        "promotion_allowed": bool(passed),
+        "automatic_promotion": False,
+        "candidate": {
+            "candidate_id": candidate_id,
+            "settled_events": unique_events,
+            "sport_event_counts": sport_events,
+            "holdout_bets": holdout_bets,
+            "holdout_roi": holdout_roi,
+            "holdout_drawdown": holdout_drawdown,
+            "policy": optimisation.get("policy"),
+            "meta_model_status": meta_model.get("status"),
+            "generated_at": roi_report.get("generated_at"),
+        },
+        "champion": {
+            "id": champion_id,
+            "status": (champion or {}).get("status") if champion else "none",
+            "created_at": (champion or {}).get("created_at") if champion else None,
+        },
+        "comparison": comparison,
+        "gates": gates,
+        "next_action": next_action,
+        "constraints": {
+            "manual_promotion_only": True,
+            "automatic_bet_placement": False,
+            "real_money_stake_recommendation": False,
+        },
+    }
+
+
 def build_roi_lab_report(
     shadow_rows: Sequence[Mapping[str, Any]], *, bankrolls: Sequence[float] = (100.0, 500.0, 1000.0),
 ) -> dict[str, Any]:
@@ -572,6 +777,12 @@ def build_roi_lab_report(
     meta_model = train_roi_meta_model(opportunities)
     policy = SignalPolicy(**optimisation.get("policy", SignalPolicy().to_dict()))
     simulations = simulate_bankroll_grid(opportunities, policy=policy, bankrolls=bankrolls)
+    paths = {
+        strategy: simulate_bankroll_path(
+            opportunities, policy=policy, starting_bankroll=1000.0, strategy=strategy,
+        )
+        for strategy in ("flat_1pct", "quarter_kelly_capped_2pct")
+    }
     sport_counts: dict[str, int] = {}
     for item in opportunities:
         sport_counts[item.sport] = sport_counts.get(item.sport, 0) + 1
@@ -584,6 +795,7 @@ def build_roi_lab_report(
         "optimisation": optimisation,
         "meta_model": meta_model,
         "simulations": simulations,
+        "paper_bankroll_paths": paths,
         "constraints": {
             "automatic_bet_placement": False,
             "real_money_stake_recommendation": False,

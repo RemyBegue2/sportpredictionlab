@@ -1,5 +1,18 @@
 # Changelog
 
+## V4.5.0 — Automated Shadow Learning & Simple UI
+
+- makes the simple daily view the default and defers expert endpoints until the operator opens expert mode ;
+- groups the interface into Today, Signals and Learning, with bankroll and training details collapsed by default ;
+- adds an auditable paper-bankroll path without creating a real staking instruction ;
+- adds a shared local-day credit ledger across capture and settlement ;
+- skips paid football capture on automated empty-fixture days ;
+- adds bounded scheduled capture, settlement and weekly zero-credit challenger training ;
+- adds strict champion–challenger promotion gates for total sample, per-sport sample, holdout signals, drawdown and chronological stability ;
+- creates stable `RCH-*` challenger identifiers and a manual-only promotion endpoint/workflow ;
+- keeps historical evidence disabled and preserves no-bet, no-stake and no-automatic-promotion invariants ;
+- adds regression coverage for the simple UI, lazy expert loading, daily budget, no-op settlement and manual promotion.
+
 ## V4.4.0 — Dual-Sport ROI Lab
 
 - adds one persisted football-and-tennis research view for today’s matches, probabilities, shadow signals and simulated bankrolls ;

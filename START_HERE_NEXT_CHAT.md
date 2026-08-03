@@ -1,27 +1,29 @@
-# Sports Prediction Lab — point de reprise V4.4.0
+# Sports Prediction Lab — point de reprise V4.5.0
 
 ## État préparé
 
-- Version : **4.4.0 — Dual-Sport ROI Lab**.
-- Produit : football et tennis du jour, probabilités, signaux shadow et bankrolls simulées.
-- Modèle football : opérationnel pour la recherche.
-- Modèle tennis : Elo non calibré ; signal bloqué jusqu'à preuve spécifique suffisante ou méta-modèle validé.
-- Dépenses live : manuelles, plafonnées et conditionnées au shadow.
+- Version : **4.5.0 — Automated Shadow Learning & Simple UI**.
+- Vue simple : Aujourd’hui, Signaux, Apprentissage.
+- Vue expert : chargée à la demande uniquement.
+- Football et tennis : probabilités et signaux shadow de recherche.
+- Bankrolls : simulations fictives avec trajectoires auditables.
+- Automatisation : capture/règlement bornés et entraînement hebdomadaire sans crédit.
+- Champion : promotion manuelle uniquement.
 - Evidence historique : désactivée.
 
 ## Première action
 
-1. Déployer V4.4.0.
-2. Vérifier `/api/ready`, `/api/release`, `/api/daily/slate` et `/api/research-lab`.
-3. Confirmer que le dashboard fonctionne sans appel fournisseur.
-4. Pour une expérience limitée, suivre `OPERATIONS_RUNBOOK_V4_4.md` avec un plafond de trois crédits.
-5. Régler les résultats puis lancer l'optimisation zéro crédit.
+1. Déployer V4.5.0 avec `verify_browser=true`.
+2. Vérifier `/api/ready`, `/api/release`, `/api/research-lab` et `/api/research-lab/learning`.
+3. Confirmer que la vue simple s’affiche avant le mode expert.
+4. Garder `AUTOMATED_SHADOW_ENABLED=false` pendant la vérification initiale.
+5. Suivre `OPERATIONS_RUNBOOK_V4_5.md` avant toute activation plafonnée.
 
 ## Règles
 
-- un signal est expérimental, pas une recommandation ;
-- aucune mise ou exécution automatique ;
-- aucune modification des seuils après observation sans nouvelle version ;
-- moins de 30 résultats : politique ROI non évaluable ;
-- moins de 60 résultats : méta-modèle non évaluable ;
-- aucun ROI historique n'est une promesse de rentabilité.
+- un signal reste expérimental ;
+- aucune bankroll réelle ni mise personnalisée ;
+- aucun placement automatique ;
+- aucun changement de seuil en cours d’échantillon ;
+- promotion seulement après toutes les portes et une revue humaine ;
+- aucune rentabilité future n’est revendiquée.

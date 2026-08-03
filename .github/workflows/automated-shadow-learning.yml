@@ -1,0 +1,239 @@
+name: Automated shadow learning cycle
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Controlled action to run
+        required: true
+        type: choice
+        options:
+          - capture
+          - settle
+          - cycle
+          - optimise
+        default: cycle
+  schedule:
+    - cron: '15 9 * * *'
+    - cron: '45 */6 * * *'
+    - cron: '30 20 * * 0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: automated-shadow-learning
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    needs: settle
+    if: >-
+      ${{ always() && vars.AUTOMATED_SHADOW_ENABLED == 'true' &&
+          (github.event.schedule == '15 9 * * *' ||
+           (github.event_name == 'workflow_dispatch' && (inputs.action == 'capture' || inputs.action == 'cycle'))) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+      MAX_CREDITS: ${{ vars.AUTOMATED_SHADOW_MAX_CREDITS || '3' }}
+      TENNIS_LIMIT: ${{ vars.AUTOMATED_TENNIS_LIMIT || '2' }}
+    steps:
+      - name: Validate bounded automation
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL is missing'; exit 2; }
+          [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing'; exit 2; }
+          python - <<'PY'
+          import os
+          cap=int(os.environ['MAX_CREDITS'])
+          tennis=int(os.environ['TENNIS_LIMIT'])
+          if not 1 <= cap <= 3:
+              raise SystemExit('AUTOMATED_SHADOW_MAX_CREDITS must be between 1 and 3')
+          if not 0 <= tennis <= 2:
+              raise SystemExit('AUTOMATED_TENNIS_LIMIT must be between 0 and 2')
+          PY
+
+      - name: Authenticate and capture only scheduled evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${APP_PUBLIC_URL%/}"
+          COOKIE_JAR="$RUNNER_TEMP/automated-shadow.cookies"
+          python - <<'PY' > "$RUNNER_TEMP/login.json.body"
+          import json, os
+          print(json.dumps({'password': os.environ['APP_PASSWORD']}))
+          PY
+          curl --fail --silent --show-error --cookie-jar "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' \
+            --data @"$RUNNER_TEMP/login.json.body" "$BASE/api/auth/login" > "$RUNNER_TEMP/login.json"
+          CSRF_TOKEN=$(python - <<'PY'
+          import json, os
+          from pathlib import Path
+          print(json.loads((Path(os.environ['RUNNER_TEMP'])/'login.json').read_text()).get('csrf_token') or '')
+          PY
+          )
+          export CSRF_TOKEN
+          python - <<'PY' > "$RUNNER_TEMP/capture.json.body"
+          import json, os
+          print(json.dumps({
+              'date': None,
+              'max_credits': int(os.environ['MAX_CREDITS']),
+              'tennis_limit': int(os.environ['TENNIS_LIMIT']),
+              'tennis_sport_keys': [],
+              'automation': True,
+              'confirmation': 'CAPTURE_DAILY_MARKET',
+          }))
+          PY
+          curl --fail --silent --show-error --cookie "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' --header "X-CSRF-Token: $CSRF_TOKEN" \
+            --data @"$RUNNER_TEMP/capture.json.body" "$BASE/api/research-lab/refresh" > "$RUNNER_TEMP/capture.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'capture.json').read_text())
+          summary=payload.get('summary') or {}
+          budget=payload.get('credit_budget') or {}
+          consumed=int(summary.get('credits_consumed') or 0)
+          if consumed > int(os.environ['MAX_CREDITS']):
+              raise SystemExit('automated capture exceeded its per-run cap')
+          if int(budget.get('remaining_after') or 0) < 0:
+              raise SystemExit('daily credit budget invariant failed')
+          if (payload.get('constraints') or {}).get('automatic_bet_placement') is not False:
+              raise SystemExit('automatic bet placement invariant missing')
+          print(json.dumps({'credits':consumed,'signals':summary.get('experimental_signals',0),'learning':summary.get('learning_status')},ensure_ascii=False))
+          PY
+
+      - name: Upload bounded capture evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: automated-shadow-capture
+          path: ${{ runner.temp }}/capture.json
+          retention-days: 30
+
+  settle:
+    if: >-
+      ${{ vars.AUTOMATED_SHADOW_ENABLED == 'true' &&
+          (github.event.schedule == '45 */6 * * *' ||
+           (github.event_name == 'workflow_dispatch' && (inputs.action == 'settle' || inputs.action == 'cycle'))) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+      MAX_CREDITS: ${{ vars.AUTOMATED_SHADOW_MAX_CREDITS || '3' }}
+    steps:
+      - name: Validate bounded settlement
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL is missing'; exit 2; }
+          [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing'; exit 2; }
+          python - <<'PY'
+          import os
+          cap=int(os.environ['MAX_CREDITS'])
+          if not 1 <= cap <= 3:
+              raise SystemExit('AUTOMATED_SHADOW_MAX_CREDITS must be between 1 and 3')
+          PY
+
+      - name: Authenticate and settle due events
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${APP_PUBLIC_URL%/}"
+          COOKIE_JAR="$RUNNER_TEMP/automated-settle.cookies"
+          python - <<'PY' > "$RUNNER_TEMP/login.json.body"
+          import json, os
+          print(json.dumps({'password': os.environ['APP_PASSWORD']}))
+          PY
+          curl --fail --silent --show-error --cookie-jar "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' \
+            --data @"$RUNNER_TEMP/login.json.body" "$BASE/api/auth/login" > "$RUNNER_TEMP/login.json"
+          CSRF_TOKEN=$(python - <<'PY'
+          import json, os
+          from pathlib import Path
+          print(json.loads((Path(os.environ['RUNNER_TEMP'])/'login.json').read_text()).get('csrf_token') or '')
+          PY
+          )
+          export CSRF_TOKEN
+          python - <<'PY' > "$RUNNER_TEMP/settle.json.body"
+          import json, os
+          print(json.dumps({'max_credits':int(os.environ['MAX_CREDITS']),'automation':True,'confirmation':'SETTLE_DAILY_MARKET'}))
+          PY
+          curl --fail --silent --show-error --cookie "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' --header "X-CSRF-Token: $CSRF_TOKEN" \
+            --data @"$RUNNER_TEMP/settle.json.body" "$BASE/api/research-lab/settle" > "$RUNNER_TEMP/settle.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'settle.json').read_text())
+          settlement=payload.get('settlement') or {}
+          consumed=int(settlement.get('credits_consumed') or 0)
+          if consumed > int(os.environ['MAX_CREDITS']):
+              raise SystemExit('automated settlement exceeded its cap')
+          print(json.dumps({'due':settlement.get('due_events',0),'settled':settlement.get('settled',0),'credits':consumed},ensure_ascii=False))
+          PY
+
+      - name: Upload settlement evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: automated-shadow-settlement
+          path: ${{ runner.temp }}/settle.json
+          retention-days: 90
+
+
+  optimise:
+    needs: settle
+    if: >-
+      ${{ always() && vars.AUTOMATED_SHADOW_ENABLED == 'true' &&
+          (github.event.schedule == '30 20 * * 0' ||
+           (github.event_name == 'workflow_dispatch' && (inputs.action == 'optimise' || inputs.action == 'cycle'))) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+    steps:
+      - name: Authenticate and train bounded challengers
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL is missing'; exit 2; }
+          [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing'; exit 2; }
+          BASE="${APP_PUBLIC_URL%/}"
+          COOKIE_JAR="$RUNNER_TEMP/automated-optimise.cookies"
+          python - <<'PYBODY' > "$RUNNER_TEMP/login.json.body"
+          import json, os
+          print(json.dumps({'password': os.environ['APP_PASSWORD']}))
+          PYBODY
+          curl --fail --silent --show-error --cookie-jar "$COOKIE_JAR"             --header 'Content-Type: application/json'             --data @"$RUNNER_TEMP/login.json.body" "$BASE/api/auth/login" > "$RUNNER_TEMP/login.json"
+          CSRF_TOKEN=$(python - <<'PYBODY'
+          import json, os
+          from pathlib import Path
+          print(json.loads((Path(os.environ['RUNNER_TEMP'])/'login.json').read_text()).get('csrf_token') or '')
+          PYBODY
+          )
+          curl --fail --silent --show-error --cookie "$COOKIE_JAR"             --header 'Content-Type: application/json' --header "X-CSRF-Token: $CSRF_TOKEN"             --request POST "$BASE/api/research-lab/optimise" > "$RUNNER_TEMP/optimise.json"
+          python - <<'PYBODY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'optimise.json').read_text())
+          learning=payload.get('learning') or {}
+          if (payload.get('constraints') or {}).get('automatic_bet_placement') is not False:
+              raise SystemExit('automatic bet placement invariant missing')
+          if learning.get('automatic_promotion') is not False:
+              raise SystemExit('automatic promotion invariant missing')
+          print(json.dumps({'status':learning.get('status'),'candidate':learning.get('candidate_id'),'promotion_allowed':learning.get('promotion_allowed')},ensure_ascii=False))
+          PYBODY
+
+      - name: Upload challenger evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: automated-shadow-challenger
+          path: ${{ runner.temp }}/optimise.json
+          retention-days: 365

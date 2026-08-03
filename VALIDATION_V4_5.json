@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-08-03T21:57:14.524856+00:00",
+  "version": {
+    "app_version": "4.5.0",
+    "package_version": "0.4.5.0"
+  },
+  "tests": {
+    "collected": 235,
+    "passed": 235,
+    "failed": 0,
+    "execution": "eight disjoint batches",
+    "batches": [
+      32,
+      22,
+      31,
+      50,
+      29,
+      37,
+      14,
+      20
+    ],
+    "monolithic_suite": "not claimed; disjoint batches cover all collected tests"
+  },
+  "coverage": {
+    "source": "artifacts/coverage_v4_5.json",
+    "statements_percent": 82.99229085371657,
+    "combined_statements_branches_percent": 78.2937280872614,
+    "branches_percent": 57.08762886597938,
+    "note": "The instrumented V4.4 batch completed assertions but did not exit before the environment timeout; it was validated separately without instrumentation."
+  },
+  "static_validation": {
+    "python_compileall": true,
+    "javascript_node_check": true,
+    "yaml_files": 19,
+    "github_workflows": 18,
+    "git_diff_check": true
+  },
+  "features": {
+    "simple_mode_default": true,
+    "expert_data_lazy_loaded": true,
+    "shared_daily_credit_ledger": true,
+    "empty_football_day_paid_call_skipped": true,
+    "zero_credit_noop_settlement": true,
+    "weekly_zero_credit_challenger_training": true,
+    "manual_champion_promotion_only": true,
+    "duplicate_champion_promotion_blocked": true,
+    "paper_bankroll_paths": true,
+    "automatic_bet_placement": false,
+    "real_money_stake_recommendation": false
+  },
+  "external_execution": {
+    "the_odds_api_calls": 0,
+    "provider_credits_consumed": 0,
+    "railway_deployments": 0,
+    "live_automated_cycles": 0
+  },
+  "limitations": [
+    "No real automated shadow cycle was executed from the preparation environment.",
+    "No challenger currently has enough live settled evidence for promotion.",
+    "The tennis base model remains an uncalibrated Elo baseline until sport-specific evidence is sufficient.",
+    "GitHub Actions are still mainly referenced by major tags rather than immutable SHAs.",
+    "Alembic remains required before a future complex schema migration; V4.5 reused existing append-only tables.",
+    "Simulated ROI is not evidence of future profitability."
+  ]
+}

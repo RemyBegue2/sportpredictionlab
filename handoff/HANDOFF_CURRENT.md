@@ -1,14 +1,14 @@
 # HANDOFF CURRENT — Sports Prediction Lab
 
-Generated: `2026-08-03T21:06:38.471998+00:00`
+Generated: `2026-08-03T21:59:08.690551+00:00`
 
 ## Verified repository state
 
-- App version: **4.4.0**
-- Git branch: `unknown`
-- Git commit: `unknown`
-- Release ID: `0666ec6afaa39ebbd5a9`
-- Running/source commit detected locally: `unknown`
+- App version: **4.5.0**
+- Git branch: `master`
+- Git commit: `ca5488e23ca250aeb0a7c4a8d5d41e3cc6c34f3c`
+- Release ID: `ea38dccc87fc6c760663`
+- Running/source commit detected locally: `ca5488e23ca250aeb0a7c4a8d5d41e3cc6c34f3c`
 - Artifact integrity: **OK**
 - Football model version: `3.4.0-fresh`
 - Football model SHA-256: `04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4`
@@ -28,6 +28,8 @@ GitHub Actions
 ├── deploy-production.yml       tests → Railway deploy → API proof → Chromium smoke
 ├── verify-production.yml       read-only production proof
 ├── refresh-daily-product.yml   zero-credit fixture/model refresh
+├── automated-shadow-learning.yml bounded capture → settlement → challenger training
+├── promote-research-champion.yml manual reviewed champion promotion
 ├── rebuild-fresh-football.yml  rebuild → tests → deploy → proof
 ├── estimate-historical-sample.yml  immutable zero-credit request plan
 ├── estimate-evidence-coverage.yml coverage probe → VIABLE/RISKY/NOT_VIABLE
@@ -53,6 +55,7 @@ GitHub Actions
 - Daily slate: `/api/daily/slate`
 - Model diagnostics: `/api/model-diagnostics`
 - Credit firewall: `/api/credit-firewall`
+- Research learning state: `/api/research-lab/learning`
 - Daily paid odds: **disabled by default**
 - Historical paid evidence: **disabled by default**
 - Automatic bet placement: **disabled**

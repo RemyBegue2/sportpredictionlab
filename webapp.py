@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 from zoneinfo import ZoneInfo
 import json
 import logging
@@ -53,6 +53,7 @@ from sports_predictor.database import (
     record_shadow_prediction,
     record_benchmark_run,
     record_data_quality_issue,
+    research_credits_consumed_on,
     settle_shadow_predictions,
     register_model,
     register_release,
@@ -75,7 +76,12 @@ from sports_predictor.market_benchmark import benchmark_summary
 from sports_predictor.champion_challenger import build_model_decision
 from sports_predictor.control_center import build_control_center
 from sports_predictor.shadow_mode import shadow_horizon
-from sports_predictor.roi_lab import SignalPolicy, build_roi_lab_report, score_roi_meta_model
+from sports_predictor.roi_lab import (
+    SignalPolicy,
+    build_champion_challenger_report,
+    build_roi_lab_report,
+    score_roi_meta_model,
+)
 from sports_predictor.daily_product import (
     DailyFixtureError,
     DailyFixtureSource,
@@ -188,7 +194,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V4.4 Dual-Sport ROI Lab",
+    title="Sports Prediction Lab V4.5 Automated Shadow Learning",
     version=APP_VERSION,
     description="Dual-sport daily research product with football and tennis predictions, controlled market snapshots, shadow signals and simulated bankroll evaluation.",
     lifespan=lifespan,
@@ -321,6 +327,7 @@ class HistoricalEstimateRequest(BaseModel):
 class DailyResearchRefreshRequest(BaseModel):
     date: str | None = None
     max_credits: int = Field(default=3, ge=1, le=20)
+    automation: bool = False
     tennis_limit: int = Field(default=2, ge=0, le=10)
     tennis_sport_keys: list[str] = Field(default_factory=list, max_length=10)
     confirmation: str = Field(min_length=1, max_length=64)
@@ -346,7 +353,14 @@ class DailyResearchRefreshRequest(BaseModel):
 
 class DailyResearchSettleRequest(BaseModel):
     max_credits: int = Field(default=3, ge=1, le=20)
+    automation: bool = False
     confirmation: str = Field(min_length=1, max_length=64)
+
+
+class ResearchChampionPromotionRequest(BaseModel):
+    candidate_id: str = Field(pattern=r"^RCH-[A-F0-9]{20}$")
+    confirmation: str = Field(min_length=1, max_length=64)
+    note: str = Field(default="manual review", min_length=3, max_length=500)
 
 
 @lru_cache(maxsize=1)
@@ -1560,6 +1574,50 @@ def _safe_current_signal(
     }
 
 
+def _research_learning_report(roi: Mapping[str, Any]) -> dict[str, Any]:
+    champion = latest_model_decision("dual_sport_research")
+    return build_champion_challenger_report(
+        roi,
+        champion=champion,
+        minimum_events=SETTINGS.research_promotion_min_events,
+        minimum_holdout_signals=SETTINGS.research_promotion_min_holdout_signals,
+        maximum_drawdown=SETTINGS.research_promotion_max_drawdown,
+        minimum_events_per_sport=SETTINGS.research_promotion_min_events_per_sport,
+    )
+
+
+def _research_automation_status(*, requested_date: str | None = None) -> dict[str, Any]:
+    date = requested_date or datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
+    budget = research_credits_consumed_on(date)
+    remaining = max(0, int(SETTINGS.daily_odds_max_credits) - int(budget["credits_consumed"]))
+    due = due_shadow_events(limit=500)
+    enabled = bool(SETTINGS.automated_shadow_enabled)
+    if not enabled:
+        next_action = "Automation is off. The model-only daily product remains available at zero credits."
+    elif not SETTINGS.daily_odds_enabled or not SETTINGS.shadow_enabled:
+        next_action = "Enable both DAILY_ODDS_ENABLED and SHADOW_MODE_ENABLED before the automated cycle can capture evidence."
+    elif remaining <= 0:
+        next_action = "The daily provider budget is exhausted; wait for the next local day."
+    elif due:
+        next_action = "Settle due shadow events before considering another capture."
+    else:
+        next_action = "The automated shadow cycle may capture one bounded snapshot when scheduled."
+    return {
+        "enabled": enabled,
+        "daily_odds_enabled": bool(SETTINGS.daily_odds_enabled),
+        "shadow_enabled": bool(SETTINGS.shadow_enabled),
+        "date": date,
+        "daily_credit_cap": int(SETTINGS.daily_odds_max_credits),
+        "credits_consumed": int(budget["credits_consumed"]),
+        "credits_remaining": int(remaining),
+        "cost_runs": budget["runs"],
+        "due_events": len(due),
+        "capture_allowed": bool(enabled and SETTINGS.daily_odds_enabled and SETTINGS.shadow_enabled and remaining > 0),
+        "next_action": next_action,
+        "automatic_bet_placement": False,
+    }
+
+
 def _research_report_from_slates(
     *, requested_date: str, football: dict[str, Any] | None,
     tennis: list[dict[str, Any]], credits_consumed: int, errors: list[dict[str, str]],
@@ -1576,6 +1634,8 @@ def _research_report_from_slates(
         )
     settled_rows = recent_shadow_predictions(10000, status="settled")
     roi = build_roi_lab_report(settled_rows)
+    learning = _research_learning_report(roi)
+    automation = _research_automation_status(requested_date=requested_date)
     signals = [
         signal for signal in (
             _safe_current_signal(item, roi_lab=roi) for item in [*football_events, *tennis_events]
@@ -1612,8 +1672,11 @@ def _research_report_from_slates(
             "credits_consumed": int(credits_consumed),
             "settled_market_events": int(roi.get("unique_events") or 0),
             "roi_policy_status": training_status,
+            "learning_status": learning.get("status"),
         },
         "roi_lab": roi,
+        "learning": learning,
+        "automation": automation,
         "errors": errors,
         "constraints": {
             "automatic_bet_placement": False,
@@ -1658,19 +1721,31 @@ def _active_tennis_sports(*, requested: list[str], maximum: int) -> list[dict[st
 
 def _latest_research_payload() -> dict[str, Any]:
     latest = latest_benchmark_run("dual_sport_daily")
-    if latest and latest.get("report"):
-        return {
-            **dict(latest["report"]),
-            "run": {
-                "id": latest.get("id"),
-                "status": latest.get("status"),
-                "started_at": latest.get("started_at"),
-                "finished_at": latest.get("finished_at"),
-            },
-        }
     settled_rows = recent_shadow_predictions(10000, status="settled")
+    roi = build_roi_lab_report(settled_rows)
+    learning = _research_learning_report(roi)
+    today = datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
+    automation = _research_automation_status(requested_date=today)
+    if latest and latest.get("report"):
+        payload = dict(latest["report"])
+        payload["roi_lab"] = roi
+        payload["learning"] = learning
+        payload["automation"] = automation
+        payload["summary"] = {
+            **(payload.get("summary") or {}),
+            "settled_market_events": int(roi.get("unique_events") or 0),
+            "roi_policy_status": str((roi.get("optimisation") or {}).get("status") or "not_evaluable"),
+            "learning_status": learning.get("status"),
+        }
+        payload["run"] = {
+            "id": latest.get("id"),
+            "status": latest.get("status"),
+            "started_at": latest.get("started_at"),
+            "finished_at": latest.get("finished_at"),
+        }
+        return payload
     return {
-        "date": datetime.now(ZoneInfo("Europe/Paris")).date().isoformat(),
+        "date": today,
         "mode": "dual_sport_shadow_research",
         "football": {"events": [], "summary": {}},
         "tennis": {"events": [], "tournaments": []},
@@ -1680,17 +1755,20 @@ def _latest_research_payload() -> dict[str, Any]:
             "tennis_matches": 0,
             "experimental_signals": 0,
             "credits_consumed": 0,
-            "settled_market_events": 0,
-            "roi_policy_status": "not_evaluable",
+            "settled_market_events": int(roi.get("unique_events") or 0),
+            "roi_policy_status": str((roi.get("optimisation") or {}).get("status") or "not_evaluable"),
+            "learning_status": learning.get("status"),
         },
-        "roi_lab": build_roi_lab_report(settled_rows),
+        "roi_lab": roi,
+        "learning": learning,
+        "automation": automation,
         "errors": [],
         "constraints": {
             "automatic_bet_placement": False,
             "real_money_stake_recommendation": False,
             "signals_are_experimental": True,
         },
-        "next_action": "Run the controlled daily market workflow after enabling a small credit cap.",
+        "next_action": automation["next_action"],
         "run": None,
     }
 
@@ -2069,14 +2147,18 @@ def optimise_research_policy() -> dict[str, Any]:
     settled = settle_shadow_predictions()
     rows = recent_shadow_predictions(10000, status="settled")
     roi = build_roi_lab_report(rows)
+    learning = _research_learning_report(roi)
     previous = _latest_research_payload()
     report = {
         **previous,
         "roi_lab": roi,
+        "learning": learning,
+        "automation": _research_automation_status(),
         "summary": {
             **(previous.get("summary") or {}),
             "settled_market_events": int(roi.get("unique_events") or 0),
             "roi_policy_status": str((roi.get("optimisation") or {}).get("status") or "not_evaluable"),
+            "learning_status": learning.get("status"),
         },
         "settlement": settled,
     }
@@ -2092,10 +2174,60 @@ def optimise_research_policy() -> dict[str, Any]:
     return {**report, "run": {"id": run_id, "status": status}}
 
 
+@app.get("/api/research-lab/learning")
+def research_learning() -> dict[str, Any]:
+    payload = _latest_research_payload()
+    return {
+        "learning": payload.get("learning"),
+        "automation": payload.get("automation"),
+        "summary": payload.get("summary"),
+        "constraints": payload.get("constraints"),
+    }
+
+
+@app.post("/api/research-lab/champion/promote")
+def promote_research_champion(req: ResearchChampionPromotionRequest) -> dict[str, Any]:
+    if req.confirmation != "PROMOTE_RESEARCH_CHAMPION":
+        raise HTTPException(status_code=409, detail="confirmation must equal PROMOTE_RESEARCH_CHAMPION")
+    payload = _latest_research_payload()
+    learning = payload.get("learning") or {}
+    if str(learning.get("candidate_id") or "") != req.candidate_id:
+        raise HTTPException(status_code=409, detail="candidate_id no longer matches the current challenger")
+    if not bool(learning.get("promotion_allowed")):
+        raise HTTPException(status_code=409, detail="challenger has not passed all promotion gates")
+    decision = {
+        "status": "approved",
+        "candidate": learning.get("candidate"),
+        "gates": learning.get("gates"),
+        "comparison": learning.get("comparison"),
+        "roi_lab": payload.get("roi_lab"),
+        "approved_at": datetime.now(ZoneInfo("Europe/Paris")).isoformat(),
+        "approval_note": req.note,
+        "manual_approval": True,
+        "automatic_promotion": False,
+        "automatic_bet_placement": False,
+    }
+    decision_id = record_model_decision(
+        sport_key="dual_sport_research",
+        champion=req.candidate_id,
+        decision=decision,
+        benchmark_run_id=(payload.get("run") or {}).get("id"),
+    )
+    return {
+        "status": "approved",
+        "decision_id": decision_id,
+        "champion": req.candidate_id,
+        "automatic_promotion": False,
+        "automatic_bet_placement": False,
+    }
+
+
 @app.post("/api/research-lab/refresh")
 def refresh_research_lab(req: DailyResearchRefreshRequest) -> dict[str, Any]:
     if req.confirmation != "CAPTURE_DAILY_MARKET":
         raise HTTPException(status_code=409, detail="confirmation must equal CAPTURE_DAILY_MARKET")
+    if req.automation and not SETTINGS.automated_shadow_enabled:
+        raise HTTPException(status_code=409, detail="AUTOMATED_SHADOW_ENABLED is false")
     if not SETTINGS.daily_odds_enabled:
         raise HTTPException(status_code=409, detail="DAILY_ODDS_ENABLED is false")
     if SETTINGS.daily_odds_max_credits < 1:
@@ -2105,16 +2237,31 @@ def refresh_research_lab(req: DailyResearchRefreshRequest) -> dict[str, Any]:
             status_code=409,
             detail="SHADOW_MODE_ENABLED must be true so every paid snapshot becomes training evidence",
         )
-    hard_cap = min(int(req.max_credits), int(SETTINGS.daily_odds_max_credits))
     requested_date = req.date or datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
+    if not DATE_RE.fullmatch(requested_date):
+        raise HTTPException(status_code=422, detail="date must use YYYY-MM-DD")
+    spent_before = research_credits_consumed_on(requested_date)
+    remaining_daily = max(0, int(SETTINGS.daily_odds_max_credits) - int(spent_before["credits_consumed"]))
+    hard_cap = min(int(req.max_credits), remaining_daily)
+    if hard_cap < 1:
+        raise HTTPException(status_code=409, detail="Daily research credit budget is exhausted")
     credits_consumed = 0
     errors: list[dict[str, str]] = []
     football_slate: dict[str, Any] | None = None
     tennis_slates: list[dict[str, Any]] = []
 
-    # One h2h region/bookmaker-group request is reserved for football. Cached
-    # responses consume zero provider credits.
-    if hard_cap >= 1:
+    # Automated runs consult the free fixture product first. This avoids paying
+    # for an empty football market day. Manual research runs preserve the explicit
+    # operator request and may probe the configured market directly.
+    football_due = True
+    if req.automation:
+        try:
+            free_slate = _daily_slate_payload(requested_date, horizon_days=0, refresh=False)
+            football_due = int((free_slate.get("summary") or {}).get("fixtures_today") or 0) > 0
+        except Exception as exc:  # free-source failure must not trigger a paid fallback
+            football_due = False
+            errors.append({"scope": "football_precheck", "error": type(exc).__name__})
+    if hard_cap >= 1 and football_due:
         try:
             football_slate = _football_odds_slate("soccer_epl", "E0", force_refresh=False)
             if not football_slate.get("from_cache"):
@@ -2158,6 +2305,17 @@ def refresh_research_lab(req: DailyResearchRefreshRequest) -> dict[str, Any]:
     )
     report["settlement"] = settlement
     report["credit_cap"] = hard_cap
+    report["credit_budget"] = {
+        "daily_cap": int(SETTINGS.daily_odds_max_credits),
+        "spent_before": int(spent_before["credits_consumed"]),
+        "spent_this_run": int(credits_consumed),
+        "remaining_after": max(0, remaining_daily - int(credits_consumed)),
+    }
+    report["automation"] = {
+        **(report.get("automation") or {}),
+        "credits_consumed": int(spent_before["credits_consumed"]) + int(credits_consumed),
+        "credits_remaining": max(0, remaining_daily - int(credits_consumed)),
+    }
     report["shadow_recording_enabled"] = SETTINGS.shadow_enabled
     status = "completed" if not errors else "completed_with_warnings"
     run_id = record_benchmark_run(
@@ -2170,6 +2328,7 @@ def refresh_research_lab(req: DailyResearchRefreshRequest) -> dict[str, Any]:
             "max_credits": hard_cap,
             "tennis_limit": tennis_limit,
             "tennis_sport_keys": [item["key"] for item in sports],
+            "automation": bool(req.automation),
         },
         report=report,
         summary=report.get("summary"),
@@ -2182,13 +2341,45 @@ def refresh_research_lab(req: DailyResearchRefreshRequest) -> dict[str, Any]:
 def settle_research_lab(req: DailyResearchSettleRequest) -> dict[str, Any]:
     if req.confirmation != "SETTLE_DAILY_MARKET":
         raise HTTPException(status_code=409, detail="confirmation must equal SETTLE_DAILY_MARKET")
+    if req.automation and not SETTINGS.automated_shadow_enabled:
+        raise HTTPException(status_code=409, detail="AUTOMATED_SHADOW_ENABLED is false")
     if not SETTINGS.daily_odds_enabled:
         raise HTTPException(status_code=409, detail="DAILY_ODDS_ENABLED is false")
-    hard_cap = min(int(req.max_credits), int(SETTINGS.daily_odds_max_credits))
-    if hard_cap < 1:
-        raise HTTPException(status_code=409, detail="DAILY_ODDS_MAX_CREDITS must be at least 1")
-
+    requested_date = datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
+    spent_before = research_credits_consumed_on(requested_date)
+    remaining_daily = max(0, int(SETTINGS.daily_odds_max_credits) - int(spent_before["credits_consumed"]))
+    hard_cap = min(int(req.max_credits), remaining_daily)
     due = due_shadow_events(limit=500)
+    if not due:
+        settlement = settle_shadow_predictions()
+        rows = recent_shadow_predictions(10000, status="settled")
+        roi = build_roi_lab_report(rows)
+        learning = _research_learning_report(roi)
+        previous = _latest_research_payload()
+        summary = {
+            **(previous.get("summary") or {}),
+            "credits_consumed": 0,
+            "settled_market_events": int(roi.get("unique_events") or 0),
+            "roi_policy_status": str((roi.get("optimisation") or {}).get("status") or "not_evaluable"),
+            "learning_status": learning.get("status"),
+        }
+        report = {
+            **previous,
+            "summary": summary,
+            "roi_lab": roi,
+            "learning": learning,
+            "automation": _research_automation_status(requested_date=requested_date),
+            "settlement": {**settlement, "due_events": 0, "completed_seen": 0, "results_imported": 0, "credits_consumed": 0},
+        }
+        run_id = record_benchmark_run(
+            sport_key="dual_sport_daily", model_version=APP_VERSION, status="completed",
+            config={"mode": "daily_result_settlement", "max_credits": 0, "date": requested_date, "automation": bool(req.automation), "no_op": True},
+            report=report, summary=summary,
+        )
+        return {**report, "run": {"id": run_id, "status": "completed"}}
+    if hard_cap < 1:
+        raise HTTPException(status_code=409, detail="Daily research credit budget is exhausted")
+
     grouped: dict[str, list[str]] = {}
     for item in due:
         grouped.setdefault(str(item["sport_key"]), []).append(str(item["provider_event_id"]))
@@ -2238,17 +2429,31 @@ def settle_research_lab(req: DailyResearchSettleRequest) -> dict[str, Any]:
     settlement = settle_shadow_predictions()
     rows = recent_shadow_predictions(10000, status="settled")
     roi = build_roi_lab_report(rows)
+    learning = _research_learning_report(roi)
     previous = _latest_research_payload()
     summary = {
         **(previous.get("summary") or {}),
         "credits_consumed": int(credits_consumed),
         "settled_market_events": int(roi.get("unique_events") or 0),
         "roi_policy_status": str((roi.get("optimisation") or {}).get("status") or "not_evaluable"),
+        "learning_status": learning.get("status"),
     }
     report = {
         **previous,
         "summary": summary,
         "roi_lab": roi,
+        "learning": learning,
+        "automation": {
+            **_research_automation_status(requested_date=requested_date),
+            "credits_consumed": int(spent_before["credits_consumed"]) + int(credits_consumed),
+            "credits_remaining": max(0, remaining_daily - int(credits_consumed)),
+        },
+        "credit_budget": {
+            "daily_cap": int(SETTINGS.daily_odds_max_credits),
+            "spent_before": int(spent_before["credits_consumed"]),
+            "spent_this_run": int(credits_consumed),
+            "remaining_after": max(0, remaining_daily - int(credits_consumed)),
+        },
         "settlement": {
             **settlement,
             "due_events": len(due),
@@ -2263,7 +2468,7 @@ def settle_research_lab(req: DailyResearchSettleRequest) -> dict[str, Any]:
         sport_key="dual_sport_daily",
         model_version=APP_VERSION,
         status=status,
-        config={"mode": "daily_result_settlement", "max_credits": hard_cap},
+        config={"mode": "daily_result_settlement", "max_credits": hard_cap, "date": requested_date, "automation": bool(req.automation)},
         report=report,
         summary=summary,
         error_message=(json.dumps(errors, ensure_ascii=False)[:1000] if errors else None),

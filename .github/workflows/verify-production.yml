@@ -6,7 +6,7 @@ on:
       expected_version:
         description: Version expected in production
         required: true
-        default: '4.4.0'
+        default: '4.5.0'
         type: string
       expected_commit:
         description: Expected commit SHA (leave blank to use the selected branch HEAD)

@@ -47,6 +47,28 @@ WORKFLOW_CATALOG: tuple[dict[str, Any], ...] = (
         "required_configuration": ["APP_PUBLIC_URL", "APP_PASSWORD"],
     },
     {
+        "id": "automated-shadow-learning",
+        "name": "Automated shadow learning cycle",
+        "file": "automated-shadow-learning.yml",
+        "purpose": "Capturer et régler automatiquement des preuves shadow uniquement après activation explicite, avec plafond quotidien partagé.",
+        "risk": "consumes_api_credits",
+        "confirmation": "AUTOMATED_SHADOW_ENABLED=true",
+        "required_configuration": [
+            "APP_PUBLIC_URL", "APP_PASSWORD", "THE_ODDS_API_KEY",
+            "AUTOMATED_SHADOW_ENABLED", "AUTOMATED_SHADOW_MAX_CREDITS",
+            "DAILY_ODDS_ENABLED", "SHADOW_MODE_ENABLED",
+        ],
+    },
+    {
+        "id": "promote-research-champion",
+        "name": "Promote approved research champion",
+        "file": "promote-research-champion.yml",
+        "purpose": "Enregistrer manuellement un challenger ayant passé toutes les portes comme champion de recherche.",
+        "risk": "controlled",
+        "confirmation": "PROMOTE_RESEARCH_CHAMPION",
+        "required_configuration": ["APP_PUBLIC_URL", "APP_PASSWORD"],
+    },
+    {
         "id": "deploy-production",
         "name": "Deploy production",
         "file": "deploy-production.yml",

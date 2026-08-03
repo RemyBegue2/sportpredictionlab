@@ -25,6 +25,25 @@ const fmt = (p) => `${(100*p).toFixed(1)}%`;
 const signed = (p) => `${p >= 0 ? '+' : ''}${(100*p).toFixed(1)}%`;
 const esc = (v) => String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const pct = (value) => Number.isFinite(Number(value)) ? `${(100 * Number(value)).toFixed(1)} %` : '—';
+let RESEARCH_SIGNALS = [];
+let RESEARCH_SIGNAL_FILTER = 'all';
+let EXPERT_DATA_LOADED = false;
+
+function currentInterfaceMode(){
+  try{ return localStorage.getItem('sports-lab-interface-mode')==='expert'?'expert':'simple'; }catch{ return 'simple'; }
+}
+
+function applyInterfaceMode(mode,{load=true}={}){
+  const expert=mode==='expert';
+  document.body.classList.toggle('expert-mode',expert);
+  document.body.classList.toggle('simple-mode',!expert);
+  const button=$('#interfaceMode');
+  button.textContent=expert?'Vue simple':'Mode expert';
+  button.setAttribute?.('aria-pressed',expert?'true':'false');
+  try{ localStorage.setItem('sports-lab-interface-mode',expert?'expert':'simple'); }catch{}
+  if(expert&&load) loadExpertData();
+}
+
 
 function toast(message){ const el=$('#toast'); el.textContent=message; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),4200); }
 function loading(target){ target.className='result-panel'; target.innerHTML='<div class="loader">Calcul en cours</div>'; }
@@ -419,6 +438,35 @@ function researchSignalCard(signal){
   return `<article class="slate-card"><div class="slate-top"><span>${esc(signal.sport||'sport')} · shadow</span><b class="decision candidat recherche">signal expérimental</b></div><h3>${esc(signal.event||'Événement')}</h3><p>${esc(eventTime)}</p><div class="odds-line"><span>Sélection</span><b>${esc(signal.selection||'—')}</b></div><div class="odds-line"><span>Cote</span><b>${Number.isFinite(odds)?odds.toFixed(2):'—'}</b></div><div class="odds-line"><span>Probabilité modèle</span><b>${pct(signal.model_probability)}</b></div>${meta}<div class="odds-line"><span>Probabilité marché</span><b>${pct(signal.market_probability)}</b></div><div class="odds-line"><span>Edge retenu</span><b>${Number.isFinite(edge)?signed(edge):'—'}</b></div><div class="odds-line"><span>EV robuste</span><b>${Number.isFinite(robust)?signed(robust):'—'}</b></div><small>${esc(source)} · recherche uniquement · aucune instruction de mise</small></article>`;
 }
 
+function renderFilteredResearchSignals(){
+  const filtered=RESEARCH_SIGNAL_FILTER==='all'?RESEARCH_SIGNALS:RESEARCH_SIGNALS.filter(signal=>signal.sport===RESEARCH_SIGNAL_FILTER);
+  $('#researchSignals').innerHTML=filtered.map(researchSignalCard).join('')||'<div class="slate-card"><h3>Aucun signal dans ce filtre</h3><p>L’abstention est conservée lorsque le marché, le modèle ou l’échantillon ne passent pas les portes.</p></div>';
+}
+
+function renderLearning(learning={},automation={}){
+  const candidate=learning.candidate||{};
+  const champion=learning.champion||{};
+  const sports=candidate.sport_event_counts||{};
+  const events=Number(candidate.settled_events||0);
+  const required=Number(learning.gates?.minimum_total_events?.required||100);
+  const progress=required>0?Math.min(100,100*events/required):0;
+  $('#learningEvents').textContent=events;
+  $('#learningSports').textContent=`Football ${sports.football??0} · Tennis ${sports.tennis??0}`;
+  $('#learningChampion').textContent=champion.id||'Aucun';
+  $('#learningChallenger').textContent=learning.status||'collecting';
+  $('#learningCandidate').textContent=candidate.candidate_id?`${candidate.candidate_id} · ${candidate.holdout_bets??0} signal(s) holdout`:'Candidat non évaluable.';
+  $('#learningBudget').textContent=`${automation.credits_consumed??0} / ${automation.daily_credit_cap??0}`;
+  $('#learningAutomation').textContent=automation.enabled?`${automation.due_events??0} résultat(s) à régler · ${automation.credits_remaining??0} crédit(s) restant(s)`:'Automatisation désactivée';
+  $('#learningProgressBar').style.width=`${progress.toFixed(1)}%`;
+  $('#learningProgressText').textContent=`${events} / ${required} événements pour la porte globale (${progress.toFixed(0)} %).`;
+  const action=$('#learningAction');
+  const title=learning.status==='review_required'?'Challenger prêt pour revue humaine':learning.status==='hold'?'Conserver le champion actuel':'Continuer la collecte shadow';
+  action.className=`action-card ${learning.status==='hold'?'blocked':learning.status==='review_required'?'':'attention'}`.trim();
+  action.innerHTML=`<small>PROCHAINE ÉTAPE</small><h3>${esc(title)}</h3><p>${esc(learning.next_action||automation.next_action||'Aucune action requise.')}</p>`;
+  const gates=Object.entries(learning.gates||{});
+  $('#learningGates').innerHTML=gates.map(([name,gate])=>`<article class="gate-card ${gate.passed?'passed':'blocked'}"><small>${gate.passed?'PASS':'HOLD'}</small><h3>${esc(name.replaceAll('_',' '))}</h3><p>Actuel : ${esc(typeof gate.actual==='object'?JSON.stringify(gate.actual):String(gate.actual??'—'))}<br>Requis : ${esc(typeof gate.required==='object'?JSON.stringify(gate.required):String(gate.required??'—'))}</p></article>`).join('')||'<p>Aucune porte publiée.</p>';
+}
+
 function renderResearchLab(data){
   const summary=data.summary||{};
   $('#researchFootballCount').textContent=summary.football_matches??0;
@@ -427,15 +475,28 @@ function renderResearchLab(data){
   $('#researchTennisDetail').textContent=`${data.tennis?.tournaments?.length??0} tournoi(s) capturé(s)`;
   $('#researchSignalCount').textContent=summary.experimental_signals??0;
   $('#researchSignalDetail').textContent=(summary.experimental_signals??0)>0?'Signaux shadow, non exécutables':'Aucun edge robuste retenu';
-  $('#researchCredits').textContent=summary.credits_consumed??0;
+  const automation=data.automation||{};
+  $('#researchCredits').textContent=automation.credits_consumed??summary.credits_consumed??0;
   const run=data.run||{};
-  $('#researchRunDetail').textContent=run.id?`Run #${run.id} · ${run.status||'—'}`:'Aucune capture marché persistée';
+  $('#researchRunDetail').textContent=run.id?`Run #${run.id} · ${run.status||'—'} · plafond ${automation.daily_credit_cap??0}`:'Aucune capture marché persistée';
   const signals=data.signals||[];
-  $('#researchSignals').innerHTML=signals.map(researchSignalCard).join('')||'<div class="slate-card"><h3>Aucun signal expérimental</h3><p>Le marché peut être absent, les cotes trop anciennes, le modèle en cold-start ou l’edge insuffisant.</p></div>';
+  RESEARCH_SIGNALS=signals;
+  renderFilteredResearchSignals();
+  const action=$('#researchAction');
+  if((summary.experimental_signals??0)>0){
+    action.className='action-card';
+    action.innerHTML=`<small>ACTION DU JOUR</small><h3>${summary.experimental_signals} signal(s) expérimental(aux) à examiner</h3><p>Simulation uniquement : vérifier le sport, la fraîcheur du marché et la raison du signal.</p>`;
+  }else if((summary.football_matches??0)+(summary.tennis_matches??0)>0){
+    action.className='action-card attention';
+    action.innerHTML='<small>ACTION DU JOUR</small><h3>Conserver l’abstention</h3><p>Des matchs ont été analysés, mais aucun edge robuste ne passe les portes actuelles.</p>';
+  }else{
+    action.className='action-card attention';
+    action.innerHTML='<small>ACTION DU JOUR</small><h3>Aucun snapshot marché récent</h3><p>Le produit modèle seul continue de fonctionner. Ne dépense pas de crédit juste pour remplir l’écran.</p>';
+  }
 
   const simulations=data.roi_lab?.simulations||[];
   const simulationRows=simulations.map(row=>`<tr><td>${Number(row.starting_bankroll).toFixed(0)}</td><td>${esc(row.strategy)}</td><td>${row.bets??0}</td><td>${Number(row.ending_bankroll).toFixed(2)}</td><td>${Number(row.profit).toFixed(2)}</td><td>${row.roi_on_turnover===null?'—':pct(row.roi_on_turnover)}</td><td>${pct(row.maximum_drawdown)}</td></tr>`).join('');
-  $('#researchBankrolls').innerHTML=simulationRows?`<table class="market-table"><thead><tr><th>Bankroll</th><th>Stratégie simulée</th><th>Paris</th><th>Finale</th><th>Profit</th><th>ROI turnover</th><th>Drawdown max</th></tr></thead><tbody>${simulationRows}</tbody></table>`:'<p>Aucun résultat réglé : la simulation ne peut pas encore être évaluée.</p>';
+  $('#researchBankrolls').innerHTML=simulationRows?`<table class="market-table"><thead><tr><th>Bankroll</th><th>Stratégie simulée</th><th>Signaux simulés</th><th>Finale</th><th>Profit</th><th>ROI turnover</th><th>Drawdown max</th></tr></thead><tbody>${simulationRows}</tbody></table>`:'<p>Aucun résultat réglé : la simulation ne peut pas encore être évaluée.</p>';
 
   const optimisation=data.roi_lab?.optimisation||{};
   const meta=data.roi_lab?.meta_model||{};
@@ -443,7 +504,8 @@ function renderResearchLab(data){
   const holdout=optimisation.holdout||{};
   const status=optimisation.status||'not_evaluable';
   const metaHoldout=meta.holdout||{};
-  $('#researchTraining').innerHTML=`<article class="gate-card"><small>STATUT POLITIQUE</small><h3>${esc(status)}</h3><p>${esc(optimisation.reason||'aucune optimisation')}</p></article><article class="gate-card"><small>ÉCHANTILLON</small><h3>${optimisation.settled_events??0}</h3><p>Événements marché réglés · politique min. 30 · méta-modèle min. 60</p></article><article class="gate-card"><small>POLITIQUE</small><h3>edge ${pct(policy.minimum_edge)}</h3><p>EV robuste ${pct(policy.minimum_robust_return)} · cote max ${policy.maximum_decimal_odds??'—'} · ${policy.maximum_bets_per_day??'—'} pari(s)/jour</p></article><article class="gate-card"><small>HOLDOUT ROI</small><h3>${holdout.bets??0} pari(s)</h3><p>ROI ${holdout.roi_on_turnover===null||holdout.roi_on_turnover===undefined?'—':pct(holdout.roi_on_turnover)} · drawdown ${holdout.maximum_drawdown===undefined?'—':pct(holdout.maximum_drawdown)}</p></article><article class="gate-card"><small>MÉTA-MODÈLE</small><h3>${esc(meta.status||'not_evaluable')}</h3><p>${metaHoldout.log_loss===undefined?'Pas assez de données':`log-loss holdout ${Number(metaHoldout.log_loss).toFixed(3)} · Brier ${Number(metaHoldout.brier).toFixed(3)}`}</p></article>`;
+  $('#researchTraining').innerHTML=`<article class="gate-card"><small>STATUT POLITIQUE</small><h3>${esc(status)}</h3><p>${esc(optimisation.reason||'aucune optimisation')}</p></article><article class="gate-card"><small>ÉCHANTILLON</small><h3>${optimisation.settled_events??0}</h3><p>Événements marché réglés · politique min. 30 · méta-modèle min. 60</p></article><article class="gate-card"><small>POLITIQUE</small><h3>edge ${pct(policy.minimum_edge)}</h3><p>EV robuste ${pct(policy.minimum_robust_return)} · cote max ${policy.maximum_decimal_odds??'—'} · ${policy.maximum_bets_per_day??'—'} signal(s)/jour</p></article><article class="gate-card"><small>HOLDOUT ROI</small><h3>${holdout.bets??0} signal(s)</h3><p>ROI ${holdout.roi_on_turnover===null||holdout.roi_on_turnover===undefined?'—':pct(holdout.roi_on_turnover)} · drawdown ${holdout.maximum_drawdown===undefined?'—':pct(holdout.maximum_drawdown)}</p></article><article class="gate-card"><small>MÉTA-MODÈLE</small><h3>${esc(meta.status||'not_evaluable')}</h3><p>${metaHoldout.log_loss===undefined?'Pas assez de données':`log-loss holdout ${Number(metaHoldout.log_loss).toFixed(3)} · Brier ${Number(metaHoldout.brier).toFixed(3)}`}</p></article>`;
+  renderLearning(data.learning||{},data.automation||{});
 }
 
 async function refreshResearchLab(){
@@ -451,7 +513,53 @@ async function refreshResearchLab(){
   catch(error){ toast(`Laboratoire ROI indisponible : ${error.message}`); }
 }
 
+async function loadExpertData(){
+  if(EXPERT_DATA_LOADED) return;
+  EXPERT_DATA_LOADED=true;
+  const controlTask=refreshControl();
+  const requests={
+    audit:jsonFetch('/api/metrics'),
+    provider:jsonFetch('/api/odds/status'),
+    history:jsonFetch('/api/history/predictions?limit=20'),
+    benchmark:jsonFetch('/api/benchmark/summary'),
+    evidence:jsonFetch('/api/evidence'),
+    preflight:jsonFetch('/api/coverage-preflight'),
+    campaign:jsonFetch('/api/evidence-campaign'),
+    decision:jsonFetch('/api/model-decision'),
+    shadow:jsonFetch('/api/shadow/summary'),
+    shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
+    system:jsonFetch('/api/system/status'),
+  };
+  const keys=Object.keys(requests);
+  const settled=await Promise.allSettled(Object.values(requests));
+  const loaded={};
+  settled.forEach((result,index)=>{
+    if(result.status==='fulfilled') loaded[keys[index]]=result.value;
+    else toast(`${keys[index]} : ${result.reason?.message||'chargement impossible'}`);
+  });
+  if(loaded.audit) $('#metrics').textContent=JSON.stringify(loaded.audit,null,2);
+  if(loaded.provider) renderProviderStatus(loaded.provider);
+  if(loaded.history) renderHistory(loaded.history);
+  if(loaded.benchmark) renderBenchmark(loaded.benchmark);
+  if(loaded.evidence) renderEvidence(loaded.evidence);
+  if(loaded.preflight) renderPreflight(loaded.preflight);
+  if(loaded.campaign) renderCampaign(loaded.campaign);
+  if(loaded.decision) renderDecision(loaded.decision);
+  if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
+  if(loaded.system) renderSystem(loaded.system);
+  await controlTask;
+  const paidOddsAvailable=Boolean(loaded.provider?.configured&&loaded.provider?.paid_calls_enabled);
+  $('#loadLiveOdds').disabled=!paidOddsAvailable;
+  $('#loadTennisOdds').disabled=!paidOddsAvailable;
+  if(!paidOddsAvailable){
+    $('#liveOddsResult').innerHTML='<div class="slate-card"><h3>Cotes payantes suspendues</h3><p>Le produit quotidien modèle seul reste disponible sans consommer de crédit.</p></div>';
+  }else{
+    try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); }
+  }
+}
+
 async function init(){
+  applyInterfaceMode(currentInterfaceMode(),{load:false});
   try{
     const health=await jsonFetch('/api/health');
     $('#health').textContent=`API ${health.status} · v${health.version}`;
@@ -473,59 +581,21 @@ async function init(){
     fill('#homeTeam',cat.football_teams,'Arsenal'); fill('#awayTeam',cat.football_teams,'Man City');
     fill('#player1',cat.tennis_players,'Taylor Fritz'); fill('#player2',cat.tennis_players,'Alexander Zverev');
     syncDifferent('#homeTeam','#awayTeam'); syncDifferent('#player1','#player2');
-    // Le centre de contrôle est critique pour le pilotage. On le charge et
-    // l'affiche indépendamment des appels plus lents (cotes, shadow, benchmark).
-    // Ainsi, une API secondaire lente ne bloque plus son rendu.
-    const controlTask=refreshControl();
-    const requests={
-      audit:jsonFetch('/api/metrics'),
-      slate:jsonFetch('/api/daily/slate'),
-      research:jsonFetch('/api/research-lab'),
-      modelDiagnostics:jsonFetch('/api/model-diagnostics'),
-      provider:jsonFetch('/api/odds/status'),
-      history:jsonFetch('/api/history/predictions?limit=20'),
-      benchmark:jsonFetch('/api/benchmark/summary'),
-      evidence:jsonFetch('/api/evidence'),
-      preflight:jsonFetch('/api/coverage-preflight'),
-      campaign:jsonFetch('/api/evidence-campaign'),
-      decision:jsonFetch('/api/model-decision'),
-      shadow:jsonFetch('/api/shadow/summary'),
-      shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
-      system:jsonFetch('/api/system/status'),
-    };
-    const keys=Object.keys(requests);
-    const settled=await Promise.allSettled(Object.values(requests));
-    const loaded={};
-    settled.forEach((result,index)=>{
-      if(result.status==='fulfilled') loaded[keys[index]]=result.value;
-      else toast(`${keys[index]} : ${result.reason?.message||'chargement impossible'}`);
-    });
-    if(loaded.audit) $('#metrics').textContent=JSON.stringify(loaded.audit,null,2);
-    if(loaded.slate) renderDaily(loaded.slate);
-    if(loaded.research) renderResearchLab(loaded.research);
-    if(loaded.modelDiagnostics) renderModelDiagnostics(loaded.modelDiagnostics);
-    if(loaded.provider) renderProviderStatus(loaded.provider);
-    if(loaded.history) renderHistory(loaded.history);
-    if(loaded.benchmark) renderBenchmark(loaded.benchmark);
-    if(loaded.evidence) renderEvidence(loaded.evidence);
-    if(loaded.preflight) renderPreflight(loaded.preflight);
-    if(loaded.campaign) renderCampaign(loaded.campaign);
-    if(loaded.decision) renderDecision(loaded.decision);
-    if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
-    if(loaded.system) renderSystem(loaded.system);
-    await controlTask;
-    const paidOddsAvailable=Boolean(loaded.provider?.configured&&loaded.provider?.paid_calls_enabled);
-    $('#loadLiveOdds').disabled=!paidOddsAvailable;
-    $('#loadTennisOdds').disabled=!paidOddsAvailable;
-    if(!paidOddsAvailable){
-      $('#liveOddsResult').innerHTML='<div class="slate-card"><h3>Cotes payantes suspendues</h3><p>Le produit quotidien modèle seul reste disponible sans consommer de crédit.</p></div>';
-    }else{
-      try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); }
-    }
+
+    const primary=await Promise.allSettled([
+      jsonFetch('/api/daily/slate'),
+      jsonFetch('/api/research-lab'),
+      jsonFetch('/api/model-diagnostics'),
+    ]);
+    if(primary[0].status==='fulfilled') renderDaily(primary[0].value); else toast(`daily : ${primary[0].reason?.message||'chargement impossible'}`);
+    if(primary[1].status==='fulfilled') renderResearchLab(primary[1].value); else toast(`research : ${primary[1].reason?.message||'chargement impossible'}`);
+    if(primary[2].status==='fulfilled') renderModelDiagnostics(primary[2].value);
+    if(currentInterfaceMode()==='expert') await loadExpertData();
   }catch(e){
     toast(`Interface partiellement chargée : ${e.message}`);
   }
 }
+
 
 $('#footballForm').addEventListener('submit',async e=>{
   e.preventDefault(); const target=$('#footballResult'); loading(target);
@@ -591,6 +661,12 @@ $('#logoutButton').addEventListener('click',async()=>{
 });
 
 $('#refreshResearchLab').addEventListener('click',refreshResearchLab);
+$('#interfaceMode').addEventListener('click',()=>applyInterfaceMode(currentInterfaceMode()==='expert'?'simple':'expert'));
+(document.querySelectorAll?.('.signal-filter')||[]).forEach(button=>button.addEventListener('click',()=>{
+  RESEARCH_SIGNAL_FILTER=button.dataset.sport||'all';
+  (document.querySelectorAll?.('.signal-filter')||[]).forEach(item=>item.classList.toggle('active',item===button));
+  renderFilteredResearchSignals();
+}));
 
 init();
 

@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 from typing import Any, Iterator, Mapping
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, Text, UniqueConstraint, create_engine, func, select, text
@@ -683,6 +684,50 @@ def latest_benchmark_run(sport_key: str | None = None) -> dict[str, Any] | None:
             "started_at": row.started_at.isoformat(),
             "finished_at": row.finished_at.isoformat() if row.finished_at else None,
         }
+
+
+def research_credits_consumed_on(
+    requested_date: str, *, timezone_name: str = "Europe/Paris",
+) -> dict[str, Any]:
+    """Sum paid dual-sport research credits for one local calendar day.
+
+    The daily cap must apply across capture and settlement runs, not merely per
+    HTTP request. Existing benchmark rows provide an append-only cost ledger, so
+    no new mutable counter is required.
+    """
+    try:
+        parsed_date = datetime.strptime(str(requested_date), "%Y-%m-%d").date()
+        if parsed_date.isoformat() != str(requested_date):
+            raise ValueError
+        local_start = pd.Timestamp(parsed_date, tz=ZoneInfo(timezone_name))
+    except (TypeError, ValueError):
+        raise ValueError("requested_date must use YYYY-MM-DD") from None
+    start_utc = local_start.tz_convert("UTC").to_pydatetime()
+    end_utc = (local_start + pd.Timedelta(days=1)).tz_convert("UTC").to_pydatetime()
+    with session_scope() as session:
+        rows = session.scalars(
+            select(BenchmarkRunRecord).where(
+                BenchmarkRunRecord.sport_key == "dual_sport_daily",
+                BenchmarkRunRecord.started_at >= start_utc,
+                BenchmarkRunRecord.started_at < end_utc,
+            ).order_by(BenchmarkRunRecord.started_at)
+        ).all()
+    total = 0
+    runs: list[dict[str, Any]] = []
+    for row in rows:
+        mode = str((row.config or {}).get("mode") or "")
+        if mode not in {"daily_live_market_shadow", "daily_result_settlement", "automated_shadow_cycle"}:
+            continue
+        summary = row.summary or {}
+        consumed = int(summary.get("credits_consumed") or 0)
+        total += max(0, consumed)
+        runs.append({
+            "id": int(row.id),
+            "mode": mode,
+            "credits_consumed": max(0, consumed),
+            "started_at": row.started_at.isoformat(),
+        })
+    return {"date": requested_date, "credits_consumed": int(total), "runs": runs}
 
 
 def benchmark_source_rows(*, sport_key: str, bookmaker_key: str = "winamax_fr") -> list[dict[str, Any]]:

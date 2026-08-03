@@ -47,13 +47,13 @@ def build_handoff() -> dict[str, Any]:
     report = read_json("artifacts/fresh_rebuild_report.json")
     artifact_manifest = read_json("artifacts/artifact_manifest.json")
     release_manifest = read_json("artifacts/release_manifest.json")
-    validation = read_json("VALIDATION_V4_4.json")
+    validation = read_json("VALIDATION_V4_5.json")
     integration_status = ({
         "status": "ready_for_controlled_deploy",
         "version": APP_VERSION,
         "validation": validation,
         "required_user_actions": [
-            "Deploy production version 4.4.0",
+            "Deploy production version 4.5.0",
             "Verify the dual-sport ROI lab renders in Chromium",
             "Keep paid capture disabled until a small shadow experiment is explicitly approved",
         ],
@@ -93,13 +93,13 @@ def build_handoff() -> dict[str, Any]:
             "services": ["sportpredictionlab", "daily-product-cron", "Postgres"],
             "cloud_jobs": [
                 "GitHub Actions daily product refresh",
-                "manual dual-sport market capture and settlement",
-                "zero-credit ROI policy optimisation",
+                "bounded automated shadow capture and settlement",
+                "weekly zero-credit challenger training",
             ],
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Deploy V4.4, verify the dual-sport ROI lab, then run only a manually approved shadow capture under a three-credit cap.",
+        "next_priority": "Deploy V4.5, verify the simple daily view and keep automated shadow learning disabled until its bounded schedule is approved.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
             "Tennis remains experimental; a base-model abstention requires at least 30 settled tennis events before meta-model rehabilitation.",
@@ -158,6 +158,8 @@ GitHub Actions
 ├── deploy-production.yml       tests → Railway deploy → API proof → Chromium smoke
 ├── verify-production.yml       read-only production proof
 ├── refresh-daily-product.yml   zero-credit fixture/model refresh
+├── automated-shadow-learning.yml bounded capture → settlement → challenger training
+├── promote-research-champion.yml manual reviewed champion promotion
 ├── rebuild-fresh-football.yml  rebuild → tests → deploy → proof
 ├── estimate-historical-sample.yml  immutable zero-credit request plan
 ├── estimate-evidence-coverage.yml coverage probe → VIABLE/RISKY/NOT_VIABLE
@@ -183,6 +185,7 @@ GitHub Actions
 - Daily slate: `/api/daily/slate`
 - Model diagnostics: `/api/model-diagnostics`
 - Credit firewall: `/api/credit-firewall`
+- Research learning state: `/api/research-lab/learning`
 - Daily paid odds: **disabled by default**
 - Historical paid evidence: **disabled by default**
 - Automatic bet placement: **disabled**
@@ -235,12 +238,12 @@ def active_model_card(payload: dict[str, Any]) -> str:
 
 def next_actions(payload: dict[str, Any]) -> str:
     decision = payload.get("model_decision") or {}
-    action = "Deploy V4.4, verify /api/ready, /api/release and /api/research-lab, then keep paid capture closed until a three-credit shadow experiment is approved."
+    action = "Deploy V4.5, verify the simple view and /api/research-lab/learning, then enable bounded shadow automation only after reviewing the daily credit cap."
     return f"""# NEXT ACTIONS
 
 1. {action}
 2. Confirm `/api/credit-firewall` keeps daily odds and historical evidence disabled by default.
-3. Follow `OPERATIONS_RUNBOOK_V4_4.md` for any manual live capture and settlement.
+3. Follow `OPERATIONS_RUNBOOK_V4_5.md` to approve the bounded automation schedule or perform a manual recovery run.
 4. Use GitHub Actions → Generate handoff package, then attach the downloaded ZIP in the next conversation.
 
 No secret is exported.

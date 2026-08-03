@@ -40,12 +40,12 @@
     "version": "3.6.0"
   },
   "coverage_preflight": null,
-  "current_version": "4.4.0",
+  "current_version": "4.5.0",
   "deployment": {
     "cloud_jobs": [
       "GitHub Actions daily product refresh",
-      "manual dual-sport market capture and settlement",
-      "zero-credit ROI policy optimisation"
+      "bounded automated shadow capture and settlement",
+      "weekly zero-credit challenger training"
     ],
     "platform": "Railway",
     "public_url": "not_exported",
@@ -106,11 +106,11 @@
     },
     "version": "3.4.0"
   },
-  "generated_at_utc": "2026-08-03T21:06:38.471998+00:00",
+  "generated_at_utc": "2026-08-03T21:59:08.690551+00:00",
   "git": {
-    "branch": "unknown",
-    "commit": "unknown",
-    "commit_short": "unknown"
+    "branch": "master",
+    "commit": "ca5488e23ca250aeb0a7c4a8d5d41e3cc6c34f3c",
+    "commit_short": "ca5488e23ca2"
   },
   "historical_evidence": {
     "app_version": "3.9.0",
@@ -1164,77 +1164,78 @@
   },
   "integration_status": {
     "required_user_actions": [
-      "Deploy production version 4.4.0",
+      "Deploy production version 4.5.0",
       "Verify the dual-sport ROI lab renders in Chromium",
       "Keep paid capture disabled until a small shadow experiment is explicitly approved"
     ],
     "status": "ready_for_controlled_deploy",
     "validation": {
-      "external_actions": {
+      "coverage": {
+        "branches_percent": 57.08762886597938,
+        "combined_statements_branches_percent": 78.2937280872614,
+        "note": "The instrumented V4.4 batch completed assertions but did not exit before the environment timeout; it was validated separately without instrumentation.",
+        "source": "artifacts/coverage_v4_5.json",
+        "statements_percent": 82.99229085371657
+      },
+      "external_execution": {
+        "live_automated_cycles": 0,
         "provider_credits_consumed": 0,
-        "railway_deployed_from_audit_environment": false,
+        "railway_deployments": 0,
         "the_odds_api_calls": 0
       },
+      "features": {
+        "automatic_bet_placement": false,
+        "duplicate_champion_promotion_blocked": true,
+        "empty_football_day_paid_call_skipped": true,
+        "expert_data_lazy_loaded": true,
+        "manual_champion_promotion_only": true,
+        "paper_bankroll_paths": true,
+        "real_money_stake_recommendation": false,
+        "shared_daily_credit_ledger": true,
+        "simple_mode_default": true,
+        "weekly_zero_credit_challenger_training": true,
+        "zero_credit_noop_settlement": true
+      },
+      "generated_at_utc": "2026-08-03T21:57:14.524856+00:00",
       "limitations": [
-        "No live settled V4.4 sample exists in the preparation environment.",
-        "The bundled tennis model is Elo-only and uncalibrated until sport-specific shadow evidence is sufficient.",
-        "Historical simulated ROI is not a profitability claim."
+        "No real automated shadow cycle was executed from the preparation environment.",
+        "No challenger currently has enough live settled evidence for promotion.",
+        "The tennis base model remains an uncalibrated Elo baseline until sport-specific evidence is sufficient.",
+        "GitHub Actions are still mainly referenced by major tags rather than immutable SHAs.",
+        "Alembic remains required before a future complex schema migration; V4.5 reused existing append-only tables.",
+        "Simulated ROI is not evidence of future profitability."
       ],
       "schema_version": "1.0",
-      "technical_validation": {
-        "configuration_files_validated": 19,
-        "javascript_syntax": "passed",
-        "python_compileall": "passed",
-        "railway_ci_streaming_mode_forbidden": true,
-        "release_registry_includes_v44_components": true,
-        "workflow_yaml_files": 16
+      "static_validation": {
+        "git_diff_check": true,
+        "github_workflows": 18,
+        "javascript_node_check": true,
+        "python_compileall": true,
+        "yaml_files": 19
       },
       "tests": {
         "batches": [
-          20,
-          12,
-          24,
-          29,
+          32,
+          22,
+          31,
           50,
-          46,
-          38
+          29,
+          37,
+          14,
+          20
         ],
-        "collected": 219,
-        "execution_mode": "seven_disjoint_batches",
+        "collected": 235,
+        "execution": "eight disjoint batches",
         "failed": 0,
-        "monolithic_run": "timed_out_in_audit_environment_after_partial_progress",
-        "passed": 219
-      },
-      "v44_contracts": {
-        "automatic_bet_placement": false,
-        "chronological_policy_grid_candidates": 144,
-        "dashboard_provider_calls": false,
-        "dual_sport_daily_view": true,
-        "football_and_tennis_settlement": true,
-        "manual_credit_capped_capture": true,
-        "meta_model_minimum_settled_events": 60,
-        "one_training_row_per_event": true,
-        "policy_minimum_settled_events": 30,
-        "real_money_stake_recommendation": false,
-        "shadow_required_before_paid_capture": true,
-        "simulated_bankrolls": [
-          100,
-          500,
-          1000
-        ],
-        "simulation_strategies": [
-          "flat_1pct",
-          "flat_2pct",
-          "quarter_kelly_capped_2pct"
-        ],
-        "sport_specific_meta_rehabilitation_minimum": 30
+        "monolithic_suite": "not claimed; disjoint batches cover all collected tests",
+        "passed": 235
       },
       "version": {
-        "app_version": "4.4.0",
-        "package_version": "0.4.4.0"
+        "app_version": "4.5.0",
+        "package_version": "0.4.5.0"
       }
     },
-    "version": "4.4.0"
+    "version": "4.5.0"
   },
   "known_gates": [
     "No profitability claim before a sufficiently large temporally valid sample.",
@@ -1258,7 +1259,7 @@
     "reason": "No real historical champion–challenger benchmark was executed in the delivered package.",
     "status": "not_evaluable"
   },
-  "next_priority": "Deploy V4.4, verify the dual-sport ROI lab, then run only a manually approved shadow capture under a three-credit cap.",
+  "next_priority": "Deploy V4.5, verify the simple daily view and keep automated shadow learning disabled until its bounded schedule is approved.",
   "project": "Sports Prediction Lab",
   "release": {
     "app": {
@@ -1266,9 +1267,9 @@
       "environment": "development",
       "name": "sports-prediction-lab",
       "service_id": null,
-      "source_commit": "unknown",
-      "source_commit_short": "unknown",
-      "version": "4.4.0"
+      "source_commit": "ca5488e23ca250aeb0a7c4a8d5d41e3cc6c34f3c",
+      "source_commit_short": "ca5488e23ca2",
+      "version": "4.5.0"
     },
     "football_model": {
       "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
@@ -1291,7 +1292,7 @@
       },
       "trained_until": "2026-05-24T00:00:00+00:00"
     },
-    "generated_at_utc": "2026-08-03T21:06:38.471357+00:00",
+    "generated_at_utc": "2026-08-03T21:59:08.689916+00:00",
     "integrity": {
       "artifact_integrity_ok": true,
       "artifact_manifest_present": true,
@@ -1319,17 +1320,21 @@
         }
       },
       "code_files": {
+        ".github/workflows/automated-shadow-learning.yml": {
+          "bytes": 10421,
+          "sha256": "7b06185b60a2cb1b6c792cb3d3a038adf90e1b99325cd3570724087b2a9e5451"
+        },
         ".github/workflows/capture-daily-research.yml": {
           "bytes": 5797,
           "sha256": "658a11cd754060ad1f65d5a42df189287bedfae43e9e64d5805a475186274b29"
         },
         ".github/workflows/deploy-production.yml": {
           "bytes": 5365,
-          "sha256": "9355bbd622dfd6bfc774d0a4ad8957dffaf161afb72e7a7fba556236058e0109"
+          "sha256": "db3a8c63bd0a5b552600d084ca0b46326f3e096aca292f8a88b86333d46466dd"
         },
         ".github/workflows/estimate-evidence-coverage.yml": {
           "bytes": 8173,
-          "sha256": "4896a2a910bb96b5d96516b012e820ce373f03accae358f1dfcb008c9b4e46b5"
+          "sha256": "58031086d7dcab70cbf45af6bbf73efb23b59834c2a08d45674f934bc4290f92"
         },
         ".github/workflows/estimate-historical-sample.yml": {
           "bytes": 3864,
@@ -1343,17 +1348,21 @@
           "bytes": 2872,
           "sha256": "31859b4741d2ad0eca8b299b3e963ad578d93aa2e1ba71720f2ba097f28a946c"
         },
+        ".github/workflows/promote-research-champion.yml": {
+          "bytes": 3039,
+          "sha256": "edf48c753606ff2ce25c1da037ec90582838b624b904c283eeb79953d8ef0e11"
+        },
         ".github/workflows/rebuild-fresh-football.yml": {
           "bytes": 5985,
-          "sha256": "f80666818060667c2196ca2deb0858a82dd5d810ef1244fce28b3557d881407b"
+          "sha256": "fd5e779dea27d9a7ea00e043427fb50d880fbaa9f6ed91fb9ee6e57b0ca7c3f2"
         },
         ".github/workflows/run-evidence-campaign.yml": {
           "bytes": 26102,
-          "sha256": "51978125dd8e430b4868a54de101709dd93f3352f3381bead7649088aa57f71a"
+          "sha256": "2bba202eb4878377002f10dc43ec6a2cc836de927c2d3f9cb033455077e7dec3"
         },
         ".github/workflows/run-historical-sample.yml": {
           "bytes": 15665,
-          "sha256": "a24dfdec799bd6368e8f247c421ae0a278667fa226d68d4044d26c7797022075"
+          "sha256": "e5cb37a0b9c7d990f100225429316520280673bda7b7c42ed2d9aaa45b2d5e86"
         },
         ".github/workflows/settle-daily-research.yml": {
           "bytes": 4060,
@@ -1361,7 +1370,7 @@
         },
         ".github/workflows/verify-production.yml": {
           "bytes": 3214,
-          "sha256": "cd7a4bed201ad65b47aaa7ae42b3a407dcf13db451e4bad6cc3bc7e7e0e4f4e5"
+          "sha256": "41083c1a14faf6d9436e8c09e0c88d1910f042ce8b870b7b796301b17e279aa2"
         },
         "Dockerfile": {
           "bytes": 1117,
@@ -1376,24 +1385,28 @@
           "sha256": "c43ca6879fef6ba96a2380a09e0621e5627e222003fcf858fe3f7f0702b4cd16"
         },
         "scripts/browser_smoke_test.py": {
-          "bytes": 9354,
-          "sha256": "369ce09b9bbad70d9aaebc5aa7d04812c1b5d8d4242542d465574de210587ec7"
+          "bytes": 8036,
+          "sha256": "67c1c9db62ce541be6cde381a2b90467144ac6b542ee2de7473eb80144a2f967"
         },
         "scripts/run_coverage_preflight.py": {
           "bytes": 13253,
           "sha256": "f6a96fc56d294a0f60317526d3c3adc8d9a44ab314591125d39cac7400cc380c"
         },
+        "sports_predictor/cloud_config.py": {
+          "bytes": 8071,
+          "sha256": "72279ab16f99d1b1293b0a285b9733ee49cbe7d286bcee0cb3767bd17a212ed0"
+        },
         "sports_predictor/control_center.py": {
-          "bytes": 15908,
-          "sha256": "562935f46b691fcda173b40d0d959817920b78027ddfcdce6042160733bcbb9f"
+          "bytes": 16986,
+          "sha256": "24f7d95a0ea88151709341437301e26324ad7df252ae7d01920f54efc42e75e5"
         },
         "sports_predictor/coverage_preflight.py": {
           "bytes": 21242,
           "sha256": "743ed8cf0c6915d1f19d3062ed6893bea9400dc4127ef4eca2f69db8a9969af9"
         },
         "sports_predictor/database.py": {
-          "bytes": 61431,
-          "sha256": "e79b13cc6426ab72e27b984587d6aef6a5ac5feba66c21d78804facb479143dc"
+          "bytes": 63406,
+          "sha256": "16868f4b80728e109d96f9a121478269723674c9c1be83a22520ac0ef8161ed4"
         },
         "sports_predictor/evidence_campaign.py": {
           "bytes": 17594,
@@ -1408,12 +1421,12 @@
           "sha256": "19e088dfa6ad939ff8f4e2f079bfc14d2f13edbdd7834532ac1d0ba06532c23a"
         },
         "sports_predictor/release_registry.py": {
-          "bytes": 13850,
-          "sha256": "6e9ffe854d3d7b908dacccabaa0c89b0c95a21688ea25142b5e07688368da3c0"
+          "bytes": 14041,
+          "sha256": "30612f0f4da62c906c1deb31f549f4d69e1fabce720a441eb5172d9189aefa9a"
         },
         "sports_predictor/roi_lab.py": {
-          "bytes": 24052,
-          "sha256": "8d55a23f426fcc992ec7cb989b3dacff7e8747248acec57d7d140625b167c27d"
+          "bytes": 33377,
+          "sha256": "52097f007c2f2ed7aa5ddccbaa6c7034c5776fca2de477d7faf5bec2d50127af"
         },
         "sports_predictor/sample_plan.py": {
           "bytes": 9057,
@@ -1424,16 +1437,20 @@
           "sha256": "a0a8262dfe6614caf66709aeccc2c20e63719b921f002aae150fab69c500ded5"
         },
         "static/app.js": {
-          "bytes": 47820,
-          "sha256": "032a4bb3d177606a7aaaa5e13e49930b45934a3933a86175e214a77cebc4fc87"
+          "bytes": 52842,
+          "sha256": "87e7f221727bdaa4965be0904f79dc0b84ccff7d1bf6a3441def99d588971ad1"
         },
         "static/index.html": {
-          "bytes": 29468,
-          "sha256": "d73a66d85684968ffef1fcc35fa1b6ac2df506f3f9612b25ff5bd7a9f5379ece"
+          "bytes": 31796,
+          "sha256": "0516e4aa5cb2b9e159a1f2b7a1beefa04c65af0819b2369684daa0270471b1ec"
+        },
+        "static/styles.css": {
+          "bytes": 22449,
+          "sha256": "73319bec8a9d42b504de8c40b7f867a038dfa82ce34e585fbbab76f03f7099c9"
         },
         "webapp.py": {
-          "bytes": 114159,
-          "sha256": "3742791c64786b02ba579d2994c9d5cfe7464e7384201d9795b50179aa6c1cbe"
+          "bytes": 124096,
+          "sha256": "aafecde87a5de84b56bf03339d87038d863b61510fbae10ceeb540ea58aea105"
         }
       }
     },
@@ -1467,7 +1484,7 @@
         "rps": 0.43954820365378716
       }
     },
-    "release_id": "0666ec6afaa39ebbd5a9",
+    "release_id": "ea38dccc87fc6c760663",
     "safety": {
       "automatic_bet_placement": false,
       "secrets_exported": false,
@@ -1481,9 +1498,9 @@
       "environment": "development",
       "name": "sports-prediction-lab",
       "service_id": null,
-      "source_commit": "unknown",
-      "source_commit_short": "unknown",
-      "version": "4.4.0"
+      "source_commit": "ca5488e23ca250aeb0a7c4a8d5d41e3cc6c34f3c",
+      "source_commit_short": "ca5488e23ca2",
+      "version": "4.5.0"
     },
     "football_model": {
       "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
@@ -1506,7 +1523,7 @@
       },
       "trained_until": "2026-05-24T00:00:00+00:00"
     },
-    "generated_at_utc": "2026-08-03T21:06:36.879347+00:00",
+    "generated_at_utc": "2026-08-03T21:59:07.174157+00:00",
     "integrity": {
       "artifact_integrity_ok": true,
       "artifact_manifest_present": true,
@@ -1534,17 +1551,21 @@
         }
       },
       "code_files": {
+        ".github/workflows/automated-shadow-learning.yml": {
+          "bytes": 10421,
+          "sha256": "7b06185b60a2cb1b6c792cb3d3a038adf90e1b99325cd3570724087b2a9e5451"
+        },
         ".github/workflows/capture-daily-research.yml": {
           "bytes": 5797,
           "sha256": "658a11cd754060ad1f65d5a42df189287bedfae43e9e64d5805a475186274b29"
         },
         ".github/workflows/deploy-production.yml": {
           "bytes": 5365,
-          "sha256": "9355bbd622dfd6bfc774d0a4ad8957dffaf161afb72e7a7fba556236058e0109"
+          "sha256": "db3a8c63bd0a5b552600d084ca0b46326f3e096aca292f8a88b86333d46466dd"
         },
         ".github/workflows/estimate-evidence-coverage.yml": {
           "bytes": 8173,
-          "sha256": "4896a2a910bb96b5d96516b012e820ce373f03accae358f1dfcb008c9b4e46b5"
+          "sha256": "58031086d7dcab70cbf45af6bbf73efb23b59834c2a08d45674f934bc4290f92"
         },
         ".github/workflows/estimate-historical-sample.yml": {
           "bytes": 3864,
@@ -1558,17 +1579,21 @@
           "bytes": 2872,
           "sha256": "31859b4741d2ad0eca8b299b3e963ad578d93aa2e1ba71720f2ba097f28a946c"
         },
+        ".github/workflows/promote-research-champion.yml": {
+          "bytes": 3039,
+          "sha256": "edf48c753606ff2ce25c1da037ec90582838b624b904c283eeb79953d8ef0e11"
+        },
         ".github/workflows/rebuild-fresh-football.yml": {
           "bytes": 5985,
-          "sha256": "f80666818060667c2196ca2deb0858a82dd5d810ef1244fce28b3557d881407b"
+          "sha256": "fd5e779dea27d9a7ea00e043427fb50d880fbaa9f6ed91fb9ee6e57b0ca7c3f2"
         },
         ".github/workflows/run-evidence-campaign.yml": {
           "bytes": 26102,
-          "sha256": "51978125dd8e430b4868a54de101709dd93f3352f3381bead7649088aa57f71a"
+          "sha256": "2bba202eb4878377002f10dc43ec6a2cc836de927c2d3f9cb033455077e7dec3"
         },
         ".github/workflows/run-historical-sample.yml": {
           "bytes": 15665,
-          "sha256": "a24dfdec799bd6368e8f247c421ae0a278667fa226d68d4044d26c7797022075"
+          "sha256": "e5cb37a0b9c7d990f100225429316520280673bda7b7c42ed2d9aaa45b2d5e86"
         },
         ".github/workflows/settle-daily-research.yml": {
           "bytes": 4060,
@@ -1576,7 +1601,7 @@
         },
         ".github/workflows/verify-production.yml": {
           "bytes": 3214,
-          "sha256": "cd7a4bed201ad65b47aaa7ae42b3a407dcf13db451e4bad6cc3bc7e7e0e4f4e5"
+          "sha256": "41083c1a14faf6d9436e8c09e0c88d1910f042ce8b870b7b796301b17e279aa2"
         },
         "Dockerfile": {
           "bytes": 1117,
@@ -1591,24 +1616,28 @@
           "sha256": "c43ca6879fef6ba96a2380a09e0621e5627e222003fcf858fe3f7f0702b4cd16"
         },
         "scripts/browser_smoke_test.py": {
-          "bytes": 9354,
-          "sha256": "369ce09b9bbad70d9aaebc5aa7d04812c1b5d8d4242542d465574de210587ec7"
+          "bytes": 8036,
+          "sha256": "67c1c9db62ce541be6cde381a2b90467144ac6b542ee2de7473eb80144a2f967"
         },
         "scripts/run_coverage_preflight.py": {
           "bytes": 13253,
           "sha256": "f6a96fc56d294a0f60317526d3c3adc8d9a44ab314591125d39cac7400cc380c"
         },
+        "sports_predictor/cloud_config.py": {
+          "bytes": 8071,
+          "sha256": "72279ab16f99d1b1293b0a285b9733ee49cbe7d286bcee0cb3767bd17a212ed0"
+        },
         "sports_predictor/control_center.py": {
-          "bytes": 15908,
-          "sha256": "562935f46b691fcda173b40d0d959817920b78027ddfcdce6042160733bcbb9f"
+          "bytes": 16986,
+          "sha256": "24f7d95a0ea88151709341437301e26324ad7df252ae7d01920f54efc42e75e5"
         },
         "sports_predictor/coverage_preflight.py": {
           "bytes": 21242,
           "sha256": "743ed8cf0c6915d1f19d3062ed6893bea9400dc4127ef4eca2f69db8a9969af9"
         },
         "sports_predictor/database.py": {
-          "bytes": 61431,
-          "sha256": "e79b13cc6426ab72e27b984587d6aef6a5ac5feba66c21d78804facb479143dc"
+          "bytes": 63406,
+          "sha256": "16868f4b80728e109d96f9a121478269723674c9c1be83a22520ac0ef8161ed4"
         },
         "sports_predictor/evidence_campaign.py": {
           "bytes": 17594,
@@ -1623,12 +1652,12 @@
           "sha256": "19e088dfa6ad939ff8f4e2f079bfc14d2f13edbdd7834532ac1d0ba06532c23a"
         },
         "sports_predictor/release_registry.py": {
-          "bytes": 13850,
-          "sha256": "6e9ffe854d3d7b908dacccabaa0c89b0c95a21688ea25142b5e07688368da3c0"
+          "bytes": 14041,
+          "sha256": "30612f0f4da62c906c1deb31f549f4d69e1fabce720a441eb5172d9189aefa9a"
         },
         "sports_predictor/roi_lab.py": {
-          "bytes": 24052,
-          "sha256": "8d55a23f426fcc992ec7cb989b3dacff7e8747248acec57d7d140625b167c27d"
+          "bytes": 33377,
+          "sha256": "52097f007c2f2ed7aa5ddccbaa6c7034c5776fca2de477d7faf5bec2d50127af"
         },
         "sports_predictor/sample_plan.py": {
           "bytes": 9057,
@@ -1639,16 +1668,20 @@
           "sha256": "a0a8262dfe6614caf66709aeccc2c20e63719b921f002aae150fab69c500ded5"
         },
         "static/app.js": {
-          "bytes": 47820,
-          "sha256": "032a4bb3d177606a7aaaa5e13e49930b45934a3933a86175e214a77cebc4fc87"
+          "bytes": 52842,
+          "sha256": "87e7f221727bdaa4965be0904f79dc0b84ccff7d1bf6a3441def99d588971ad1"
         },
         "static/index.html": {
-          "bytes": 29468,
-          "sha256": "d73a66d85684968ffef1fcc35fa1b6ac2df506f3f9612b25ff5bd7a9f5379ece"
+          "bytes": 31796,
+          "sha256": "0516e4aa5cb2b9e159a1f2b7a1beefa04c65af0819b2369684daa0270471b1ec"
+        },
+        "static/styles.css": {
+          "bytes": 22449,
+          "sha256": "73319bec8a9d42b504de8c40b7f867a038dfa82ce34e585fbbab76f03f7099c9"
         },
         "webapp.py": {
-          "bytes": 114159,
-          "sha256": "3742791c64786b02ba579d2994c9d5cfe7464e7384201d9795b50179aa6c1cbe"
+          "bytes": 124096,
+          "sha256": "aafecde87a5de84b56bf03339d87038d863b61510fbae10ceeb540ea58aea105"
         }
       }
     },
@@ -1682,7 +1715,7 @@
         "rps": 0.43954820365378716
       }
     },
-    "release_id": "0666ec6afaa39ebbd5a9",
+    "release_id": "ea38dccc87fc6c760663",
     "safety": {
       "automatic_bet_placement": false,
       "secrets_exported": false,

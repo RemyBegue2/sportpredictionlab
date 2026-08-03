@@ -66,7 +66,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.4.0'
+      EXPECTED_VERSION: '4.5.0'
       INPUT_MODE: ${{ inputs.mode }}
       INPUT_TARGET_STAGE: ${{ inputs.target_stage }}
       INPUT_MAX_CREDITS: ${{ inputs.max_credits }}
@@ -99,7 +99,7 @@ jobs:
               "sports_predictor/evidence_campaign.py": "CAMPAIGN_STAGES",
               "sports_predictor/coverage_preflight.py": "PREFLIGHT_DECISIONS",
               "scripts/plan_evidence_campaign.py": "ZERO-CREDIT CAMPAIGN PLAN",
-              "sports_predictor/version.py": 'APP_VERSION = "4.4.0"',
+              "sports_predictor/version.py": 'APP_VERSION = "4.5.0"',
               "sports_predictor/cloud_config.py": "cloud_runtime_detected",
           }
           errors = []

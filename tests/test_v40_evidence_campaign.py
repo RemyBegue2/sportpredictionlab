@@ -38,7 +38,7 @@ def _viable_preflight(stage: int, max_credits: int, *, baseline: str = "consensu
     ids = sorted(f"event-{index}" for index in range(max(recommended, stage)))
     candidate = {
         "schema_version": "1.0",
-        "app_version": "4.4.0",
+        "app_version": "4.5.0",
         "baseline": baseline,
         "campaign_type": "french_market_comparison",
         "target_stage": stage,
@@ -168,7 +168,7 @@ def test_v40_campaign_planner_cli_is_file_only(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["app_version"] == "4.4.0"
+    assert payload["app_version"] == "4.5.0"
     assert "ZERO-CREDIT CAMPAIGN PLAN" in result.stdout
 
 
@@ -212,7 +212,7 @@ def test_v40_api_frontend_and_workflow_contract() -> None:
         release = client.get("/api/release")
         campaign = client.get("/api/evidence-campaign")
     assert release.status_code == 200
-    assert release.json()["version"] == "4.4.0"
+    assert release.json()["version"] == "4.5.0"
     assert campaign.status_code == 200
     assert campaign.json()["report"]["automatic_model_promotion"] is False
 
@@ -222,7 +222,7 @@ def test_v40_api_frontend_and_workflow_contract() -> None:
     for element_id in ("campaignDecision", "campaignCompleted", "campaignNext", "campaignBudget"):
         assert f'id="{element_id}"' in html
         assert f"#{element_id}" in js
-    assert "app.js?v=4.4.0" in html
+    assert "app.js?v=4.5.0" in html
     assert "plan_request_id" not in workflow
     assert "Test before any provider request" in workflow
     assert workflow.index("Test before any provider request") < workflow.index("Discover historical events")
