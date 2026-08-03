@@ -31,3 +31,19 @@ Aucun benchmark historique réel n’a été exécuté dans le paquet V3.7 livr�
 La V3.8 ne modifie pas le modèle football. Elle ajoute un protocole de collecte et de qualité destiné à déterminer si le modèle mérite une analyse plus large.
 
 Une porte `technical_validation` indique seulement que la chaîne fonctionne sur un petit échantillon. Elle ne signifie ni avantage statistique ni rentabilité.
+
+## V4.3 daily-product status
+
+The football model is exposed for **model-only research probabilities**, not for automatic betting decisions. The V4.3 runtime checks artifact integrity, a valid probability vector, chronological test size, log-loss against a naive baseline, calibration availability and model freshness.
+
+Current bundled metrics at preparation time:
+
+- model version: `3.4.0-fresh`;
+- chronological test observations: 380;
+- log-loss: 1.0619;
+- naive log-loss: 1.0846;
+- ECE: 0.0959;
+- market-shortlist readiness: false;
+- automatic betting and staking: false.
+
+A valid model-only prediction may be displayed without odds. A market shortlist requires separate live-market evidence and remains disabled by default.

@@ -420,6 +420,49 @@ def record_prediction(*, sport: str, model_version: str, fixture: Mapping[str, A
         return int(record.id)
 
 
+def record_prediction_once(*, sport: str, model_version: str, fixture: Mapping[str, Any], probabilities: Mapping[str, Any], market_analysis: Mapping[str, Any] | None, decision: str, provider_event_id: str) -> dict[str, Any]:
+    """Persist one immutable daily prediction per provider event and model version.
+
+    Manual prediction endpoints intentionally keep their append-only behaviour.
+    The automated zero-credit daily sync uses this idempotent helper so page
+    refreshes and cron retries do not inflate the prediction table.
+    """
+    event_key = str(provider_event_id or "").strip()
+    if not event_key:
+        raise ValueError("provider_event_id is required for idempotent prediction persistence")
+    with session_scope() as session:
+        bind = session.get_bind()
+        if bind.dialect.name == "postgresql":
+            # The API and the six-hour cron may refresh the same fixture at the
+            # same time. A transaction-scoped advisory lock closes the race
+            # between the lookup and insert without requiring an immediate
+            # schema migration on existing production databases.
+            lock_key = f"daily-prediction|{sport}|{model_version}|{event_key}"
+            session.execute(
+                text("SELECT pg_advisory_xact_lock(CAST(hashtext(:lock_key) AS bigint))"),
+                {"lock_key": lock_key},
+            )
+        existing = session.scalar(select(PredictionRecord).where(
+            PredictionRecord.provider_event_id == event_key,
+            PredictionRecord.model_version == str(model_version),
+            PredictionRecord.sport == str(sport),
+        ).order_by(PredictionRecord.created_at.desc()))
+        if existing is not None:
+            return {"id": int(existing.id), "created": False}
+        record = PredictionRecord(
+            provider_event_id=event_key,
+            sport=str(sport),
+            model_version=str(model_version),
+            fixture=_json_safe(dict(fixture)),
+            probabilities=_json_safe(dict(probabilities)),
+            market_analysis=_json_safe(dict(market_analysis)) if market_analysis else None,
+            decision=str(decision),
+        )
+        session.add(record)
+        session.flush()
+        return {"id": int(record.id), "created": True}
+
+
 def recent_predictions(limit: int = 50) -> list[dict[str, Any]]:
     with session_scope() as session:
         records = session.scalars(select(PredictionRecord).order_by(PredictionRecord.created_at.desc()).limit(max(1, min(200, limit)))).all()

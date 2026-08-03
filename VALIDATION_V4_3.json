@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.1",
+  "application": {
+    "name": "Sports Prediction Lab",
+    "app_version": "4.3.0",
+    "package_version": "0.4.3.0",
+    "release_name": "Daily Product Recovery & Credit Firewall"
+  },
+  "tests": {
+    "collected": 205,
+    "passed": 205,
+    "failed": 0,
+    "execution_mode": "five_disjoint_batches",
+    "batch_passed_counts": [27, 40, 53, 73, 12]
+  },
+  "coverage": {
+    "statement_percent": 82.38,
+    "branch_inclusive_percent": 78,
+    "total_statements": 5908,
+    "missed_statements": 1041,
+    "webapp_statement_percent": 79.63,
+    "webapp_branch_inclusive_percent": 76,
+    "daily_product_statement_percent": 70.96,
+    "daily_product_branch_inclusive_percent": 67
+  },
+  "static_validation": {
+    "python_compileall": true,
+    "javascript_node_check": true,
+    "yaml_parse": true,
+    "yaml_files_checked": 14
+  },
+  "runtime_validation": {
+    "local_model_diagnostics_status": "operational_research",
+    "credit_firewall_status": "protected",
+    "model_only_cost_credits": 0,
+    "daily_odds_enabled": false,
+    "historical_evidence_enabled": false,
+    "external_fixture_connectivity_validated": false,
+    "railway_deployment_performed": false,
+    "github_workflow_performed": false,
+    "the_odds_api_calls_performed": false
+  },
+  "model_diagnostics": {
+    "model_version": "3.4.0-fresh",
+    "registry_status": "shadow",
+    "data_cutoff": "2026-05-24T00:00:00+00:00",
+    "chronological_test_rows": 380,
+    "log_loss": 1.0618926736262253,
+    "naive_log_loss": 1.0846018600662934,
+    "ece": 0.0958730475496105,
+    "model_only_predictions_ready": true,
+    "market_shortlist_ready": false
+  }
+}

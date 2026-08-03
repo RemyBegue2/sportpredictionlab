@@ -59,6 +59,43 @@ def main() -> None:
         try:
             page.wait_for_function(
                 """() => {
+                    const element = document.querySelector('#dailyModelStatus');
+                    if (!element) return false;
+                    const value = (element.textContent || '').trim();
+                    return value.length > 0 && value !== 'Chargement…' && value !== '—';
+                }""",
+                timeout=args.timeout_ms,
+            )
+        except Exception as exc:
+            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
+            raise SystemExit(
+                "Browser smoke test failed: daily model diagnostics did not render"
+                + (f"; interface message: {toast}" if toast else "")
+            ) from exc
+        daily_model = page.locator("#dailyModelStatus").inner_text().strip()
+        daily_count = page.locator("#dailyPredictionCount").inner_text().strip()
+        try:
+            page.wait_for_function(
+                """() => {
+                    const detail = document.querySelector('#dailyPredictionDetail');
+                    const today = document.querySelector('#dailySlate');
+                    const upcoming = document.querySelector('#upcomingSlate');
+                    if (!detail || !today || !upcoming) return false;
+                    return !(detail.textContent || '').includes('Aucun calendrier chargé')
+                      && !today.querySelector('.loading-card')
+                      && !upcoming.querySelector('.loading-card');
+                }""",
+                timeout=args.timeout_ms,
+            )
+        except Exception as exc:
+            toast = page.locator("#toast").inner_text().strip() if page.locator("#toast").count() else ""
+            raise SystemExit(
+                "Browser smoke test failed: daily slate did not finish rendering"
+                + (f"; interface message: {toast}" if toast else "")
+            ) from exc
+        try:
+            page.wait_for_function(
+                """() => {
                     const element = document.querySelector('#evidenceGate');
                     if (!element) return false;
                     const value = (element.textContent || '').trim();
@@ -95,6 +132,10 @@ def main() -> None:
         problems.append(f"health badge mismatch: {health!r}")
     if not control or control == "—":
         problems.append("control center did not render")
+    if not daily_model or daily_model in {"—", "Chargement…"}:
+        problems.append("daily model diagnostics did not render")
+    if not daily_count:
+        problems.append("daily prediction count did not render")
     if not evidence or evidence == "—":
         problems.append("evidence dashboard did not render")
     if not preflight or preflight == "—":
@@ -109,7 +150,7 @@ def main() -> None:
         problems.append("page errors: " + " | ".join(page_errors))
     if problems:
         raise SystemExit("Browser smoke test failed: " + "; ".join(problems))
-    print(json.dumps({"status": "ok", "health": health, "control_center": control, "evidence": evidence, "preflight": preflight}, ensure_ascii=False))
+    print(json.dumps({"status": "ok", "health": health, "control_center": control, "daily_model": daily_model, "daily_predictions": daily_count, "evidence": evidence, "preflight": preflight}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

@@ -29,6 +29,7 @@ def test_control_center_turns_cloud_state_into_actions() -> None:
         benchmark={"evaluated_rows": 0},
         model_decision={"decision": {"status": "not_evaluable", "historical_predictions": 0}},
         backfills=[],
+        daily_product={"shadow_enabled": True, "historical_evidence_enabled": True},
         now=now,
     )
     assert payload["local_python_required"] is False
@@ -38,6 +39,27 @@ def test_control_center_turns_cloud_state_into_actions() -> None:
     assert {item["id"] for item in payload["workflows"]} >= {
         "deploy-production", "verify-production", "generate-handoff", "backup-database"
     }
+
+
+
+def test_control_center_treats_credit_freeze_as_healthy_state() -> None:
+    payload = build_control_center(
+        release=_release(),
+        database={"connected": True, "odds_snapshots": 0, "open_data_quality_issues": 0},
+        models=[{"sport": "football", "model_id": "football-1n2-shadow", "version": "fresh", "status": "shadow"}],
+        shadow_cycle=None, benchmark={}, model_decision={}, backfills=[],
+        daily_product={
+            "model_status": "operational_research",
+            "prediction_count": 0,
+            "fixture_status": "no_fixtures",
+            "shadow_enabled": False,
+            "historical_evidence_enabled": False,
+        },
+    )
+    checks = {item["id"]: item for item in payload["checks"]}
+    assert checks["shadow-cron"]["status"] == "ok"
+    assert checks["historical-backfill"]["status"] == "ok"
+    assert checks["historical-backfill"]["workflow"] is None
 
 
 def test_control_center_blocks_unproven_release_and_database() -> None:
@@ -128,7 +150,7 @@ def test_control_center_endpoint_and_frontend_contract() -> None:
     for element_id in ("controlOverall", "controlChecks", "controlWorkflows", "controlNextActions", "refreshControl"):
         assert f'id="{element_id}"' in html
         assert f"#{element_id}" in js
-    assert "app.js?v=4.2.1" in html
+    assert "app.js?v=4.3.0" in html
 
 
 def test_public_release_proof_contains_deployment_safety_contract() -> None:
@@ -138,7 +160,7 @@ def test_public_release_proof_contains_deployment_safety_contract() -> None:
         response = client.get("/api/release")
     assert response.status_code == 200, response.text
     payload = response.json()
-    assert payload["version"] == "4.2.1"
+    assert payload["version"] == "4.3.0"
     assert payload["automatic_model_promotion"] is False
     assert payload["profitability_claim"] is False
     assert payload["automatic_bet_placement"] is False

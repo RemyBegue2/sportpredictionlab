@@ -45,10 +45,15 @@ class CloudSettings:
     odds_sync_sports: tuple[str, ...]
     odds_stale_minutes: int
     model_version: str
-    shadow_enabled: bool = True
+    shadow_enabled: bool = False
     shadow_max_events: int = 50
     shadow_quota_floor: int = 100
     model_max_age_days: int = 365
+    daily_fixture_horizon_days: int = 31
+    daily_fixture_cache_hours: int = 6
+    daily_odds_enabled: bool = False
+    daily_odds_max_credits: int = 0
+    historical_evidence_enabled: bool = False
 
     @classmethod
     def from_env(cls, root: Path | None = None) -> "CloudSettings":
@@ -82,6 +87,18 @@ class CloudSettings:
             model_max_age_days = max(30, min(3650, int(os.getenv("MODEL_MAX_AGE_DAYS", "365"))))
         except ValueError:
             model_max_age_days = 365
+        try:
+            daily_fixture_horizon_days = max(0, min(31, int(os.getenv("DAILY_FIXTURE_HORIZON_DAYS", "31"))))
+        except ValueError:
+            daily_fixture_horizon_days = 31
+        try:
+            daily_fixture_cache_hours = max(1, min(72, int(os.getenv("DAILY_FIXTURE_CACHE_HOURS", "6"))))
+        except ValueError:
+            daily_fixture_cache_hours = 6
+        try:
+            daily_odds_max_credits = max(0, min(10000, int(os.getenv("DAILY_ODDS_MAX_CREDITS", "0"))))
+        except ValueError:
+            daily_odds_max_credits = 0
         return cls(
             environment=environment,
             auth_required=auth_required,
@@ -92,10 +109,15 @@ class CloudSettings:
             odds_sync_sports=_csv(os.getenv("ODDS_SYNC_SPORTS"), ("soccer_epl",)),
             odds_stale_minutes=stale,
             model_version=os.getenv("MODEL_VERSION", APP_VERSION),
-            shadow_enabled=_truthy(os.getenv("SHADOW_MODE_ENABLED"), default=True),
+            shadow_enabled=_truthy(os.getenv("SHADOW_MODE_ENABLED"), default=False),
             shadow_max_events=shadow_max_events,
             shadow_quota_floor=shadow_quota_floor,
             model_max_age_days=model_max_age_days,
+            daily_fixture_horizon_days=daily_fixture_horizon_days,
+            daily_fixture_cache_hours=daily_fixture_cache_hours,
+            daily_odds_enabled=_truthy(os.getenv("DAILY_ODDS_ENABLED"), default=False),
+            daily_odds_max_credits=daily_odds_max_credits,
+            historical_evidence_enabled=_truthy(os.getenv("HISTORICAL_EVIDENCE_ENABLED"), default=False),
         )
 
     @property

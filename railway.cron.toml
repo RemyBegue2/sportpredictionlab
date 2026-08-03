@@ -3,6 +3,6 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "sh -lc 'cd /app && PYTHONPATH=/app python -m scripts.run_shadow_cycle'"
-cronSchedule = "*/15 * * * *"
+startCommand = "sh -lc 'cd /app && PYTHONPATH=/app python -m scripts.sync_daily_predictions --horizon-days 31'"
+cronSchedule = "0 */6 * * *"
 restartPolicyType = "NEVER"

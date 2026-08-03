@@ -9,7 +9,7 @@ on:
         type: boolean
         default: true
       deploy_cron:
-        description: Deploy the shadow cron service
+        description: Deploy the zero-credit daily product cron service
         required: true
         type: boolean
         default: true
@@ -38,7 +38,7 @@ jobs:
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       RAILWAY_CRON_SERVICE_ID: ${{ vars.RAILWAY_CRON_SERVICE_ID }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.2.0'
+      EXPECTED_VERSION: '4.3.0'
 
     steps:
       - name: Checkout repository
@@ -97,7 +97,7 @@ jobs:
           railway up --detach --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
             --service "$RAILWAY_WEB_SERVICE" --message "Sports Prediction Lab ${GITHUB_SHA}"
 
-      - name: Queue shadow cron deployment without log streaming
+      - name: Queue daily product cron deployment without log streaming
         if: ${{ inputs.deploy_cron }}
         shell: bash
         run: |

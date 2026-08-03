@@ -8,6 +8,15 @@ STATUS_ORDER = {"ok": 0, "pending": 1, "attention": 2, "blocked": 3}
 
 WORKFLOW_CATALOG: tuple[dict[str, Any], ...] = (
     {
+        "id": "refresh-daily-product",
+        "name": "Refresh daily product",
+        "file": "refresh-daily-product.yml",
+        "purpose": "Charger le calendrier gratuit et produire les probabilités modèle sans consommer de crédit fournisseur.",
+        "risk": "zero_credit",
+        "confirmation": None,
+        "required_configuration": ["APP_PUBLIC_URL", "APP_PASSWORD"],
+    },
+    {
         "id": "deploy-production",
         "name": "Deploy production",
         "file": "deploy-production.yml",
@@ -127,10 +136,36 @@ def build_control_center(
     benchmark: dict[str, Any] | None,
     model_decision: dict[str, Any] | None,
     backfills: list[dict[str, Any]],
+    daily_product: dict[str, Any] | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     reference = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     checks: list[dict[str, Any]] = []
+
+    daily = daily_product or {}
+    daily_model_status = str(daily.get("model_status") or "unknown")
+    daily_predictions = int(daily.get("prediction_count") or 0)
+    fixture_status = str(daily.get("fixture_status") or "unknown")
+    if daily_model_status == "blocked":
+        daily_status = "blocked"
+        daily_action = "Corriger le chargement du modèle avant toute autre dépense."
+    elif daily_predictions > 0:
+        daily_status = "ok"
+        daily_action = "Aucune action immédiate ; les probabilités du jour sont disponibles."
+    elif fixture_status == "no_fixtures":
+        daily_status = "ok"
+        daily_action = "Aucun match couvert aujourd’hui ; consulter les prochains matchs."
+    else:
+        daily_status = "attention"
+        daily_action = "Lancer le rafraîchissement quotidien sans crédit."
+    checks.append(_check(
+        "daily-product",
+        "Produit quotidien sans crédit",
+        daily_status,
+        f"Modèle : {daily_model_status} · {daily_predictions} prédiction(s) aujourd’hui · calendrier {fixture_status}.",
+        daily_action,
+        "refresh-daily-product" if daily_status != "ok" else None,
+    ))
 
     app = release.get("app") or {}
     integrity = release.get("integrity") or {}
@@ -182,11 +217,16 @@ def build_control_center(
         "rebuild-fresh-football" if not football_models else None,
     ))
 
+    shadow_enabled = bool(daily.get("shadow_enabled", False))
     cycle_finished = _parse_utc((shadow_cycle or {}).get("finished_at") or (shadow_cycle or {}).get("started_at"))
-    if shadow_cycle is None:
+    if not shadow_enabled:
+        cycle_status = "ok"
+        cycle_detail = "Shadow marché suspendu par le pare-feu de crédits."
+        cycle_action = "Aucune action : conserver le mode modèle seul tant qu’une validation marché n’est pas approuvée."
+    elif shadow_cycle is None:
         cycle_status = "pending"
-        cycle_detail = "Aucun cycle shadow enregistré."
-        cycle_action = "Vérifier le service Railway shadow-cron."
+        cycle_detail = "Shadow autorisé mais aucun cycle enregistré."
+        cycle_action = "Vérifier le workflow shadow explicitement autorisé."
     else:
         age_hours = (reference - cycle_finished).total_seconds() / 3600 if cycle_finished else None
         failed = str(shadow_cycle.get("status", "")).casefold() not in {"ok", "success", "completed"}
@@ -194,8 +234,8 @@ def build_control_center(
         cycle_status = "blocked" if failed else ("attention" if stale else "ok")
         age_text = f"{age_hours:.1f} h" if age_hours is not None else "âge inconnu"
         cycle_detail = f"Dernier cycle : {shadow_cycle.get('status', 'inconnu')} · {age_text}."
-        cycle_action = "Contrôler les logs du service shadow-cron." if cycle_status != "ok" else "Aucune action immédiate."
-    checks.append(_check("shadow-cron", "Cycle shadow", cycle_status, cycle_detail, cycle_action, None))
+        cycle_action = "Contrôler le workflow shadow." if cycle_status != "ok" else "Aucune action immédiate."
+    checks.append(_check("shadow-cron", "Shadow marché", cycle_status, cycle_detail, cycle_action, None))
 
     decision = ((model_decision or {}).get("decision") or model_decision or {})
     decision_status = str(decision.get("status") or "not_evaluable")
@@ -207,10 +247,10 @@ def build_control_center(
         evidence_action = "Conserver le champion actuel et analyser les segments faibles."
     elif decision_status == "continue_shadow":
         evidence_status = "pending"
-        evidence_action = "Continuer la collecte shadow et historique."
+        evidence_action = "Conserver la collecte historique en pause et exploiter d’abord le produit quotidien."
     else:
         evidence_status = "pending"
-        evidence_action = "Lancer le petit lot historique contrôlé."
+        evidence_action = "Ne pas consommer de nouveaux crédits ; exploiter d’abord les prédictions quotidiennes."
     evaluated = int((benchmark or {}).get("evaluated_rows") or decision.get("historical_predictions") or 0)
     checks.append(_check(
         "evidence",
@@ -218,11 +258,16 @@ def build_control_center(
         evidence_status,
         f"Verdict : {decision_status} · {evaluated} observation(s) historiques évaluées.",
         evidence_action,
-        "estimate-historical-sample" if decision_status in {"not_evaluable", "continue_shadow"} else None,
+        "refresh-daily-product" if decision_status in {"not_evaluable", "continue_shadow"} else None,
     ))
 
+    historical_enabled = bool(daily.get("historical_evidence_enabled", False))
     latest_backfill = backfills[0] if backfills else None
-    if latest_backfill is None:
+    if not historical_enabled:
+        backfill_status = "ok"
+        backfill_detail = "Collecte historique payante suspendue par le pare-feu de crédits."
+        backfill_action = "Aucune action : ne pas relancer avant approbation humaine et justification budgétaire."
+    elif latest_backfill is None:
         backfill_status = "pending"
         backfill_detail = "Aucun backfill historique enregistré."
         backfill_action = "Planifier le lot de validation plafonné."
@@ -245,7 +290,7 @@ def build_control_center(
         backfill_status,
         backfill_detail,
         backfill_action,
-        "run-historical-sample" if latest_backfill else "estimate-historical-sample",
+        None if not historical_enabled else ("run-historical-sample" if latest_backfill else "estimate-historical-sample"),
     ))
 
     overall = _overall(checks)

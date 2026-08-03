@@ -1,5 +1,23 @@
 # Changelog
 
+## V4.3.0 — Daily Product Recovery & Credit Firewall
+
+- adds zero-credit daily fixture discovery with cached ESPN and Football-Data fallback sources ;
+- generates idempotent model-only Premier League predictions without requiring market odds ;
+- adds explicit model diagnostics separating research usability from market-shortlist readiness ;
+- adds `/api/daily/slate`, `/api/model-diagnostics` and `/api/credit-firewall` ;
+- replaces the paid shadow cron with a six-hour zero-credit daily-product refresh ;
+- disables daily paid odds and historical evidence by default ;
+- guards paid historical workflows behind `HISTORICAL_EVIDENCE_ENABLED=true` and existing human confirmations ;
+- updates the dashboard with today’s probabilities, upcoming matches, credit usage and abstention reasons ;
+- preserves no-bet, no-stake and no-automatic-promotion invariants.
+- expands the default upcoming horizon to 31 days so off-season pages can show the next league round ;
+- normalizes current/promoted club aliases and keeps unsupported clubs as explicit cold-start predictions shrunk toward league priors ;
+- prevents cold-start predictions from becoming market candidates ;
+- adds source-failure backoff, streamed 5 MB response limits and stable cross-provider fixture identifiers ;
+- avoids calling paid-odds endpoints from the UI while the credit firewall is closed ;
+- adds a PostgreSQL transaction lock for concurrent idempotent daily refreshes.
+
 ## V4.2.1 — Frontend preflight rendering hotfix
 
 - Déplace le formateur de pourcentage `pct` au niveau partagé afin que `renderPreflight` puisse l'utiliser.

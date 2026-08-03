@@ -28,6 +28,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--sports", nargs="+", default=None, help="The Odds API sport keys. Defaults to ODDS_SYNC_SPORTS.")
     p.add_argument("--skip-results", action="store_true", help="Skip recent score synchronization.")
     p.add_argument("--force", action="store_true", help="Ignore the configured quota floor.")
+    p.add_argument("--confirmation", default=None, help="Must equal EXECUTE_DAILY_ODDS when paid odds are enabled")
     return p
 
 
@@ -67,6 +68,30 @@ def main() -> int:
     reused = 0
     settled = 0
     quota_remaining: int | None = None
+
+    if not settings.daily_odds_enabled or settings.daily_odds_max_credits <= 0:
+        cycle_id = record_shadow_cycle(
+            status="skipped_credit_firewall", sports=sports, events_seen=0, predictions_created=0,
+            predictions_reused=0, predictions_settled=0, quota_remaining=None, errors=[],
+            diagnostics={"credit_firewall": 1}, started_at=started,
+            duration_ms=_duration_ms(started_monotonic), lock_acquired=True,
+        )
+        print(json.dumps({
+            "status": "skipped_credit_firewall", "cycle_id": cycle_id,
+            "reason": "daily paid odds are disabled", "credits_consumed": 0,
+        }))
+        return 0
+    confirmation = args.confirmation or __import__("os").getenv("DAILY_ODDS_CONFIRMATION")
+    if confirmation != "EXECUTE_DAILY_ODDS":
+        cycle_id = record_shadow_cycle(
+            status="blocked_confirmation", sports=sports, events_seen=0, predictions_created=0,
+            predictions_reused=0, predictions_settled=0, quota_remaining=None,
+            errors=[{"type": "confirmation", "message": "EXECUTE_DAILY_ODDS required"}],
+            diagnostics={"credit_firewall": 1}, started_at=started,
+            duration_ms=_duration_ms(started_monotonic), lock_acquired=True,
+        )
+        print(json.dumps({"status": "blocked_confirmation", "cycle_id": cycle_id, "credits_consumed": 0}))
+        return 2
 
     with shadow_cycle_lock() as lock_acquired:
         if not lock_acquired:

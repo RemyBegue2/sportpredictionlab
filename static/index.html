@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V4.2 Coverage-Aware Evidence Planning</title>
-  <meta name="description" content="Application cloud privée avec prédictions pré-match immuables, règlement automatique des résultats et validation en shadow mode.">
+  <title>Sports Prediction Lab V4.3 Daily Product Recovery</title>
+  <meta name="description" content="Application cloud privée centrée sur les matchs et probabilités du jour, avec mode modèle sans crédit et enrichissement marché facultatif.">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
     <nav>
-      <a href="#control">Pilotage</a><a href="#bets">Paris du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#evidence">Preuves</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
+      <a href="#control">Pilotage</a><a href="#bets">Matchs du jour</a><a href="#odds-api">Flux cotes</a><a href="#cloud">Cloud</a><a href="#shadow">Shadow</a><a href="#benchmark">Benchmark</a><a href="#evidence">Preuves</a><a href="#decision">Décision</a><a href="#football">Football</a><a href="#tennis">Tennis</a><a href="#audit">Audit</a>
     </nav>
     <div class="top-actions"><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
   </header>
@@ -19,10 +19,10 @@
   <main>
     <section id="overview" class="hero">
       <div>
-        <p class="eyebrow">VERSION 4.2 · COVERAGE-AWARE EVIDENCE PLANNING · ZÉRO PYTHON LOCAL</p>
+        <p class="eyebrow">VERSION 4.3 · DAILY PRODUCT RECOVERY · ZÉRO CRÉDIT PAR DÉFAUT</p>
         <h1>Des probabilités sportives,<br><span>pas des certitudes vendues.</span></h1>
-        <p class="lede">Une application privée pilotée depuis GitHub Actions et Railway : estimation historique sans crédit, exécution plafonnée, contrôle de qualité et preuve publiée sans Python sur votre ordinateur.</p>
-        <div class="actions"><a class="button primary" href="#bets">Voir la shortlist</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
+        <p class="lede">Une application privée qui affiche d’abord le calendrier et les probabilités du modèle. Les cotes payantes et les campagnes historiques sont désactivées par défaut et ne peuvent plus bloquer le produit quotidien.</p>
+        <div class="actions"><a class="button primary" href="#bets">Voir les matchs du jour</a><a class="button ghost" href="#audit">Voir l’audit</a></div>
       </div>
       <aside class="trust-card">
         <div class="trust-title">Chaîne de décision</div>
@@ -39,7 +39,7 @@
     <section class="stats" aria-label="Résumé des données">
       <article><span id="footballRows">—</span><small>matchs football embarqués</small></article>
       <article><span id="tennisRows">—</span><small>matchs tennis embarqués</small></article>
-      <article><span id="dailyCandidates">—</span><small>candidats recherche aujourd’hui</small></article>
+      <article><span id="dailyCandidates">—</span><small>prédictions modèle aujourd’hui</small></article>
       <article><span id="oddsApiState">—</span><small>connexion The Odds API</small></article><article><span id="dbSnapshots">—</span><small>snapshots persistés</small></article>
       <article><span id="shadowState">—</span><small>prédictions shadow réglées</small></article>
     </section>
@@ -59,25 +59,36 @@
     </section>
 
     <section id="bets" class="workbench bets-section">
-      <div class="section-heading"><p class="eyebrow">SHORTLIST QUOTIDIENNE</p><h2>Paris du jour</h2><p>La liste distingue les événements à examiner des paris réellement validés par le protocole. Une cote absente, trop ancienne ou un modèle non calibré déclenchent une abstention.</p></div>
-      <div id="dailySlate" class="daily-grid"><div class="slate-card loading-card">Chargement de la revue du jour…</div></div>
-      <div class="policy-note"><b>Mode Winamax :</b> aucune connexion au compte, aucun scraping authentifié et aucune prise de pari automatique. Recopiez les cotes décimales dans les formulaires ci-dessous pour obtenir l’edge, l’EV et le verdict.</div>
+      <div class="section-heading"><p class="eyebrow">PRODUIT QUOTIDIEN · MODÈLE D’ABORD</p><h2>Matchs et probabilités du jour</h2><p>Le calendrier et les probabilités du modèle sont affichés sans appeler le fournisseur de cotes. Une shortlist de marché n’apparaît que si des cotes fraîches ont été explicitement autorisées et qu’un avantage robuste est validé.</p></div>
+      <div class="benchmark-grid">
+        <article class="benchmark-card"><small>ÉTAT DU MODÈLE</small><h3 id="dailyModelStatus">Chargement…</h3><p id="dailyModelDetail">Diagnostic en cours.</p></article>
+        <article class="benchmark-card"><small>PRÉDICTIONS DU JOUR</small><h3 id="dailyPredictionCount">0</h3><p id="dailyPredictionDetail">Aucun calendrier chargé.</p></article>
+        <article class="benchmark-card"><small>SHORTLIST MARCHÉ</small><h3 id="dailyShortlistCount">0</h3><p id="dailyShortlistDetail">Aucune sélection forcée.</p></article>
+        <article class="benchmark-card"><small>CRÉDITS AUJOURD’HUI</small><h3 id="dailyCredits">0</h3><p id="dailyCreditDetail">Mode modèle seul.</p></article>
+      </div>
+      <div id="dailyNoShortlist" class="policy-note"><b>Lecture :</b> chargement des raisons d’absence de shortlist…</div>
+      <div id="dailySlate" class="daily-grid"><div class="slate-card loading-card">Chargement des matchs du jour…</div></div>
+      <div class="history-panel">
+        <div class="history-heading"><div><small>PROCHAINS MATCHS COUVERTS</small><h3>À venir dans l’horizon quotidien</h3></div></div>
+        <div id="upcomingSlate" class="daily-grid"><div class="slate-card loading-card">Chargement du calendrier à venir…</div></div>
+      </div>
+      <div class="policy-note"><b>Pare-feu de crédits :</b> le calendrier et les probabilités coûtent 0 crédit. Les appels de cotes sont désactivés par défaut, plafonnés et séparés des campagnes historiques. Aucun pari n’est transmis à un bookmaker.</div>
     </section>
 
     <section id="odds-api" class="workbench odds-api-section">
-      <div class="section-heading"><p class="eyebrow">WINAMAX + CONSENSUS</p><h2>Flux de cotes</h2><p>La clé reste exclusivement sur le serveur. Un appel charge le 1N2 Winamax France et un consensus de bookmakers pour les rencontres EPL disponibles, puis applique le même protocole d’abstention.</p></div>
+      <div class="section-heading"><p class="eyebrow">WINAMAX + CONSENSUS</p><h2>Flux de cotes</h2><p>La clé reste exclusivement sur le serveur. Les appels payants sont désactivés par défaut ; cette section ne devient active qu’après configuration explicite d’un plafond quotidien.</p></div>
       <div class="provider-grid">
         <article class="provider-card"><small>État du connecteur</small><h3 id="providerStatus">Chargement…</h3><p id="providerQuota">Quota inconnu</p><code>THE_ODDS_API_KEY</code></article>
         <div class="provider-control">
           <label>Football<select id="oddsSport"><option value="soccer_epl">Premier League · soccer_epl</option></select></label>
           <button id="loadLiveOdds" class="button primary full" type="button">Charger le football</button>
-          <p class="fineprint">Modèle embarqué : EPL. Coût attendu : 1 crédit pour h2h et jusqu’à 10 bookmakers.</p>
+          <p class="fineprint">Modèle embarqué : EPL. Bouton désactivé tant que DAILY_ODDS_ENABLED=false ou que le plafond est nul.</p>
         </div>
         <div class="provider-control">
           <label>Tournoi tennis actif<select id="oddsTennisSport"><option value="">Clé chargée depuis le fournisseur</option></select></label>
           <label>Surface<select id="oddsTennisSurface"><option value="hard">Dur</option><option value="clay">Terre battue</option><option value="grass">Gazon</option></select></label>
           <button id="loadTennisOdds" class="button ghost full" type="button">Charger le tennis</button>
-          <p class="fineprint">Les tournois sont découverts dynamiquement. Le modèle snapshot reste non calibré et doit normalement s’abstenir.</p>
+          <p class="fineprint">Les tournois ne sont découverts que si les appels payants sont explicitement autorisés. Le modèle tennis reste non calibré et doit s’abstenir.</p>
         </div>
       </div>
       <div id="liveOddsResult" class="daily-grid provider-results"><div class="slate-card loading-card">Connecteur en attente.</div></div>
@@ -108,7 +119,7 @@
 
 
     <section id="shadow" class="workbench shadow-section">
-      <div class="section-heading"><p class="eyebrow">OBSERVATION EN CONDITIONS RÉELLES</p><h2>Shadow mode</h2><p>Le cron fige les probabilités, l'heure de la cote et la version du modèle avant le coup d’envoi. Les résultats sont ensuite rapprochés automatiquement. Aucune mise n’est proposée ni transmise à Winamax.</p></div>
+      <div class="section-heading"><p class="eyebrow">OBSERVATION EN CONDITIONS RÉELLES</p><h2>Shadow mode</h2><p>Le shadow marché est suspendu par défaut par le pare-feu de crédits. Il ne peut être relancé qu’avec une autorisation explicite et un plafond quotidien ; le produit modèle seul continue, lui, sans appel payant.</p></div>
       <div class="benchmark-grid">
         <article class="benchmark-card"><small>Prédictions figées</small><h3 id="shadowTotal">0</h3><p>Enregistrements immuables et dédupliqués par empreinte SHA-256.</p></article>
         <article class="benchmark-card"><small>Résultats évalués</small><h3 id="shadowSettled">0</h3><p id="shadowMaturity">Échantillon anecdotique.</p></article>
@@ -255,8 +266,8 @@
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V4.2 Coverage-Aware Evidence Planning</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V4.3 Daily Product Recovery</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/app.js?v=4.2.1"></script>
+  <script src="/static/app.js?v=4.3.0"></script>
 </body>
 </html>

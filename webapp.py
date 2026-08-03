@@ -45,6 +45,8 @@ from sports_predictor.database import (
     model_status_history,
     recent_shadow_predictions,
     record_prediction,
+    record_prediction_once,
+    record_sync_run,
     record_model_decision,
     record_shadow_prediction,
     register_model,
@@ -60,6 +62,7 @@ from sports_predictor.data_sources.the_odds_api import (
     OddsApiConfig,
     OddsApiError,
     OddsApiNotConfigured,
+    OddsApiNetworkDisabled,
 )
 from sports_predictor.identity import football_model_name, normalize_identity
 from sports_predictor.odds_data import bookmaker_h2h_markets, consensus_h2h, normalize_odds_payload
@@ -67,6 +70,14 @@ from sports_predictor.market_benchmark import benchmark_summary
 from sports_predictor.champion_challenger import build_model_decision
 from sports_predictor.control_center import build_control_center
 from sports_predictor.shadow_mode import shadow_horizon
+from sports_predictor.daily_product import (
+    DailyFixtureError,
+    DailyFixtureSource,
+    build_model_diagnostics,
+    fixture_identifier,
+    probability_diagnostics,
+    select_fixture_window,
+)
 
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / "static"
@@ -171,9 +182,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V4.2 Coverage-Aware Evidence Planning",
+    title="Sports Prediction Lab V4.3 Daily Product Recovery",
     version=APP_VERSION,
-    description="Cloud-first data-reliability edition with explicit coverage denominators, zero-credit evidence recomputation, bookmaker matrices and leakage-safe quality gates.",
+    description="Daily model-first sports research product with zero-credit fixture discovery, explicit model diagnostics, optional market enrichment and strict credit controls.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -350,6 +361,14 @@ def odds_client() -> OddsApiClient:
     return OddsApiClient(OddsApiConfig.from_env(root=ROOT))
 
 
+@lru_cache(maxsize=1)
+def fixture_source() -> DailyFixtureSource:
+    return DailyFixtureSource(
+        ROOT / "data" / "daily_fixtures",
+        cache_ttl_seconds=SETTINGS.daily_fixture_cache_hours * 60 * 60,
+    )
+
+
 initialize_runtime()
 
 
@@ -375,7 +394,10 @@ def _persist_odds_response(rows: pd.DataFrame, response: Any, *, sport_key: str,
 
 def _record_prediction_payload(payload: dict[str, Any], *, provider_event_id: str | None = None) -> int:
     analysis = payload.get("market_analysis")
-    decision = "candidat recherche" if analysis and analysis.get("shortlist") else "abstention"
+    decision = (
+        "candidat recherche" if analysis and analysis.get("shortlist")
+        else ("abstention" if analysis else "model_only")
+    )
     try:
         return record_prediction(
             sport=str(payload["sport"]),
@@ -479,7 +501,10 @@ def _football_odds_slate(sport_key: str, league: str, *, force_refresh: bool = F
             markets=("h2h",),
             bookmakers=ODDS_BOOKMAKERS,
             force_refresh=force_refresh,
+            allow_network=SETTINGS.daily_odds_enabled and SETTINGS.daily_odds_max_credits >= 1,
         )
+    except OddsApiNetworkDisabled as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except OddsApiNotConfigured as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except OddsApiError as exc:
@@ -663,7 +688,10 @@ def _tennis_odds_slate(sport_key: str, surface: str, *, force_refresh: bool = Fa
             markets=("h2h",),
             bookmakers=ODDS_BOOKMAKERS,
             force_refresh=force_refresh,
+            allow_network=SETTINGS.daily_odds_enabled and SETTINGS.daily_odds_max_credits >= 1,
         )
+    except OddsApiNetworkDisabled as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except OddsApiNotConfigured as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except OddsApiError as exc:
@@ -812,29 +840,73 @@ def _future_prediction_date(raw_date: str | None, history_max: Any) -> str:
     return requested.date().isoformat()
 
 
-def _football_prediction(req: FootballRequest) -> dict[str, Any]:
+def _football_model_only_prediction(
+    *,
+    home_team: str,
+    away_team: str,
+    date: str | None,
+    league: str,
+    allow_cold_start: bool,
+) -> dict[str, Any]:
     r = resources()
     history = r["football"]
-    league_history = history[history["league"].astype(str) == req.league]
+    league_history = history[history["league"].astype(str) == league]
     if league_history.empty:
-        raise HTTPException(status_code=422, detail=f"Unknown league in bundled model: {req.league}")
+        raise HTTPException(status_code=422, detail=f"Unknown league in bundled model: {league}")
     teams = set(league_history["home_team"]) | set(league_history["away_team"])
-    unknown = [x for x in (req.home_team, req.away_team) if x not in teams]
-    if unknown:
-        raise HTTPException(status_code=422, detail=f"Unknown team(s) for league {req.league}: {unknown}")
-    date = _future_prediction_date(req.date, history["date"].max())
+    unknown = [x for x in (home_team, away_team) if x not in teams]
+    if unknown and not allow_cold_start:
+        raise HTTPException(status_code=422, detail=f"Unknown team(s) for league {league}: {unknown}")
+    prediction_date = _future_prediction_date(date, history["date"].max())
     fixture = pd.DataFrame([{
-        "date": date,
-        "league": req.league,
-        "home_team": req.home_team,
-        "away_team": req.away_team,
+        "date": prediction_date,
+        "league": league,
+        "home_team": home_team,
+        "away_team": away_team,
     }])
     try:
         pred = r["football_model"].predict_matches(history, fixture)[0]
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    freshness = _model_freshness(data_cutoff=history["date"].max(), as_of=date)
+    freshness = _model_freshness(data_cutoff=history["date"].max(), as_of=prediction_date)
     warning = "Research probability from a small real-data snapshot; not a production or betting guarantee."
+    coverage_mode = "historical_team_coverage"
+    model_weight = 1.0
+    if unknown:
+        coverage_mode = "cold_start_league_priors"
+        model_weight = 0.5 if len(unknown) == 1 else 0.25
+        home_goals = pd.to_numeric(league_history["home_goals"], errors="coerce")
+        away_goals = pd.to_numeric(league_history["away_goals"], errors="coerce")
+        valid_results = home_goals.notna() & away_goals.notna()
+        home_goals = home_goals[valid_results]
+        away_goals = away_goals[valid_results]
+        total_results = max(1, len(home_goals))
+        prior = {
+            "home": float((home_goals > away_goals).sum() / total_results),
+            "draw": float((home_goals == away_goals).sum() / total_results),
+            "away": float((home_goals < away_goals).sum() / total_results),
+        }
+        raw_probabilities = {
+            "home": float(pred["home_win"]),
+            "draw": float(pred["draw"]),
+            "away": float(pred["away_win"]),
+        }
+        shrunk = {
+            key: model_weight * raw_probabilities[key] + (1.0 - model_weight) * prior[key]
+            for key in ("home", "draw", "away")
+        }
+        normalizer = sum(shrunk.values()) or 1.0
+        pred["home_win"] = shrunk["home"] / normalizer
+        pred["draw"] = shrunk["draw"] / normalizer
+        pred["away_win"] = shrunk["away"] / normalizer
+        league_home_mean = float(home_goals.mean()) if len(home_goals) else 1.45
+        league_away_mean = float(away_goals.mean()) if len(away_goals) else 1.15
+        pred["expected_home_goals"] = model_weight * float(pred["expected_home_goals"]) + (1.0 - model_weight) * league_home_mean
+        pred["expected_away_goals"] = model_weight * float(pred["expected_away_goals"]) + (1.0 - model_weight) * league_away_mean
+        warning = (
+            "Cold-start research probability: one or more clubs have no Premier League history in the current "
+            "training window, so the model is shrunk toward league priors. No market shortlist is permitted."
+        )
     if freshness["stale"]:
         warning = (
             f"Research-only stale model: training data is {freshness['age_days']} days older than this fixture. "
@@ -843,22 +915,43 @@ def _football_prediction(req: FootballRequest) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "sport": "football",
         "model_version": r["football_model_version"],
-        "fixture": {"home_team": req.home_team, "away_team": req.away_team, "date": date, "league": req.league},
+        "fixture": {
+            "home_team": home_team,
+            "away_team": away_team,
+            "date": prediction_date,
+            "league": league,
+            "coverage_mode": coverage_mode,
+            "cold_start_teams": unknown,
+            "cold_start_model_weight": model_weight,
+        },
         "probabilities": {"home": pred["home_win"], "draw": pred["draw"], "away": pred["away_win"]},
         "expected_goals": {"home": pred["expected_home_goals"], "away": pred["expected_away_goals"]},
         "top_scores": pred["top_scores"],
         "model_freshness": freshness,
+        "market_eligible": not unknown and not freshness["stale"],
         "warning": warning,
     }
+    return payload
+
+
+def _football_prediction(req: FootballRequest) -> dict[str, Any]:
+    payload = _football_model_only_prediction(
+        home_team=req.home_team,
+        away_team=req.away_team,
+        date=req.date,
+        league=req.league,
+        allow_cold_start=False,
+    )
+    freshness = payload["model_freshness"]
     if req.winamax_home_odds is not None:
         try:
             payload["market_analysis"] = analyze_three_way(
                 home_label=req.home_team,
                 draw_label="Match nul",
                 away_label=req.away_team,
-                home_probability=float(pred["home_win"]),
-                draw_probability=float(pred["draw"]),
-                away_probability=float(pred["away_win"]),
+                home_probability=float(payload["probabilities"]["home"]),
+                draw_probability=float(payload["probabilities"]["draw"]),
+                away_probability=float(payload["probabilities"]["away"]),
                 home_odds=req.winamax_home_odds,
                 draw_odds=req.winamax_draw_odds,
                 away_odds=req.winamax_away_odds,
@@ -932,6 +1025,379 @@ def _tennis_prediction(req: TennisRequest) -> dict[str, Any]:
     return payload
 
 
+
+def _model_diagnostics_payload() -> dict[str, Any]:
+    try:
+        current = resources()
+        history = current["football"]
+        teams = set(history["home_team"].astype(str)) | set(history["away_team"].astype(str))
+        preferred = [team for team in ("Arsenal", "Chelsea", "Liverpool", "Man City") if team in teams]
+        if len(preferred) < 2:
+            preferred = sorted(teams)[:2]
+        probe: dict[str, Any] | None = None
+        probe_error: str | None = None
+        if len(preferred) >= 2:
+            probe_date = (pd.to_datetime(history["date"], utc=True).max() + pd.Timedelta(days=7)).date().isoformat()
+            try:
+                probe = _football_prediction(FootballRequest(
+                    home_team=preferred[0], away_team=preferred[1], date=probe_date, league="E0",
+                ))
+            except Exception as exc:  # diagnostic output keeps only the type
+                probe_error = type(exc).__name__
+        registry = next(
+            (
+                row for row in list_models()
+                if row.get("model_id") == "football-1n2-shadow"
+                and row.get("version") == current["football_model_version"]
+            ),
+            None,
+        )
+        freshness = _model_freshness(
+            data_cutoff=history["date"].max(), as_of=datetime.now(ZoneInfo("UTC")),
+        )
+        diagnostics = build_model_diagnostics(
+            model_loaded=current["football_model"].artifacts is not None,
+            artifact_integrity_verified=True,
+            model_version=current["football_model_version"],
+            data_cutoff=history["date"].max(),
+            metrics=current["metrics"].get("football") or {},
+            model_freshness=freshness,
+            probe_probabilities=(probe or {}).get("probabilities"),
+            registry_status=(registry or {}).get("status"),
+        )
+        diagnostics["probe_fixture"] = (probe or {}).get("fixture")
+        diagnostics["probe_error"] = probe_error
+        diagnostics["credit_firewall"] = {
+            "model_only_cost_credits": 0,
+            "daily_odds_enabled": SETTINGS.daily_odds_enabled,
+            "daily_odds_max_credits": SETTINGS.daily_odds_max_credits,
+            "historical_evidence_enabled": SETTINGS.historical_evidence_enabled,
+        }
+        return diagnostics
+    except Exception as exc:
+        return {
+            "schema_version": "1.0",
+            "status": "blocked",
+            "hard_failures": ["diagnostic_runtime_failure"],
+            "error_type": type(exc).__name__,
+            "product_readiness": {"model_only_predictions": False, "market_shortlist": False},
+            "credit_firewall": {
+                "model_only_cost_credits": 0,
+                "daily_odds_enabled": SETTINGS.daily_odds_enabled,
+                "daily_odds_max_credits": SETTINGS.daily_odds_max_credits,
+                "historical_evidence_enabled": SETTINGS.historical_evidence_enabled,
+            },
+        }
+
+
+def _daily_event_from_prediction(row: dict[str, Any]) -> dict[str, Any]:
+    fixture = row.get("fixture") or {}
+    probabilities = row.get("probabilities") or {}
+    analysis = row.get("market_analysis") or None
+    diagnostics = probability_diagnostics(probabilities)
+    event_name = f"{fixture.get('home_team', '—')} — {fixture.get('away_team', '—')}"
+    reasons: list[str] = []
+    if not diagnostics["valid"]:
+        reasons.append("probabilités invalides : " + ", ".join(diagnostics["issues"]))
+    if analysis is None:
+        reasons.append("cotes non demandées : prédiction modèle seule, coût API nul")
+        decision = "probabilités seulement"
+    else:
+        observed = pd.to_datetime(analysis.get("observed_at"), utc=True, errors="coerce")
+        age_minutes = None if pd.isna(observed) else max(0.0, (pd.Timestamp.now(tz="UTC") - observed).total_seconds() / 60.0)
+        decision = str(row.get("decision") or "abstention")
+        reasons.extend(sorted({
+            str(reason)
+            for selection in analysis.get("selections", [])
+            for reason in selection.get("reasons", [])
+        }))
+        if age_minutes is None or age_minutes > SETTINGS.odds_stale_minutes:
+            decision = "à actualiser"
+            reasons.append("cote absente ou trop ancienne au moment de l’affichage")
+    freshness = fixture.get("model_freshness") or {}
+    coverage_mode = str(fixture.get("coverage_mode") or "historical_team_coverage")
+    cold_start_teams = list(fixture.get("cold_start_teams") or [])
+    cold_start_model_weight = float(fixture.get("cold_start_model_weight") or 1.0)
+    if coverage_mode == "cold_start_league_priors":
+        reasons.append(
+            "confiance réduite : "
+            + ", ".join(cold_start_teams or ["club sans historique récent"])
+            + " utilise des priors de championnat"
+        )
+    if freshness.get("stale"):
+        reasons.append("modèle trop ancien pour une sélection de marché")
+    return {
+        "sport": str(row.get("sport") or "football"),
+        "event": event_name,
+        "competition": fixture.get("league") or "E0",
+        "date": fixture.get("date"),
+        "commence_time": fixture.get("commence_time"),
+        "market": (analysis or {}).get("market_type") or "aucun marché demandé",
+        "decision": decision,
+        "reasons": list(dict.fromkeys(reasons)),
+        "probabilities": probabilities,
+        "probability_diagnostics": diagnostics,
+        "expected_goals": fixture.get("expected_goals"),
+        "model_version": row.get("model_version"),
+        "model_freshness": fixture.get("model_freshness"),
+        "coverage_mode": coverage_mode,
+        "cold_start_teams": cold_start_teams,
+        "cold_start_model_weight": cold_start_model_weight,
+        "market_eligible": bool(fixture.get("market_eligible", False)) and coverage_mode != "cold_start_league_priors",
+        "winamax_odds": bool(analysis),
+        "market_analysis": analysis,
+        "prediction_id": row.get("id"),
+        "provider_event_id": row.get("provider_event_id"),
+    }
+
+
+def _generate_daily_model_predictions(requested: str, *, horizon_days: int) -> dict[str, Any]:
+    started = datetime.now(ZoneInfo("UTC"))
+    try:
+        source = fixture_source()
+        if hasattr(source, "fetch_window"):
+            snapshot = source.fetch_window(
+                requested_date=requested, horizon_days=horizon_days, allow_network=True,
+            )
+        else:  # compatibility for injected tests and legacy sources
+            snapshot = source.fetch(force=False, allow_network=True)
+    except DailyFixtureError as exc:
+        try:
+            record_sync_run(
+                job_name="daily_model_only", sport_key=f"soccer_epl:{requested}", status="error",
+                fetched_events=0, inserted_snapshots=0, quota_remaining=None, quota_last_cost=0,
+                error_message=type(exc).__name__, started_at=started,
+            )
+        except Exception:
+            pass
+        return {
+            "status": "fixture_source_unavailable",
+            "error": str(exc),
+            "source": "zero-credit fixture sources",
+            "credits_consumed": 0,
+            "generated": [],
+            "unsupported": [],
+            "fixture_snapshot": None,
+        }
+    window = select_fixture_window(
+        snapshot.fixtures,
+        requested_date=requested,
+        horizon_days=horizon_days,
+        leagues=("E0",),
+    )
+    current = resources()
+    history = current["football"]
+    known_teams = set(history["home_team"].astype(str)) | set(history["away_team"].astype(str))
+    generated: list[dict[str, Any]] = []
+    unsupported: list[dict[str, Any]] = []
+    created = 0
+    reused = 0
+    cold_start = 0
+    for item in window.to_dict(orient="records"):
+        source_home = str(item["home_team"])
+        source_away = str(item["away_team"])
+        home = football_model_name(source_home)
+        away = football_model_name(source_away)
+        commence = pd.to_datetime(item["date"], utc=True)
+        fixture_date = commence.date().isoformat()
+        if commence <= pd.Timestamp.now(tz="UTC"):
+            unsupported.append({
+                "event": f"{source_home} — {source_away}",
+                "date": fixture_date,
+                "commence_time": commence.isoformat(),
+                "reason": "rencontre déjà commencée : prédiction pré-match non générée",
+            })
+            continue
+        missing = [team for team in (home, away) if team not in known_teams]
+        try:
+            prediction = _football_model_only_prediction(
+                home_team=home,
+                away_team=away,
+                date=fixture_date,
+                league=str(item["league"]),
+                allow_cold_start=True,
+            )
+        except HTTPException as exc:
+            unsupported.append({
+                "event": f"{source_home} — {source_away}",
+                "date": fixture_date,
+                "commence_time": commence.isoformat(),
+                "reason": "prédiction modèle indisponible",
+                "error_type": type(exc).__name__,
+                "source_teams": [source_home, source_away],
+            })
+            continue
+        cold_start += int(bool(missing))
+        prediction["fixture"]["commence_time"] = commence.isoformat()
+        prediction["fixture"]["source_home_team"] = source_home
+        prediction["fixture"]["source_away_team"] = source_away
+        prediction["fixture"]["fixture_source"] = snapshot.source
+        prediction["fixture"]["fixture_snapshot_sha256"] = snapshot.sha256
+        prediction["fixture"]["model_freshness"] = prediction.get("model_freshness")
+        prediction["fixture"]["expected_goals"] = prediction.get("expected_goals")
+        prediction["fixture"]["market_eligible"] = prediction.get("market_eligible", False)
+        check = probability_diagnostics(prediction["probabilities"])
+        if not check["valid"]:
+            unsupported.append({
+                "event": f"{home} — {away}", "date": fixture_date,
+                "commence_time": commence.isoformat(),
+                "reason": "probabilités invalides", "issues": check["issues"],
+            })
+            continue
+        event_id = fixture_identifier(item)
+        persisted = record_prediction_once(
+            sport="football",
+            model_version=str(prediction["model_version"]),
+            fixture=prediction["fixture"],
+            probabilities=prediction["probabilities"],
+            market_analysis=None,
+            decision="model_only",
+            provider_event_id=event_id,
+        )
+        created += int(bool(persisted["created"]))
+        reused += int(not bool(persisted["created"]))
+        generated.append({**prediction, "prediction_id": persisted["id"], "provider_event_id": event_id})
+    try:
+        record_sync_run(
+            job_name="daily_model_only", sport_key=f"soccer_epl:{requested}", status="ok",
+            fetched_events=len(window), inserted_snapshots=0,
+            quota_remaining=None, quota_last_cost=0, started_at=started,
+        )
+    except Exception:
+        pass
+    return {
+        "status": "ok",
+        "source": snapshot.source,
+        "credits_consumed": 0,
+        "generated": generated,
+        "unsupported": unsupported,
+        "created": created,
+        "reused": reused,
+        "cold_start": cold_start,
+        "fixture_snapshot": {
+            "fetched_at": snapshot.fetched_at,
+            "from_cache": snapshot.from_cache,
+            "sha256": snapshot.sha256,
+            "fixtures_in_window": len(window),
+        },
+    }
+
+
+def _recent_daily_sync(requested: str) -> dict[str, Any] | None:
+    expected_key = f"soccer_epl:{requested}"
+    maximum_age = pd.Timedelta(hours=SETTINGS.daily_fixture_cache_hours)
+    now = pd.Timestamp.now(tz="UTC")
+    for row in recent_sync_runs(100):
+        if row.get("job_name") != "daily_model_only" or row.get("sport_key") != expected_key:
+            continue
+        started = pd.to_datetime(row.get("started_at"), utc=True, errors="coerce")
+        if not pd.isna(started) and now - started <= maximum_age:
+            return row
+    return None
+
+
+def _daily_slate_payload(
+    requested: str,
+    *,
+    horizon_days: int | None = None,
+    refresh: bool = False,
+) -> dict[str, Any]:
+    horizon = SETTINGS.daily_fixture_horizon_days if horizon_days is None else max(0, min(31, int(horizon_days)))
+    bundled = DAILY_SLATE / f"{requested}.json"
+    rows = predictions_for_date(requested)
+    existing_upcoming_rows: list[dict[str, Any]] = []
+    for offset in range(1, horizon + 1):
+        date_value = (pd.Timestamp(requested) + pd.Timedelta(days=offset)).date().isoformat()
+        existing_upcoming_rows.extend(predictions_for_date(date_value))
+    generation: dict[str, Any] | None = None
+    if bundled.exists() and not rows:
+        payload = json.loads(bundled.read_text(encoding="utf-8"))
+        payload["source"] = "bundled_snapshot"
+        payload["model_diagnostics"] = _model_diagnostics_payload()
+        payload["credit_firewall"] = {"credits_consumed": 0, "daily_odds_enabled": SETTINGS.daily_odds_enabled}
+        return payload
+    recent_sync = _recent_daily_sync(requested)
+    should_refresh = bool(refresh or (not rows and not existing_upcoming_rows and recent_sync is None))
+    if should_refresh:
+        generation = _generate_daily_model_predictions(requested, horizon_days=horizon)
+    else:
+        generation = {
+            "status": "cached_predictions" if rows or existing_upcoming_rows else "recent_empty_refresh",
+            "source": "postgresql",
+            "credits_consumed": 0,
+            "generated": [],
+            "unsupported": [],
+            "recent_sync": recent_sync,
+        }
+    rows = predictions_for_date(requested)
+    today_events = [_daily_event_from_prediction(row) for row in rows]
+    upcoming_rows: list[dict[str, Any]] = []
+    for offset in range(1, horizon + 1):
+        date_value = (pd.Timestamp(requested) + pd.Timedelta(days=offset)).date().isoformat()
+        upcoming_rows.extend(predictions_for_date(date_value))
+    upcoming_events = [_daily_event_from_prediction(row) for row in upcoming_rows]
+    candidates = sum(event["decision"] == "candidat recherche" for event in today_events)
+    valid_predictions = sum(bool(event["probability_diagnostics"]["valid"]) for event in today_events)
+    cold_start_predictions = sum(event.get("coverage_mode") == "cold_start_league_priors" for event in today_events + upcoming_events)
+    no_shortlist_reasons: list[str] = []
+    generation_status = str((generation or {}).get("status") or "not_needed")
+    if generation_status == "fixture_source_unavailable":
+        no_shortlist_reasons.append("calendrier gratuit indisponible : aucune dépense de crédit n’a été engagée")
+    elif not today_events:
+        no_shortlist_reasons.append(f"aucun match E0 couvert par le modèle à cette date dans l’horizon de {horizon} jour(s)")
+    unsupported_count = len((generation or {}).get("unsupported") or [])
+    if unsupported_count:
+        no_shortlist_reasons.append(f"{unsupported_count} rencontre(s) ignorée(s) pour cause de calendrier ou de prédiction invalide")
+    if cold_start_predictions:
+        no_shortlist_reasons.append(
+            f"{cold_start_predictions} prédiction(s) utilisent des priors de championnat pour des clubs sans historique récent"
+        )
+    if today_events and not any(event["winamax_odds"] for event in today_events):
+        no_shortlist_reasons.append("cotes payantes désactivées : probabilités modèle uniquement")
+    if candidates == 0:
+        no_shortlist_reasons.append("aucun avantage de marché robuste validé")
+    if generation_status == "fixture_source_unavailable":
+        fixture_status = "unavailable"
+    elif today_events or upcoming_events:
+        fixture_status = "available"
+    elif generation_status in {"ok", "cached_predictions", "recent_empty_refresh"}:
+        fixture_status = "no_fixtures"
+    else:
+        fixture_status = "unknown"
+    return {
+        "date": requested,
+        "source": "postgresql" if rows or upcoming_rows else (generation or {}).get("status", "empty"),
+        "fixture_status": fixture_status,
+        "bookmaker": None,
+        "summary": {
+            "fixtures_today": len(today_events),
+            "events_reviewed": len(today_events),
+            "model_predictions": valid_predictions,
+            "research_candidates": candidates,
+            "abstentions": len(today_events) - candidates,
+            "upcoming_predictions": len(upcoming_events),
+            "cold_start_predictions": cold_start_predictions,
+            "credits_consumed": int((generation or {}).get("credits_consumed") or 0),
+        },
+        "events": today_events,
+        "upcoming_events": upcoming_events[:30],
+        "unsupported_events": (generation or {}).get("unsupported", []),
+        "generation": generation,
+        "model_diagnostics": _model_diagnostics_payload(),
+        "credit_firewall": {
+            "model_only_cost_credits": 0,
+            "daily_odds_enabled": SETTINGS.daily_odds_enabled,
+            "daily_odds_max_credits": SETTINGS.daily_odds_max_credits,
+            "historical_evidence_enabled": SETTINGS.historical_evidence_enabled,
+        },
+        "no_shortlist_reasons": list(dict.fromkeys(no_shortlist_reasons)),
+        "warning": (
+            "Probabilités de recherche uniquement. Les cotes sont facultatives et désactivées par défaut. "
+            "Aucune sélection ne constitue une consigne de pari."
+        ),
+    }
+
+
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
     if not SETTINGS.auth_required or request.session.get("authenticated"):
@@ -992,6 +1458,9 @@ def health() -> dict[str, Any]:
         "automatic_bet_placement": False,
         "the_odds_api_configured": odds_client().config.configured,
         "shadow_mode_enabled": SETTINGS.shadow_enabled,
+        "daily_model_only_enabled": True,
+        "daily_odds_enabled": SETTINGS.daily_odds_enabled,
+        "historical_evidence_enabled": SETTINGS.historical_evidence_enabled,
     }
 
 
@@ -1014,6 +1483,10 @@ def release_proof() -> dict[str, Any]:
         "automatic_model_promotion": False,
         "profitability_claim": False,
         "automatic_bet_placement": False,
+        "daily_model_only_enabled": True,
+        "daily_odds_enabled": SETTINGS.daily_odds_enabled,
+        "daily_odds_max_credits": SETTINGS.daily_odds_max_credits,
+        "historical_evidence_enabled": SETTINGS.historical_evidence_enabled,
     }
 
 
@@ -1189,6 +1662,13 @@ def system_status() -> dict[str, Any]:
 @app.get("/api/control-center")
 def control_center() -> dict[str, Any]:
     status = _system_status_payload()
+    today = datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
+    daily_rows = predictions_for_date(today)
+    daily_diagnostics = _model_diagnostics_payload()
+    daily_run = next((row for row in recent_sync_runs(50) if row.get("job_name") == "daily_model_only"), None)
+    fixture_status = "predictions_available" if daily_rows else "not_refreshed"
+    if not daily_rows and daily_run and str(daily_run.get("status")) == "ok":
+        fixture_status = "no_fixtures" if int(daily_run.get("fetched_events") or 0) == 0 else "refreshed_without_supported_predictions"
     return build_control_center(
         release=status.get("release") or {},
         database=status.get("database") or {},
@@ -1197,6 +1677,13 @@ def control_center() -> dict[str, Any]:
         benchmark=status.get("benchmark") or {},
         model_decision=status.get("model_decision") or {},
         backfills=recent_backfill_jobs(limit=10),
+        daily_product={
+            "model_status": daily_diagnostics.get("status"),
+            "prediction_count": len(daily_rows),
+            "fixture_status": fixture_status,
+            "shadow_enabled": SETTINGS.shadow_enabled,
+            "historical_evidence_enabled": SETTINGS.historical_evidence_enabled,
+        },
     )
 
 
@@ -1250,75 +1737,34 @@ def sync_history(limit: int = 20) -> dict[str, Any]:
     return {"runs": recent_sync_runs(limit), "database": database_summary()}
 
 
-@app.get("/api/bets/today")
-def bets_today(date: str | None = None) -> dict[str, Any]:
+@app.get("/api/model-diagnostics")
+def model_diagnostics() -> dict[str, Any]:
+    return _model_diagnostics_payload()
+
+
+@app.get("/api/daily/slate")
+def daily_slate(
+    date: str | None = None,
+    horizon_days: int | None = None,
+    refresh: bool = False,
+) -> dict[str, Any]:
     requested = date or datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
     if not DATE_RE.fullmatch(requested):
         raise HTTPException(status_code=422, detail="date must use YYYY-MM-DD")
-    persisted = [row for row in predictions_for_date(requested) if row.get("market_analysis")]
-    if persisted:
-        now = pd.Timestamp.now(tz="UTC")
-        events: list[dict[str, Any]] = []
-        for row in persisted:
-            fixture = row.get("fixture") or {}
-            analysis = row.get("market_analysis") or {}
-            sport = str(row.get("sport"))
-            event_name = (
-                f"{fixture.get('home_team', '—')} — {fixture.get('away_team', '—')}"
-                if sport == "football"
-                else f"{fixture.get('player_1', '—')} — {fixture.get('player_2', '—')}"
-            )
-            observed = pd.to_datetime(analysis.get("observed_at"), utc=True, errors="coerce")
-            age_minutes = None if pd.isna(observed) else max(0.0, (now - observed).total_seconds() / 60.0)
-            decision = str(row.get("decision") or "abstention")
-            reasons = sorted({
-                str(reason)
-                for selection in analysis.get("selections", [])
-                for reason in selection.get("reasons", [])
-            })
-            if age_minutes is None or age_minutes > SETTINGS.odds_stale_minutes:
-                decision = "à actualiser"
-                reasons.append("cote absente ou trop ancienne au moment de l’affichage")
-            if not reasons and decision != "candidat recherche":
-                reasons.append(str(analysis.get("warning") or "aucun edge robuste validé"))
-            events.append({
-                "sport": sport,
-                "event": event_name,
-                "competition": fixture.get("league") or fixture.get("tournament_level") or "marché pré-match",
-                "market": analysis.get("market_type", "vainqueur"),
-                "decision": decision,
-                "reasons": reasons,
-                "winamax_odds": bool(analysis),
-                "observed_at": _iso(observed),
-                "odds_age_minutes": age_minutes,
-                "prediction_id": row.get("id"),
-            })
-        candidates = sum(event["decision"] == "candidat recherche" for event in events)
-        return {
-            "date": requested,
-            "bookmaker": "Winamax via The Odds API",
-            "source": "postgresql",
-            "summary": {
-                "events_reviewed": len(events),
-                "research_candidates": candidates,
-                "abstentions": len(events) - candidates,
-            },
-            "events": events,
-            "warning": "Prices are reclassified as stale at display time. Verify every price directly with Winamax.",
-        }
-    path = DAILY_SLATE / f"{requested}.json"
-    if path.exists():
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        payload["source"] = "bundled_snapshot"
-        return payload
-    return {
-        "date": requested,
-        "bookmaker": "Winamax",
-        "source": "empty",
-        "summary": {"events_reviewed": 0, "research_candidates": 0, "abstentions": 0},
-        "events": [],
-        "warning": "No fresh persisted slate is available. Run the sync job or load the odds feed.",
-    }
+    if horizon_days is not None and not 0 <= horizon_days <= 31:
+        raise HTTPException(status_code=422, detail="horizon_days must be between 0 and 31")
+    return _daily_slate_payload(requested, horizon_days=horizon_days, refresh=refresh)
+
+
+@app.get("/api/bets/today")
+def bets_today(date: str | None = None) -> dict[str, Any]:
+    # Backward-compatible route. V4.3 no longer promises a bet: it returns the
+    # daily fixture and model-probability product, with market enrichment only
+    # when explicitly available.
+    requested = date or datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
+    if not DATE_RE.fullmatch(requested):
+        raise HTTPException(status_code=422, detail="date must use YYYY-MM-DD")
+    return _daily_slate_payload(requested)
 
 
 
@@ -1492,6 +1938,20 @@ def backfill_history(limit: int = 20) -> dict[str, Any]:
     return {"jobs": recent_backfill_jobs(limit), "database": database_summary()}
 
 
+@app.get("/api/credit-firewall")
+def credit_firewall() -> dict[str, Any]:
+    return {
+        "status": "protected",
+        "model_only_predictions_cost_credits": 0,
+        "daily_odds_enabled": SETTINGS.daily_odds_enabled,
+        "daily_odds_max_credits": SETTINGS.daily_odds_max_credits,
+        "historical_evidence_enabled": SETTINGS.historical_evidence_enabled,
+        "provider_cache_available": odds_client().config.cache_dir.exists(),
+        "automatic_bet_placement": False,
+        "automatic_model_promotion": False,
+    }
+
+
 @app.get("/api/odds/status")
 def odds_status() -> dict[str, Any]:
     client = odds_client()
@@ -1499,6 +1959,9 @@ def odds_status() -> dict[str, Any]:
     return {
         "provider": "The Odds API",
         "configured": client.config.configured,
+        "paid_calls_enabled": SETTINGS.daily_odds_enabled,
+        "daily_credit_cap": SETTINGS.daily_odds_max_credits,
+        "historical_evidence_enabled": SETTINGS.historical_evidence_enabled,
         "key_exposed_to_frontend": False,
         "cache_backend": "provider cache + PostgreSQL snapshots",
         "quota": client.quota_status(),
@@ -1531,7 +1994,11 @@ def historical_estimate(req: HistoricalEstimateRequest) -> dict[str, Any]:
 @app.get("/api/odds/sports")
 def odds_sports(group: str | None = None) -> dict[str, Any]:
     try:
-        response = odds_client().list_sports()
+        response = odds_client().list_sports(
+            allow_network=SETTINGS.daily_odds_enabled and SETTINGS.daily_odds_max_credits >= 1
+        )
+    except OddsApiNetworkDisabled as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except OddsApiNotConfigured as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except OddsApiError as exc:

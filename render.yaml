@@ -31,22 +31,30 @@ services:
       - key: ODDS_STALE_MINUTES
         value: "15"
       - key: MODEL_VERSION
-        value: "4.2.1"
+        value: "4.3.0"
       - key: SHADOW_MODE_ENABLED
-        value: "true"
+        value: "false"
       - key: SHADOW_QUOTA_FLOOR
         value: "100"
       - key: MODEL_MAX_AGE_DAYS
         value: "365"
+      - key: DAILY_ODDS_ENABLED
+        value: "false"
+      - key: DAILY_ODDS_MAX_CREDITS
+        value: "0"
+      - key: HISTORICAL_EVIDENCE_ENABLED
+        value: "false"
+      - key: DAILY_FIXTURE_HORIZON_DAYS
+        value: "31"
 
   - type: cron
-    name: sports-prediction-odds-sync
+    name: sports-prediction-daily-product
     runtime: docker
     plan: starter
     region: frankfurt
-    schedule: "*/15 * * * *"
+    schedule: "0 */6 * * *"
     dockerfilePath: ./Dockerfile
-    dockerCommand: python -m scripts.run_shadow_cycle
+    dockerCommand: python -m scripts.sync_daily_predictions --horizon-days 31
     envVars:
       - key: APP_ENV
         value: production
@@ -61,13 +69,21 @@ services:
       - key: ODDS_SYNC_SPORTS
         value: soccer_epl
       - key: MODEL_VERSION
-        value: "4.2.1"
+        value: "4.3.0"
       - key: SHADOW_MODE_ENABLED
-        value: "true"
+        value: "false"
       - key: SHADOW_QUOTA_FLOOR
         value: "100"
       - key: MODEL_MAX_AGE_DAYS
         value: "365"
+      - key: DAILY_ODDS_ENABLED
+        value: "false"
+      - key: DAILY_ODDS_MAX_CREDITS
+        value: "0"
+      - key: HISTORICAL_EVIDENCE_ENABLED
+        value: "false"
+      - key: DAILY_FIXTURE_HORIZON_DAYS
+        value: "31"
 
 databases:
   - name: sports-prediction-db

@@ -141,10 +141,12 @@ def test_v32_worker_and_cloud_cycle_configs() -> None:
     cron = (ROOT / "railway.cron.toml").read_text(encoding="utf-8")
     worker = (ROOT / "railway.worker.toml").read_text(encoding="utf-8")
     render = (ROOT / "render.yaml").read_text(encoding="utf-8")
-    assert "scripts.run_shadow_cycle" in cron
+    assert "scripts.sync_daily_predictions" in cron
+    assert "0 */6 * * *" in cron
     assert "scripts.run_historical_backfill" in worker
     assert "BACKFILL_MAX_CREDITS" in worker
-    assert "scripts.run_shadow_cycle" in render
+    assert "scripts.sync_daily_predictions" in render
+    assert "DAILY_ODDS_ENABLED" in render
 
 
 def test_v32_historical_scripts_have_safe_dry_run_help() -> None:

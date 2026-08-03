@@ -51,6 +51,12 @@ def main() -> None:
                 problems.append("profitability claim flag must remain false")
             if release.get("automatic_bet_placement") is not False:
                 problems.append("automatic bet placement must remain disabled")
+            if release.get("daily_model_only_enabled") is not True:
+                problems.append("zero-credit daily model mode must be enabled")
+            if release.get("daily_odds_enabled") is not False:
+                problems.append("daily paid odds must remain disabled for V4.3 deployment")
+            if release.get("historical_evidence_enabled") is not False:
+                problems.append("historical paid evidence must remain disabled for V4.3 deployment")
             if not problems:
                 print(json.dumps({"status": "verified", "attempt": attempt, "readiness": readiness, "proof": release}, ensure_ascii=False))
                 return

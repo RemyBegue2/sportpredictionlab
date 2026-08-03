@@ -50,13 +50,14 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.2.0'
+      EXPECTED_VERSION: '4.3.0'
       INPUT_START_DATE: ${{ inputs.start_date }}
       INPUT_END_DATE: ${{ inputs.end_date }}
       INPUT_SAMPLE_EVENTS: ${{ inputs.sample_events }}
       INPUT_MAX_DISCOVERY_CALLS: ${{ inputs.max_discovery_calls }}
       INPUT_MAX_ODDS_CREDITS: ${{ inputs.max_odds_credits }}
       INPUT_CONFIRMATION: ${{ inputs.confirmation }}
+      HISTORICAL_EVIDENCE_ENABLED: ${{ vars.HISTORICAL_EVIDENCE_ENABLED || 'false' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -73,6 +74,10 @@ jobs:
           set -euo pipefail
 
           errors=()
+
+          if [ "${HISTORICAL_EVIDENCE_ENABLED:-false}" != 'true' ]; then
+            errors+=("historical evidence is disabled by the V4.3 credit firewall; set repository variable HISTORICAL_EVIDENCE_ENABLED=true only after explicit human approval")
+          fi
 
           NORMALIZED_CONFIRMATION=$(printf '%s' "${INPUT_CONFIRMATION:-}" | tr -d '\r\n' | xargs)
           if [ "$NORMALIZED_CONFIRMATION" != 'EXECUTE_SAMPLE' ]; then

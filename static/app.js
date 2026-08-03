@@ -53,11 +53,12 @@ function marketTable(analysis){
 
 function renderProviderStatus(data){
   const configured=Boolean(data.configured);
-  $('#oddsApiState').textContent=configured?'prête':'inactive';
-  $('#providerStatus').textContent=configured?'Clé configurée côté serveur':'Clé non configurée';
+  const paidEnabled=Boolean(data.paid_calls_enabled);
+  $('#oddsApiState').textContent=!configured?'inactive':(paidEnabled?'autorisée':'protégée');
+  $('#providerStatus').textContent=!configured?'Clé non configurée':(paidEnabled?'Appels payants autorisés':'Pare-feu actif · appels payants désactivés');
   const q=data.quota||{};
-  $('#providerQuota').textContent=q.known?`Quota restant : ${q.remaining ?? '—'} · dernier coût : ${q.last_cost ?? '—'}`:'Quota connu après le premier appel';
-  $('#loadLiveOdds').disabled=!configured; $('#loadTennisOdds').disabled=!configured;
+  $('#providerQuota').textContent=paidEnabled?(q.known?`Quota restant : ${q.remaining ?? '—'} · dernier coût : ${q.last_cost ?? '—'} · plafond quotidien ${data.daily_credit_cap ?? 0}`:`Quota inconnu · plafond quotidien ${data.daily_credit_cap ?? 0}`):'0 crédit par défaut · activation explicite requise';
+  $('#loadLiveOdds').disabled=!configured||!paidEnabled; $('#loadTennisOdds').disabled=!configured||!paidEnabled;
   const db=data.database||{};
   $('#dbSnapshots').textContent=db.odds_snapshots ?? 0;
   $('#cloudDatabase').textContent=db.connected?'Connectée':'Indisponible';
@@ -362,14 +363,49 @@ function renderLiveOdds(data){
   $('#liveOddsResult').innerHTML=cards||'<div class="slate-card"><h3>Aucun événement disponible</h3><p>Le marché peut être fermé, hors saison ou absent du flux.</p></div>';
 }
 
+function dailyProbabilityRows(event){
+  const p=event.probabilities||{};
+  const labels=event.sport==='football'
+    ? [['1',p.home],['N',p.draw],['2',p.away]]
+    : [['J1',p.player_1],['J2',p.player_2]];
+  return labels.filter(([,value])=>Number.isFinite(Number(value))).map(([label,value])=>`<div class="odds-line"><span>${label}</span><b>${pct(value)}</b></div>`).join('');
+}
+
+function dailyCard(event,{upcoming=false}={}){
+  const reasons=(event.reasons||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  const time=event.commence_time?new Date(event.commence_time).toLocaleString('fr-FR'):(event.date||'date inconnue');
+  const diagnostic=event.probability_diagnostics||{};
+  const coldStart=event.coverage_mode==='cold_start_league_priors';
+  const badge=diagnostic.valid===false?'probabilités invalides':(coldStart?'cold-start':(event.decision||'probabilités seulement'));
+  return `<article class="slate-card"><div class="slate-top"><span>${esc(event.sport||'football')} · ${esc(event.competition||'')}</span><b class="decision ${esc(badge)}">${esc(badge)}</b></div><h3>${esc(event.event)}</h3><p>${esc(time)} · modèle ${esc(event.model_version||'—')}</p>${dailyProbabilityRows(event)}<ul>${reasons}</ul><small>${event.winamax_odds?'Marché enrichi':'Modèle seul · 0 crédit'}${coldStart?' · confiance réduite':''}${upcoming?' · à venir':''}</small></article>`;
+}
+
+function renderModelDiagnostics(data){
+  const status=data.status||'blocked';
+  const statusLabels={operational_research:'Opérationnel recherche',degraded:'Dégradé',blocked:'Bloqué'};
+  $('#dailyModelStatus').textContent=statusLabels[status]||status;
+  const metrics=data.metrics||{};
+  const freshness=data.freshness||{};
+  $('#dailyModelDetail').textContent=`${data.model_version||'version inconnue'} · test ${metrics.n_test??'—'} · log-loss ${Number.isFinite(Number(metrics.log_loss))?Number(metrics.log_loss).toFixed(3):'—'} · âge ${freshness.age_days??'—'} j`;
+}
+
 function renderDaily(data){
-  $('#dailyCandidates').textContent=data.summary?.research_candidates ?? 0;
-  const events=data.events || [];
-  const cards=events.map(event=>{
-    const reasons=(event.reasons||[]).map(x=>`<li>${esc(x)}</li>`).join('');
-    return `<article class="slate-card"><div class="slate-top"><span>${esc(event.sport)} · ${esc(event.tour||'')}</span><b class="decision ${esc(event.decision)}">${esc(event.decision)}</b></div><h3>${esc(event.event)}</h3><p>${esc(event.competition)} · ${esc(event.market)}</p><ul>${reasons}</ul><small>${event.winamax_odds?'Cotes disponibles':'Cotes Winamax non vérifiées'}</small></article>`;
-  }).join('');
-  $('#dailySlate').innerHTML=cards || `<div class="slate-card"><h3>Aucune revue embarquée</h3><p>${esc(data.warning||'Saisissez des cotes fraîches dans les formulaires.')}</p></div>`;
+  const summary=data.summary||{};
+  $('#dailyCandidates').textContent=summary.model_predictions ?? 0;
+  $('#dailyPredictionCount').textContent=summary.model_predictions ?? 0;
+  $('#dailyPredictionDetail').textContent=`${summary.fixtures_today??summary.events_reviewed??0} match(s) aujourd’hui · ${summary.upcoming_predictions??0} à venir · ${summary.cold_start_predictions??0} cold-start`;
+  $('#dailyShortlistCount').textContent=summary.research_candidates ?? 0;
+  $('#dailyShortlistDetail').textContent=(summary.research_candidates??0)>0?'Signaux de recherche uniquement':'Aucune sélection de marché forcée';
+  $('#dailyCredits').textContent=summary.credits_consumed ?? 0;
+  const firewall=data.credit_firewall||{};
+  $('#dailyCreditDetail').textContent=firewall.daily_odds_enabled?`Cotes autorisées · plafond ${firewall.daily_odds_max_credits??0}`:'Modèle seul · appels payants bloqués';
+  const noShortlist=data.no_shortlist_reasons||[];
+  $('#dailyNoShortlist').innerHTML=`<b>Pourquoi aucune shortlist :</b> ${noShortlist.length?noShortlist.map(esc).join(' · '):'Une shortlist éventuelle reste expérimentale et soumise aux cotes fraîches.'}`;
+  const events=data.events||[];
+  $('#dailySlate').innerHTML=events.map(event=>dailyCard(event)).join('') || `<div class="slate-card"><h3>Aucun match couvert aujourd’hui</h3><p>${esc(data.warning||'Le calendrier ne contient aucun match couvert à cette date.')}</p></div>`;
+  const upcoming=data.upcoming_events||[];
+  $('#upcomingSlate').innerHTML=upcoming.map(event=>dailyCard(event,{upcoming:true})).join('') || '<div class="slate-card"><h3>Aucun prochain match couvert</h3><p>Le calendrier gratuit peut être hors saison, indisponible ou contenir des équipes encore inconnues du modèle.</p></div>';
+  if(data.model_diagnostics) renderModelDiagnostics(data.model_diagnostics);
 }
 
 async function init(){
@@ -400,7 +436,8 @@ async function init(){
     const controlTask=refreshControl();
     const requests={
       audit:jsonFetch('/api/metrics'),
-      slate:jsonFetch('/api/bets/today'),
+      slate:jsonFetch('/api/daily/slate'),
+      modelDiagnostics:jsonFetch('/api/model-diagnostics'),
       provider:jsonFetch('/api/odds/status'),
       history:jsonFetch('/api/history/predictions?limit=20'),
       benchmark:jsonFetch('/api/benchmark/summary'),
@@ -421,6 +458,7 @@ async function init(){
     });
     if(loaded.audit) $('#metrics').textContent=JSON.stringify(loaded.audit,null,2);
     if(loaded.slate) renderDaily(loaded.slate);
+    if(loaded.modelDiagnostics) renderModelDiagnostics(loaded.modelDiagnostics);
     if(loaded.provider) renderProviderStatus(loaded.provider);
     if(loaded.history) renderHistory(loaded.history);
     if(loaded.benchmark) renderBenchmark(loaded.benchmark);
@@ -431,7 +469,14 @@ async function init(){
     if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
     if(loaded.system) renderSystem(loaded.system);
     await controlTask;
-    if(loaded.provider?.configured){ try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); } }
+    const paidOddsAvailable=Boolean(loaded.provider?.configured&&loaded.provider?.paid_calls_enabled);
+    $('#loadLiveOdds').disabled=!paidOddsAvailable;
+    $('#loadTennisOdds').disabled=!paidOddsAvailable;
+    if(!paidOddsAvailable){
+      $('#liveOddsResult').innerHTML='<div class="slate-card"><h3>Cotes payantes suspendues</h3><p>Le produit quotidien modèle seul reste disponible sans consommer de crédit.</p></div>';
+    }else{
+      try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); }
+    }
   }catch(e){
     toast(`Interface partiellement chargée : ${e.message}`);
   }

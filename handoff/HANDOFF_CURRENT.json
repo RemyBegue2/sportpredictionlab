@@ -40,16 +40,17 @@
     "version": "3.6.0"
   },
   "coverage_preflight": null,
-  "current_version": "4.2.1",
+  "current_version": "4.3.0",
   "deployment": {
     "cloud_jobs": [
-      "GitHub Actions evidence campaign"
+      "GitHub Actions daily product refresh",
+      "paid evidence disabled by default"
     ],
     "platform": "Railway",
     "public_url": "not_exported",
     "services": [
       "sportpredictionlab",
-      "shadow-cron",
+      "daily-product-cron",
       "Postgres"
     ],
     "verification_endpoint": "/api/release"
@@ -104,7 +105,7 @@
     },
     "version": "3.4.0"
   },
-  "generated_at_utc": "2026-08-03T18:15:07.492815+00:00",
+  "generated_at_utc": "2026-08-03T19:39:39.988561+00:00",
   "git": {
     "branch": "unknown",
     "commit": "unknown",
@@ -1187,9 +1188,10 @@
     "A green workflow is insufficient without /api/release post-deployment verification.",
     "The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.",
     "Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.",
-    "Use Estimate evidence coverage before approving any paid evidence campaign.",
-    "Only an exact VIABLE preflight may authorize a paid campaign.",
-    "Stage 100 remains blocked until a real V4.2 stage-30 report returns PASS.",
+    "Daily model-only predictions must consume zero provider credits.",
+    "Daily odds and paid historical evidence remain disabled by default.",
+    "Do not restart paid evidence without explicit human approval and a new justification.",
+    "Stage 100 remains blocked until a real stage-30 report returns PASS.",
     "A consensus requires at least two independent bookmakers after Winamax exclusion.",
     "No model promotion is automatic, even when all evidence gates pass."
   ],
@@ -1202,17 +1204,17 @@
     "reason": "No real historical champion–challenger benchmark was executed in the delivered package.",
     "status": "not_evaluable"
   },
-  "next_priority": "Deploy V4.2, verify /api/ready and /api/release, then run Estimate evidence coverage before any paid campaign.",
+  "next_priority": "Deploy V4.3, verify the model and credit firewall, then run Refresh daily product at zero provider cost.",
   "project": "Sports Prediction Lab",
   "release": {
     "app": {
       "deployment_id": null,
-      "environment": "development",
+      "environment": "test",
       "name": "sports-prediction-lab",
       "service_id": null,
       "source_commit": "unknown",
       "source_commit_short": "unknown",
-      "version": "4.2.1"
+      "version": "4.3.0"
     },
     "football_model": {
       "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
@@ -1235,7 +1237,7 @@
       },
       "trained_until": "2026-05-24T00:00:00+00:00"
     },
-    "generated_at_utc": "2026-08-03T18:15:07.492200+00:00",
+    "generated_at_utc": "2026-08-03T19:39:39.987260+00:00",
     "integrity": {
       "artifact_integrity_ok": true,
       "artifact_manifest_present": true,
@@ -1264,12 +1266,12 @@
       },
       "code_files": {
         ".github/workflows/deploy-production.yml": {
-          "bytes": 5339,
-          "sha256": "cce580fba635a4ed19c5103340beededadf6bf2f99c323370cce1eb7030e2b09"
+          "bytes": 5365,
+          "sha256": "ff9caf05bf082bdc349d829a3da89a743033cb40e14f5a7da6e923bdc6444aa5"
         },
         ".github/workflows/estimate-evidence-coverage.yml": {
-          "bytes": 7819,
-          "sha256": "bf9a40b0a31cc76089e2b431fdf993ef4e0476edd8463e349f43cdb9518abffc"
+          "bytes": 8173,
+          "sha256": "2bc0e8df899c26038be406e6be16b390eb06a63159bcf03b4ddcfcad82c037b9"
         },
         ".github/workflows/estimate-historical-sample.yml": {
           "bytes": 3864,
@@ -1281,27 +1283,27 @@
         },
         ".github/workflows/rebuild-fresh-football.yml": {
           "bytes": 5985,
-          "sha256": "46b5a2c3164de9e05345dc4ca940999cd34a03ebb6d2ff91bd5964667059d2a6"
+          "sha256": "5205e826e2898dfce196b44d514f33d0e24c79bd77c2496ec6602db6f7bd8437"
         },
         ".github/workflows/run-evidence-campaign.yml": {
-          "bytes": 25747,
-          "sha256": "e55cb0a4b7fd1f40a8e7c339d3f141fb4a3fdf29b32e8f1c4952b0c0b4763c91"
+          "bytes": 26102,
+          "sha256": "d6a1e787f6bfe2955fd187e1797a20c9a80b564d53584b25329d186ae96f5573"
         },
         ".github/workflows/run-historical-sample.yml": {
-          "bytes": 15315,
-          "sha256": "74ef2ba64b1ad0c36dcfe4dc267ae60da6b6edd68d74580eb765d37d46bda48f"
+          "bytes": 15665,
+          "sha256": "8850dc14ae6b3209af46d9ac1ec7dee7514429b3bab5f76cf2181a5ee64005ff"
         },
         ".github/workflows/verify-production.yml": {
           "bytes": 3214,
-          "sha256": "f5fb800d78a6c1da00d2ba9ba289824e4eddede022dbd600a438c716e509da41"
+          "sha256": "34a5e34a6273e3dffacf249b353b6b6bb5340618474249ee05aa3fc0fada8da8"
         },
         "Dockerfile": {
           "bytes": 1117,
           "sha256": "699a22b7c94633ba93d863e17d339abf79235c59824c5edfa80c582244f86b27"
         },
         "railway.cron.toml": {
-          "bytes": 217,
-          "sha256": "123971d861b52475ec000cd81ac9813b6ef50026b49005ced763b70494653961"
+          "bytes": 240,
+          "sha256": "6b53c3bce3458f24bd14ff4b6da60d072042d87899066c0024a28a50b14f4408"
         },
         "railway.toml": {
           "bytes": 416,
@@ -1312,16 +1314,16 @@
           "sha256": "f6a96fc56d294a0f60317526d3c3adc8d9a44ab314591125d39cac7400cc380c"
         },
         "sports_predictor/control_center.py": {
-          "bytes": 12016,
-          "sha256": "0dad0b3bb4595dbd2ce224043e00d37bb60da9294535602f09a2e23ff1bfb6ee"
+          "bytes": 14455,
+          "sha256": "2c02f2cd4e0f298f6ddc89b0652f52e856b139931e60d6368ff429289668b225"
         },
         "sports_predictor/coverage_preflight.py": {
           "bytes": 21242,
           "sha256": "743ed8cf0c6915d1f19d3062ed6893bea9400dc4127ef4eca2f69db8a9969af9"
         },
         "sports_predictor/database.py": {
-          "bytes": 58722,
-          "sha256": "4b4aa35f3fbcf36380b9bb36c53f539ac4d46810469ebea8cea180599ccbde70"
+          "bytes": 61001,
+          "sha256": "2a00e610a2c8d2b34d215db2c89b332478c24794994a5c0b2332aecb99fcc7b2"
         },
         "sports_predictor/evidence_campaign.py": {
           "bytes": 17594,
@@ -1344,16 +1346,16 @@
           "sha256": "4d13557ec245d7c31e6f7d21e1756fb3ebc67b3b95f7b6f824ad2fb26d2193b5"
         },
         "static/app.js": {
-          "bytes": 38537,
-          "sha256": "fcffa30b2e827b0425c31baa2c4fa315acdfea3f035cd91924915227fab9fd5f"
+          "bytes": 42401,
+          "sha256": "0d8212f22d72059eef184be8a1b3dfd7535cb480f7128c9227ab9dc7904561c8"
         },
         "static/index.html": {
-          "bytes": 25660,
-          "sha256": "fe1e2ce8606daec9f634e92bd71e1ec1daa47f42e13e8cace556f1a4d729fd7d"
+          "bytes": 27015,
+          "sha256": "79c8f91c0a76fa059927130a98322bc7e4de446ff0816de13fc710cf5edffc9f"
         },
         "webapp.py": {
-          "bytes": 70515,
-          "sha256": "88e67c3a9690a1401c084bc58cb2d0d1a22144ff5832a6c49fd577e83fd743c7"
+          "bytes": 92049,
+          "sha256": "f767cf7d2e2376a9775eb9c83ae91537793cdcf63b4d8029f9d3c1492c021bfc"
         }
       }
     },
@@ -1387,7 +1389,7 @@
         "rps": 0.43954820365378716
       }
     },
-    "release_id": "238f3febf419356c7e22",
+    "release_id": "e833948ec49b968077a5",
     "safety": {
       "automatic_bet_placement": false,
       "secrets_exported": false,

@@ -39,6 +39,8 @@ def _settings(path: Path) -> CloudSettings:
         shadow_enabled=True,
         shadow_max_events=50,
         shadow_quota_floor=100,
+        daily_odds_enabled=True,
+        daily_odds_max_credits=10,
     )
 
 
@@ -338,7 +340,7 @@ def test_shadow_cycle_orchestration_and_quota_guard(monkeypatch, tmp_path: Path)
             "quota": {"remaining": 499},
         })
         monkeypatch.setattr(cycle, "_sync_results", lambda sports: {"shadow_settled": 1, "quota_remaining": 498})
-        monkeypatch.setattr("sys.argv", ["run_shadow_cycle"])
+        monkeypatch.setattr("sys.argv", ["run_shadow_cycle", "--confirmation", "EXECUTE_DAILY_ODDS"])
         assert cycle.main() == 0
         last = latest_shadow_cycle()
         assert last is not None

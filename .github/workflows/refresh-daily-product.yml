@@ -1,0 +1,99 @@
+name: Refresh daily product
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: Optional YYYY-MM-DD date; empty uses Europe/Paris today on the server
+        required: false
+        type: string
+        default: ''
+      horizon_days:
+        description: Upcoming fixture horizon
+        required: true
+        type: number
+        default: 31
+  schedule:
+    - cron: '5 5,11,17 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-product-refresh
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+      REQUESTED_DATE: ${{ inputs.date || '' }}
+      HORIZON_DAYS: ${{ inputs.horizon_days || 31 }}
+    steps:
+      - name: Validate configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL is missing'; exit 2; }
+          [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing'; exit 2; }
+
+      - name: Authenticate and refresh zero-credit daily slate
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="${APP_PUBLIC_URL%/}"
+          COOKIE_JAR="$RUNNER_TEMP/daily-product.cookies"
+          LOGIN_BODY=$(python - <<'PY'
+          import json, os
+          print(json.dumps({'password': os.environ['APP_PASSWORD']}))
+          PY
+          )
+          curl --fail --silent --show-error \
+            --cookie-jar "$COOKIE_JAR" \
+            --header 'Content-Type: application/json' \
+            --data "$LOGIN_BODY" \
+            "$BASE/api/auth/login" > "$RUNNER_TEMP/login.json"
+          QUERY="horizon_days=${HORIZON_DAYS}&refresh=true"
+          if [ -n "${REQUESTED_DATE:-}" ]; then
+            QUERY="date=${REQUESTED_DATE}&${QUERY}"
+          fi
+          curl --fail --silent --show-error \
+            --cookie "$COOKIE_JAR" \
+            "$BASE/api/daily/slate?$QUERY" > "$RUNNER_TEMP/daily-slate.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload=json.loads((Path(os.environ['RUNNER_TEMP'])/'daily-slate.json').read_text())
+          summary=payload.get('summary') or {}
+          if int(summary.get('credits_consumed') or 0) != 0:
+              raise SystemExit('daily model-only refresh unexpectedly consumed credits')
+          diagnostics=payload.get('model_diagnostics') or {}
+          if payload.get('fixture_status') == 'unavailable':
+              raise SystemExit('zero-credit fixture source is unavailable')
+          if diagnostics.get('status') == 'blocked':
+              raise SystemExit(f"model diagnostics blocked: {diagnostics.get('hard_failures')}")
+          print(json.dumps({
+              'date': payload.get('date'),
+              'fixtures_today': summary.get('fixtures_today', 0),
+              'model_predictions': summary.get('model_predictions', 0),
+              'upcoming_predictions': summary.get('upcoming_predictions', 0),
+              'credits_consumed': summary.get('credits_consumed', 0),
+              'model_status': diagnostics.get('status'),
+          }, ensure_ascii=False))
+          PY
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### Daily product refresh'
+            echo
+            echo '- Mode: model-only'
+            echo '- Provider credits allowed: no'
+            echo '- Automatic bet placement: no'
+            echo "- Endpoint: \\`${APP_PUBLIC_URL%/}/api/daily/slate\\`"
+          } >> "$GITHUB_STEP_SUMMARY"

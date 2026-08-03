@@ -1,36 +1,36 @@
-# Sports Prediction Lab — point de reprise V4.2.1
+# Sports Prediction Lab — point de reprise V4.3.0
 
 ## État préparé
 
-- Version du code : **4.2.1 — Coverage-Aware Evidence Planning**.
+- Version : **4.3.0 — Daily Product Recovery & Credit Firewall**.
 - Exploitation : GitHub Actions + Railway, sans Python local.
-- Nouveau workflow préalable : **Estimate evidence coverage**.
-- Workflow de campagne : **Run evidence campaign**.
-- Stages : 30, 100, 300 et 1 000 événements benchmark-ready.
-- Baselines exécutables de la campagne principale : `consensus` ou `winamax`.
-- `pinnacle` est uniquement une expérience de disponibilité fournisseur séparée.
+- Produit principal : calendrier et probabilités Premier League sans cotes payantes.
+- Modèle football chargé : `3.4.0-fresh`, statut de recherche opérationnel, pas validé pour une shortlist marché.
+- Cotes quotidiennes : désactivées par défaut.
+- Evidence historique payante : suspendue par défaut.
 
-## Garanties V4.2
+## Première action
 
-- préflight plafonné et reprenable avant le backfill complet ;
-- verdict `VIABLE/RISKY/NOT_VIABLE` ;
-- aucune campagne payante sans préflight `VIABLE` exact ;
-- sur-échantillonnage calculé pour atteindre le stage en observations évaluables ;
-- plan candidat immuable avec hashes des sondes, preuves et événements ;
-- sélection fondée uniquement sur la disponibilité et la chronologie, jamais sur les résultats ou métriques du modèle ;
-- payload fournisseur vide traité proprement comme non viable ;
-- déploiements Railway détachés puis vérifiés par `/api/ready`, version, commit et hash de modèle.
+1. Déployer V4.3.0.
+2. Vérifier `/api/ready`, `/api/release`, `/api/model-diagnostics` et `/api/credit-firewall`.
+3. Lancer **Refresh daily product**.
+4. Confirmer `credits_consumed=0`.
+5. Vérifier les matchs, probabilités et raisons d’absence de shortlist dans l’interface.
 
-## Résultat réel à conserver
+## Variables recommandées
 
-La campagne précédente a démontré une bonne couverture Pinnacle mais seulement environ 23 % de couverture Winamax/consensus français. Elle reste `HOLD` et ne doit pas être reprise. Le stage 100 reste interdit.
+```text
+DAILY_ODDS_ENABLED=false
+DAILY_ODDS_MAX_CREDITS=0
+HISTORICAL_EVIDENCE_ENABLED=false
+SHADOW_MODE_ENABLED=false
+DAILY_FIXTURE_HORIZON_DAYS=31
+DAILY_FIXTURE_CACHE_HOURS=6
+```
 
-## Prochaine action sûre
+## Règles
 
-1. Déployer V4.2.1.
-2. Vérifier `/api/ready`, `/api/release` et `/api/coverage-preflight`.
-3. Lancer **Estimate evidence coverage** avec un petit plafond.
-4. Lire le verdict et la matrice de couverture.
-5. Lancer une campagne payante uniquement si le préflight est `VIABLE` et après approbation humaine.
-
-Ne jamais réduire les seuils après observation des données, promouvoir automatiquement un modèle, recommander une mise ou placer un pari.
+- ne pas relancer de préflight ou backfill payant sans justification et approbation humaine ;
+- ne pas interpréter une probabilité modèle comme un pari ;
+- ne pas forcer une shortlist lorsqu’aucun avantage live n’est validé ;
+- aucune mise, connexion bookmaker, promotion ou exécution automatique.

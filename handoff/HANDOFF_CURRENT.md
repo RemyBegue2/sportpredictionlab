@@ -1,13 +1,13 @@
 # HANDOFF CURRENT — Sports Prediction Lab
 
-Generated: `2026-08-03T18:15:07.492815+00:00`
+Generated: `2026-08-03T19:39:39.988561+00:00`
 
 ## Verified repository state
 
-- App version: **4.2.1**
+- App version: **4.3.0**
 - Git branch: `unknown`
 - Git commit: `unknown`
-- Release ID: `238f3febf419356c7e22`
+- Release ID: `e833948ec49b968077a5`
 - Running/source commit detected locally: `unknown`
 - Artifact integrity: **OK**
 - Football model version: `3.4.0-fresh`
@@ -21,12 +21,13 @@ Generated: `2026-08-03T18:15:07.492815+00:00`
 ```text
 Railway
 ├── sportpredictionlab  FastAPI + private web UI
-├── shadow-cron         champion + market baselines + blend → results → settlement
+├── daily-product-cron  free fixtures → model-only probabilities → PostgreSQL
 └── Postgres            audit records, model/release registry, metrics and decisions
 
 GitHub Actions
 ├── deploy-production.yml       tests → Railway deploy → API proof → Chromium smoke
 ├── verify-production.yml       read-only production proof
+├── refresh-daily-product.yml   zero-credit fixture/model refresh
 ├── rebuild-fresh-football.yml  rebuild → tests → deploy → proof
 ├── estimate-historical-sample.yml  immutable zero-credit request plan
 ├── estimate-evidence-coverage.yml coverage probe → VIABLE/RISKY/NOT_VIABLE
@@ -46,6 +47,15 @@ GitHub Actions
 - No silent rewriting of historical predictions.
 - A blank shortlist is valid.
 - Closing prices are evaluation evidence, not past features.
+
+## Daily product
+
+- Daily slate: `/api/daily/slate`
+- Model diagnostics: `/api/model-diagnostics`
+- Credit firewall: `/api/credit-firewall`
+- Daily paid odds: **disabled by default**
+- Historical paid evidence: **disabled by default**
+- Automatic bet placement: **disabled**
 
 ## Evidence engine
 
@@ -67,9 +77,10 @@ GitHub Actions
 - A green workflow is insufficient without /api/release post-deployment verification.
 - The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.
 - Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.
-- Use Estimate evidence coverage before approving any paid evidence campaign.
-- Only an exact VIABLE preflight may authorize a paid campaign.
-- Stage 100 remains blocked until a real V4.2 stage-30 report returns PASS.
+- Daily model-only predictions must consume zero provider credits.
+- Daily odds and paid historical evidence remain disabled by default.
+- Do not restart paid evidence without explicit human approval and a new justification.
+- Stage 100 remains blocked until a real stage-30 report returns PASS.
 - A consensus requires at least two independent bookmakers after Winamax exclusion.
 - No model promotion is automatic, even when all evidence gates pass.
 

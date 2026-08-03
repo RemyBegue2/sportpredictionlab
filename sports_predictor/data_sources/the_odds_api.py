@@ -30,6 +30,10 @@ class OddsApiQuotaError(OddsApiError):
     """Raised when the provider reports exhausted quota or rate limiting."""
 
 
+class OddsApiNetworkDisabled(OddsApiError):
+    """Raised when a cache miss would require a paid provider call."""
+
+
 @dataclass(frozen=True)
 class QuotaUsage:
     remaining: int | None = None
@@ -199,6 +203,7 @@ class OddsApiClient:
         *,
         cache_ttl_seconds: float | None,
         force_refresh: bool = False,
+        allow_network: bool = True,
     ) -> OddsApiEnvelope:
         api_key = self._require_key()
         if not path.startswith("/v4/") or ".." in path:
@@ -208,6 +213,10 @@ class OddsApiClient:
             cached = self._read_cache(fingerprint, cache_ttl_seconds)
             if cached is not None:
                 return cached
+        if not allow_network:
+            raise OddsApiNetworkDisabled(
+                "Paid provider network calls are disabled. A cached response was not available."
+            )
 
         request_params = dict(params)
         request_params["apiKey"] = api_key
@@ -320,12 +329,13 @@ class OddsApiClient:
             params["regions"] = ",".join(OddsApiClient._validate_tokens(regions or ("eu",), label="region"))
         return params
 
-    def list_sports(self, *, include_inactive: bool = False, force_refresh: bool = False) -> OddsApiEnvelope:
+    def list_sports(self, *, include_inactive: bool = False, force_refresh: bool = False, allow_network: bool = True) -> OddsApiEnvelope:
         return self._request(
             "/v4/sports",
             {"all": "true" if include_inactive else "false"},
             cache_ttl_seconds=3600,
             force_refresh=force_refresh,
+            allow_network=allow_network,
         )
 
     def current_odds(
@@ -339,6 +349,7 @@ class OddsApiClient:
         commence_time_to: str | None = None,
         include_links: bool = False,
         force_refresh: bool = False,
+        allow_network: bool = True,
     ) -> OddsApiEnvelope:
         sport = self._validate_tokens((sport_key,), label="sport key")[0]
         params = self._common_params(markets=markets, regions=regions, bookmakers=bookmakers)
@@ -353,6 +364,7 @@ class OddsApiClient:
             params,
             cache_ttl_seconds=90,
             force_refresh=force_refresh,
+            allow_network=allow_network,
         )
 
     def historical_odds(

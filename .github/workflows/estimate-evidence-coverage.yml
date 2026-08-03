@@ -58,7 +58,7 @@ permissions:
   contents: write
 
 env:
-  EXPECTED_VERSION: '4.2.0'
+  EXPECTED_VERSION: '4.3.0'
   THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
   INPUT_START_DATE: ${{ inputs.start_date }}
   INPUT_END_DATE: ${{ inputs.end_date }}
@@ -70,6 +70,7 @@ env:
   INPUT_MAX_PROBE_EVENTS: ${{ inputs.max_probe_events }}
   INPUT_CONFIRMATION: ${{ inputs.confirmation }}
   INPUT_RETRY_UNCERTAIN_PREFLIGHT: ${{ inputs.retry_uncertain_preflight }}
+  HISTORICAL_EVIDENCE_ENABLED: ${{ vars.HISTORICAL_EVIDENCE_ENABLED || 'false' }}
 
 concurrency:
   group: production-change
@@ -93,12 +94,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          [ "${HISTORICAL_EVIDENCE_ENABLED:-false}" = 'true' ] || {
+            echo 'Historical evidence is disabled by the V4.3 credit firewall. Set repository variable HISTORICAL_EVIDENCE_ENABLED=true only after explicit human approval.'
+            exit 2
+          }
           [ "$(printf '%s' "$INPUT_CONFIRMATION" | tr -d '\r\n' | xargs)" = 'EXECUTE_PREFLIGHT' ] || { echo 'confirmation must equal EXECUTE_PREFLIGHT'; exit 2; }
           [ -n "${THE_ODDS_API_KEY:-}" ] || { echo 'missing repository secret: THE_ODDS_API_KEY'; exit 2; }
           python - <<'PY'
           from sports_predictor.version import APP_VERSION
-          if APP_VERSION != '4.2.0':
-              raise SystemExit(f'expected 4.2.0, found {APP_VERSION}')
+          if APP_VERSION != '4.3.0':
+              raise SystemExit(f'expected 4.3.0, found {APP_VERSION}')
           PY
       - name: Run V4.2 regression tests
         run: pytest -q tests/test_v42_coverage_preflight.py

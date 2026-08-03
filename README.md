@@ -1,27 +1,65 @@
-# Sports Prediction Lab V4.2 — Coverage-Aware Evidence Planning
+# Sports Prediction Lab V4.3 — Daily Product Recovery & Credit Firewall
 
-La V4.2 empêche une campagne historique coûteuse de démarrer lorsque la baseline demandée est manifestement indisponible. Un préflight plafonné sonde la couverture réelle des bookmakers, estime le nombre d’événements nécessaires pour obtenir le stage demandé en observations benchmark-ready, puis produit un verdict `VIABLE`, `RISKY` ou `NOT_VIABLE`.
+La V4.3 remet le produit quotidien au premier plan. Le calendrier, les probabilités du modèle, son état de santé et les raisons d’absence de shortlist sont disponibles sans appel payant à The Odds API.
 
-Le workflow à exécuter avant toute campagne payante est **Estimate evidence coverage**. Seul un manifeste `VIABLE`, immuable et cohérent avec la baseline, le stage, le budget, la version et la liste candidate peut déverrouiller **Run evidence campaign**.
+## Fonctionnement par défaut
 
-Garanties principales :
+```text
+Calendrier gratuit mis en cache
+→ normalisation des équipes
+→ prédictions 1N2 du modèle
+→ stockage idempotent PostgreSQL
+→ affichage quotidien et matchs à venir
+```
 
-- aucune sélection basée sur les résultats sportifs ou les performances du modèle ;
-- consensus composé d’au moins deux bookmakers indépendants complets ;
-- sur-échantillonnage explicite pour atteindre un nombre cible d’événements réellement évaluables ;
-- budgets distincts pour le préflight et la campagne complète ;
-- reprise après interruption sans répétition silencieuse des appels terminés ;
-- Pinnacle traité comme expérience séparée, jamais comme remplacement silencieux de Winamax/consensus ;
-- aucune promotion automatique, recommandation de mise ou exécution de pari.
+Les cotes et les campagnes historiques sont suspendues par défaut :
 
-Documents V4.2 :
+```text
+DAILY_ODDS_ENABLED=false
+DAILY_ODDS_MAX_CREDITS=0
+HISTORICAL_EVIDENCE_ENABLED=false
+SHADOW_MODE_ENABLED=false
+```
 
-- `UPGRADE_V4_2.md`
-- `AUDIT_MULTI_ROLES_V4_2.md`
-- `RESULTATS_V4_2.md`
-- `KNOWN_ISSUES_AND_GATES_V4_2.md`
-- `OPERATIONS_RUNBOOK_V4_2.md`
-- `VALIDATION_V4_2.json`
+## Endpoints principaux
+
+```text
+/api/daily/slate
+/api/model-diagnostics
+/api/credit-firewall
+/api/release
+/api/ready
+```
+
+## Workflows principaux
+
+```text
+Deploy production
+Refresh daily product
+Verify production
+Generate handoff package
+```
+
+Les workflows evidence restent disponibles pour audit et recomputation, mais les modes payants exigent une réactivation explicite du pare-feu et leur confirmation humaine.
+
+## Garanties
+
+- zéro crédit pour le calendrier et les probabilités modèle seules ;
+- aucune shortlist forcée ;
+- aucune recommandation de mise ;
+- aucun placement automatique ;
+- aucune promotion automatique ;
+- panne des sources de calendrier affichée explicitement sans rendre l’application indisponible ;
+- cotes facultatives, désactivées et plafonnées par défaut.
+
+Documents V4.3 :
+
+- `UPGRADE_V4_3.md`
+- `AUDIT_MULTI_ROLES_V4_3.md`
+- `RESULTATS_V4_3.md`
+- `KNOWN_ISSUES_AND_GATES_V4_3.md`
+- `OPERATIONS_RUNBOOK_V4_3.md`
+- `VALIDATION_V4_3.json`
 
 ---
 # Sports Prediction Lab V3.7 — Cloud Control Center

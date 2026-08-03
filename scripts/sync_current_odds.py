@@ -21,6 +21,8 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--include-tennis", action="store_true", help="Also discover active tennis tournaments. Disabled by default to protect quota.")
     p.add_argument("--tennis-surface", default="hard", choices=("hard", "clay", "grass", "carpet"))
     p.add_argument("--max-tennis-tournaments", type=int, default=4)
+    p.add_argument("--confirmation", default=None, help="Must equal EXECUTE_DAILY_ODDS for paid network calls")
+    p.add_argument("--max-credits", type=int, default=None, help="Hard planning cap for this run")
     return p
 
 
@@ -39,7 +41,35 @@ def _safe_summary(payload: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     args = parser().parse_args()
+    configured_cap = SETTINGS.daily_odds_max_credits
+    requested_cap = configured_cap if args.max_credits is None else max(0, int(args.max_credits))
+    effective_cap = min(configured_cap, requested_cap) if configured_cap else 0
+    if not SETTINGS.daily_odds_enabled or effective_cap <= 0:
+        print(json.dumps({
+            "status": "skipped_credit_firewall",
+            "reason": "daily paid odds are disabled",
+            "credits_consumed": 0,
+            "automatic_bet_placement": False,
+        }, ensure_ascii=False))
+        return 0
+    confirmation = args.confirmation or __import__("os").getenv("DAILY_ODDS_CONFIRMATION")
+    if confirmation != "EXECUTE_DAILY_ODDS":
+        print(json.dumps({
+            "status": "blocked_confirmation_required",
+            "required_confirmation": "EXECUTE_DAILY_ODDS",
+            "credits_consumed": 0,
+        }, ensure_ascii=False))
+        return 2
     football_sports = tuple(args.football_sports or SETTINGS.odds_sync_sports)
+    estimated_calls = len(football_sports) + ((1 + max(0, args.max_tennis_tournaments)) if args.include_tennis else 0)
+    if estimated_calls > effective_cap:
+        print(json.dumps({
+            "status": "blocked_credit_cap",
+            "estimated_credits": estimated_calls,
+            "maximum_credits": effective_cap,
+            "credits_consumed": 0,
+        }, ensure_ascii=False))
+        return 2
     results: list[dict[str, Any]] = []
     errors: list[dict[str, str]] = []
 

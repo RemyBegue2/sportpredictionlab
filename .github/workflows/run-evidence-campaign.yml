@@ -66,13 +66,14 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.2.0'
+      EXPECTED_VERSION: '4.3.0'
       INPUT_MODE: ${{ inputs.mode }}
       INPUT_TARGET_STAGE: ${{ inputs.target_stage }}
       INPUT_MAX_CREDITS: ${{ inputs.max_credits }}
       INPUT_BASELINE: ${{ inputs.baseline }}
       INPUT_CONFIRMATION: ${{ inputs.confirmation }}
       INPUT_RETRY_UNCERTAIN_DISCOVERY: ${{ inputs.retry_uncertain_discovery }}
+      HISTORICAL_EVIDENCE_ENABLED: ${{ vars.HISTORICAL_EVIDENCE_ENABLED || 'false' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -98,7 +99,7 @@ jobs:
               "sports_predictor/evidence_campaign.py": "CAMPAIGN_STAGES",
               "sports_predictor/coverage_preflight.py": "PREFLIGHT_DECISIONS",
               "scripts/plan_evidence_campaign.py": "ZERO-CREDIT CAMPAIGN PLAN",
-              "sports_predictor/version.py": 'APP_VERSION = "4.2.0"',
+              "sports_predictor/version.py": 'APP_VERSION = "4.3.0"',
               "sports_predictor/cloud_config.py": "cloud_runtime_detected",
           }
           errors = []
@@ -215,6 +216,9 @@ jobs:
           fi
 
           if [ "$INPUT_MODE" = 'continue_current_stage' ] || [ "$INPUT_MODE" = 'start_next_stage' ]; then
+            if [ "${HISTORICAL_EVIDENCE_ENABLED:-false}" != 'true' ]; then
+              errors+=("historical evidence is disabled by the V4.3 credit firewall; set repository variable HISTORICAL_EVIDENCE_ENABLED=true only after explicit human approval")
+            fi
             NORMALIZED=$(printf '%s' "${INPUT_CONFIRMATION:-}" | tr -d '\r\n' | xargs)
             [ "$NORMALIZED" = 'EXECUTE_CAMPAIGN' ] || errors+=("confirmation must equal EXECUTE_CAMPAIGN")
             [ -n "${THE_ODDS_API_KEY:-}" ] || errors+=("missing repository secret: THE_ODDS_API_KEY")

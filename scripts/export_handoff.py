@@ -80,21 +80,22 @@ def build_handoff() -> dict[str, Any]:
         "model_decision": (evidence_bundle or {}).get("decision") if evidence_bundle else None,
         "deployment": {
             "platform": "Railway",
-            "services": ["sportpredictionlab", "shadow-cron", "Postgres"],
-            "cloud_jobs": ["GitHub Actions evidence campaign"],
+            "services": ["sportpredictionlab", "daily-product-cron", "Postgres"],
+            "cloud_jobs": ["GitHub Actions daily product refresh", "paid evidence disabled by default"],
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Deploy V4.2, verify /api/ready and /api/release, then run Estimate evidence coverage before any paid campaign.",
+        "next_priority": "Deploy V4.3, verify the model and credit firewall, then run Refresh daily product at zero provider cost.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
             "Tennis remains experimental and uncalibrated.",
             "A green workflow is insufficient without /api/release post-deployment verification.",
             "The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.",
             "Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.",
-            "Use Estimate evidence coverage before approving any paid evidence campaign.",
-            "Only an exact VIABLE preflight may authorize a paid campaign.",
-            "Stage 100 remains blocked until a real V4.2 stage-30 report returns PASS.",
+            "Daily model-only predictions must consume zero provider credits.",
+            "Daily odds and paid historical evidence remain disabled by default.",
+            "Do not restart paid evidence without explicit human approval and a new justification.",
+            "Stage 100 remains blocked until a real stage-30 report returns PASS.",
             "A consensus requires at least two independent bookmakers after Winamax exclusion.",
             "No model promotion is automatic, even when all evidence gates pass.",
         ],
@@ -136,12 +137,13 @@ Generated: `{payload['generated_at_utc']}`
 ```text
 Railway
 ├── sportpredictionlab  FastAPI + private web UI
-├── shadow-cron         champion + market baselines + blend → results → settlement
+├── daily-product-cron  free fixtures → model-only probabilities → PostgreSQL
 └── Postgres            audit records, model/release registry, metrics and decisions
 
 GitHub Actions
 ├── deploy-production.yml       tests → Railway deploy → API proof → Chromium smoke
 ├── verify-production.yml       read-only production proof
+├── refresh-daily-product.yml   zero-credit fixture/model refresh
 ├── rebuild-fresh-football.yml  rebuild → tests → deploy → proof
 ├── estimate-historical-sample.yml  immutable zero-credit request plan
 ├── estimate-evidence-coverage.yml coverage probe → VIABLE/RISKY/NOT_VIABLE
@@ -161,6 +163,15 @@ GitHub Actions
 - No silent rewriting of historical predictions.
 - A blank shortlist is valid.
 - Closing prices are evaluation evidence, not past features.
+
+## Daily product
+
+- Daily slate: `/api/daily/slate`
+- Model diagnostics: `/api/model-diagnostics`
+- Credit firewall: `/api/credit-firewall`
+- Daily paid odds: **disabled by default**
+- Historical paid evidence: **disabled by default**
+- Automatic bet placement: **disabled**
 
 ## Evidence engine
 
@@ -210,12 +221,12 @@ def active_model_card(payload: dict[str, Any]) -> str:
 
 def next_actions(payload: dict[str, Any]) -> str:
     decision = payload.get("model_decision") or {}
-    action = decision.get("next_action") or "Deploy V4.2, verify /api/ready and /api/release, then run Estimate evidence coverage before any paid campaign."
+    action = "Deploy V4.3, verify /api/ready, /api/release and /api/model-diagnostics, then run Refresh daily product with zero provider credits."
     return f"""# NEXT ACTIONS
 
 1. {action}
-2. Use GitHub Actions → Verify production after every deploy.
-3. Keep every contender in shadow until historical and live sample gates are satisfied.
+2. Confirm `/api/credit-firewall` keeps daily odds and historical evidence disabled.
+3. Observe several daily model-only refreshes before authorizing any market-data expense.
 4. Use GitHub Actions → Generate handoff package, then attach the downloaded ZIP in the next conversation.
 
 No secret is exported.

@@ -202,10 +202,12 @@ def test_frontend_exposes_decision_contract() -> None:
     assert f"app.js?v={APP_VERSION}" in html
 
 
-def test_live_shadow_records_market_consensus_and_blend_contenders() -> None:
+def test_live_shadow_records_market_consensus_and_blend_contenders(monkeypatch) -> None:
     import webapp
+    from dataclasses import replace
     from sports_predictor.database import recent_shadow_predictions
 
+    monkeypatch.setattr(webapp, "SETTINGS", replace(webapp.SETTINGS, shadow_enabled=True))
     now = datetime.now(timezone.utc)
     prediction = {
         "sport": "football",
