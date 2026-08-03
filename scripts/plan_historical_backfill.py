@@ -13,8 +13,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from sports_predictor.backfill_control import VALIDATION_EVENT_LIMIT, build_plan_identity
-from sports_predictor.cloud_config import CloudSettings
-from sports_predictor.database import create_backfill_job, init_database
 from sports_predictor.odds_backtest import HistoricalPlan, build_historical_plan
 
 DEFAULT_BOOKMAKERS = ["winamax_fr", "betclic_fr", "unibet_fr", "pmu_fr", "pinnacle"]
@@ -132,7 +130,7 @@ def main() -> int:
     plan.targets.to_csv(output / "targets.csv", index=False)
     selected_count = int(selected_events["event_id"].nunique())
     summary = {
-        "version": "3.8.3",
+        "version": "3.8.6",
         "sport_keys": sorted(plan.requests["sport_key"].astype(str).unique().tolist()),
         "available_event_count": int(available_events),
         "requested_event_count": int(requested_event_count),
@@ -157,14 +155,14 @@ def main() -> int:
         summary["plan_request_id"] = request_plan.get("plan_request_id")
         summary["plan_request_sha256"] = __import__("hashlib").sha256(request_plan_path.read_bytes()).hexdigest()
     summary.update(build_plan_identity(summary, plan.requests, plan.targets))
+    # V3.8.6: planning is deliberately file-only.  Keep the historical
+    # flag accepted for compatibility with older workflow revisions, but
+    # never initialise SQLAlchemy or read DATABASE_URL in this command.
     if args.register_job:
-        settings = CloudSettings.from_env(ROOT)
-        init_database(settings)
-        summary["database_job_id"] = create_backfill_job(
-            sport_key=summary["sport_keys"][0] if len(summary["sport_keys"]) == 1 else "multi",
-            plan=summary,
-            request_count=len(plan.requests),
-            estimated_credits=plan.estimated_credits,
+        summary["database_job_registration"] = "disabled_file_only"
+        print(
+            "NOTICE: --register-job is deprecated and ignored; "
+            "the historical sample planner is file-only."
         )
     (output / "plan.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(json.dumps(summary, indent=2))

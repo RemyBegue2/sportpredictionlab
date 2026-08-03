@@ -1,0 +1,76 @@
+{
+  "version": "3.8.6",
+  "archive_layout": "flat",
+  "planner_file_only": true,
+  "full_test_result": "132 passed",
+  "files": [
+    {
+      "path": ".github/workflows/estimate-historical-sample.yml",
+      "sha256": "33c143f53b24922c42efde2e68b6f67a0417ce5331df3beb6d40d0793487305c"
+    },
+    {
+      "path": ".github/workflows/run-historical-sample.yml",
+      "sha256": "c13d7b239e6938d73d2fbb00e54f589939871e8dd99d771fccedf2a2b2187069"
+    },
+    {
+      "path": "README_HOTFIX_V3_8_5.md",
+      "sha256": "9dfa66590cc10caf881eac3702bac5de4a0415e96dd2c1ef8df69c6bdae9624c"
+    },
+    {
+      "path": "README_HOTFIX_V3_8_6.md",
+      "sha256": "d02c201743e2e11d567ff293efa1b65e5dc4fe4e4ab30fdbddd59cb647f6489d"
+    },
+    {
+      "path": "VALIDATION_V3_8_5.json",
+      "sha256": "02c353ff2328393bb521d8f15879dec1a561fc3f18728a4dc5e78515b53dd056"
+    },
+    {
+      "path": "scripts/discover_historical_events.py",
+      "sha256": "59fe71c97ab168efd59451bbc24a062216c44eb8adf24253cc398c8f4af71d1e"
+    },
+    {
+      "path": "scripts/estimate_historical_sample.py",
+      "sha256": "adfd2acdea311879276aa2779865265638c0ef95762de11062aa4396124c8ccc"
+    },
+    {
+      "path": "scripts/plan_historical_backfill.py",
+      "sha256": "ca713cde0de68f44b74a8e4fa2c3b688f478e12dcea576225cf548b75fdb21d1"
+    },
+    {
+      "path": "scripts/run_historical_backfill.py",
+      "sha256": "2dcc803f4f7ebc1d7c7701512c6350e38eb20f8e9e7838823b12f5090e106673"
+    },
+    {
+      "path": "sports_predictor/control_center.py",
+      "sha256": "0dad0b3bb4595dbd2ce224043e00d37bb60da9294535602f09a2e23ff1bfb6ee"
+    },
+    {
+      "path": "sports_predictor/data_sources/the_odds_api.py",
+      "sha256": "aa1999ea6521a97d64e88dcb773b7bb80ece390097f5c5a17d05227e74d4ab75"
+    },
+    {
+      "path": "sports_predictor/odds_backtest.py",
+      "sha256": "6bae91cf5e2521294234cc44aea5a042a1718a60ffd4b12c3b23f2b47fe8fd51"
+    },
+    {
+      "path": "sports_predictor/sample_plan.py",
+      "sha256": "4d13557ec245d7c31e6f7d21e1756fb3ebc67b3b95f7b6f824ad2fb26d2193b5"
+    },
+    {
+      "path": "tests/test_odds_api.py",
+      "sha256": "73486e3585ef8981b9e26bc9a25e4d39306f9afc5a98c6f102f3e7f5b41949ec"
+    },
+    {
+      "path": "tests/test_odds_backtest.py",
+      "sha256": "fac3fac122732a7ee4734f0c1c6ee9908ba98d83525c8ea71a4659bf815e874b"
+    },
+    {
+      "path": "tests/test_v37_cloud_control.py",
+      "sha256": "c52803d77367a4c17d3e46250e84467ae8471630957b57e5e554f61faf67b50a"
+    },
+    {
+      "path": "tests/test_v38_evidence_run.py",
+      "sha256": "d664f2d80fe2327b211ef398962fbf5812fa58083d29e00e22e5841796dd076d"
+    }
+  ]
+}

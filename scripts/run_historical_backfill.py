@@ -28,6 +28,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--approve-plan", help="Required for full plans; must equal plan.json plan_id exactly.")
     parser.add_argument("--job-id", type=int)
+    parser.add_argument(
+        "--storage",
+        choices=("database", "files"),
+        default="database",
+        help="Persist snapshots and audit issues in PostgreSQL or keep the cloud sample self-contained in files.",
+    )
     parser.add_argument("--force-refresh", action="store_true")
     return parser.parse_args()
 
@@ -51,8 +57,12 @@ def main() -> int:
         print("DRY-RUN only. Add --execute after reviewing the immutable plan and credit cap.")
         return 0
 
-    settings = CloudSettings.from_env(ROOT)
-    init_database(settings)
+    database_enabled = args.storage == "database"
+    if args.job_id and not database_enabled:
+        raise ValueError("--job-id requires --storage database")
+    if database_enabled:
+        settings = CloudSettings.from_env(ROOT)
+        init_database(settings)
     client = OddsApiClient(OddsApiConfig.from_env(root=ROOT))
     chunks = plan_dir / "chunks"
     chunks.mkdir(parents=True, exist_ok=True)
@@ -101,14 +111,15 @@ def main() -> int:
                     chunk_path = chunks / f"{number:06d}.csv"
                     rows.to_csv(chunk_path, index=False)
                     chunk_hash = hashlib.sha256(chunk_path.read_bytes()).hexdigest()
-                    persist_odds_rows(
-                        rows,
-                        fetched_at=response.fetched_at,
-                        quota_remaining=response.quota.remaining,
-                        quota_last_cost=response.quota.last_cost,
-                        job_name="historical_backfill",
-                        sport_key=str(request["sport_key"]),
-                    )
+                    if database_enabled:
+                        persist_odds_rows(
+                            rows,
+                            fetched_at=response.fetched_at,
+                            quota_remaining=response.quota.remaining,
+                            quota_last_cost=response.quota.last_cost,
+                            job_name="historical_backfill",
+                            sport_key=str(request["sport_key"]),
+                        )
                 else:
                     chunk_hash = None
                 actual_cost = 0 if response.from_cache else int(response.quota.last_cost or per_request_cost)
@@ -141,12 +152,13 @@ def main() -> int:
                 state.setdefault("failed", []).append(failure)
                 state["updated_at"] = datetime.now(timezone.utc).isoformat()
                 _write_state(state_path, state)
-                record_data_quality_issue(
-                    issue_type="historical_backfill_request_failed",
-                    severity="high",
-                    provider_event_id=None,
-                    details={**failure, "plan_id": summary["plan_id"]},
-                )
+                if database_enabled:
+                    record_data_quality_issue(
+                        issue_type="historical_backfill_request_failed",
+                        severity="high",
+                        provider_event_id=None,
+                        details={**failure, "plan_id": summary["plan_id"]},
+                    )
                 raise
 
         frames = [pd.read_csv(path) for path in sorted(chunks.glob("*.csv"))]
@@ -157,7 +169,7 @@ def main() -> int:
         _write_state(state_path, state)
         if args.job_id:
             update_backfill_job(args.job_id, status="completed", completed_requests=len(completed), consumed_credits=consumed)
-        print(json.dumps({"status": "completed", "plan_id": summary["plan_id"], "requests": len(completed), "rows": len(combined), "consumed_credits": consumed}, indent=2))
+        print(json.dumps({"status": "completed", "plan_id": summary["plan_id"], "requests": len(completed), "rows": len(combined), "consumed_credits": consumed, "storage": args.storage}, indent=2))
         return 0
     except Exception as exc:
         if args.job_id:

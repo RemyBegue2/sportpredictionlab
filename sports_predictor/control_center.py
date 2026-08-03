@@ -50,7 +50,7 @@ WORKFLOW_CATALOG: tuple[dict[str, Any], ...] = (
         "purpose": "Exécuter le plan approuvé sous plafonds, publier le rapport qualité et redéployer le dashboard.",
         "risk": "consumes_api_credits",
         "confirmation": "EXECUTE_SAMPLE",
-        "required_configuration": ["THE_ODDS_API_KEY", "DATABASE_URL", "RAILWAY_TOKEN", "RAILWAY_PROJECT_ID", "APP_PUBLIC_URL"],
+        "required_configuration": ["THE_ODDS_API_KEY", "RAILWAY_TOKEN", "RAILWAY_PROJECT_ID", "APP_PUBLIC_URL"],
     },
     {
         "id": "backup-database",

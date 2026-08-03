@@ -44,7 +44,6 @@ jobs:
     timeout-minutes: 90
     env:
       THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
@@ -79,20 +78,9 @@ jobs:
             errors+=("confirmation must equal EXECUTE_SAMPLE")
           fi
           [ -n "${THE_ODDS_API_KEY:-}" ] || errors+=("missing repository secret: THE_ODDS_API_KEY")
-          [ -n "${DATABASE_URL:-}" ] || errors+=("missing repository secret: DATABASE_URL (use Railway Postgres DATABASE_PUBLIC_URL)")
           [ -n "${RAILWAY_TOKEN:-}" ] || errors+=("missing repository secret: RAILWAY_TOKEN")
           [ -n "${RAILWAY_PROJECT_ID:-}" ] || errors+=("missing repository secret: RAILWAY_PROJECT_ID")
           [ -n "${APP_PUBLIC_URL:-}" ] || errors+=("missing repository variable: APP_PUBLIC_URL")
-
-          if [ -n "${DATABASE_URL:-}" ]; then
-            case "$DATABASE_URL" in
-              postgres://*|postgresql://*) ;;
-              *) errors+=("DATABASE_URL must start with postgres:// or postgresql://") ;;
-            esac
-            case "$DATABASE_URL" in
-              *railway.internal*) errors+=("DATABASE_URL is private Railway DNS; GitHub Actions needs DATABASE_PUBLIC_URL via the TCP proxy") ;;
-            esac
-          fi
 
           if [ ${#errors[@]} -gt 0 ]; then
             {
@@ -102,7 +90,7 @@ jobs:
                 echo "- $error"
               done
               echo
-              echo 'Create secrets under: Settings → Secrets and variables → Actions → Secrets.'
+              echo 'Create the listed secrets under: Settings → Secrets and variables → Actions → Secrets.'
               echo 'Create APP_PUBLIC_URL under the Variables tab.'
             } >> "$GITHUB_STEP_SUMMARY"
 
@@ -111,7 +99,7 @@ jobs:
             exit 2
           fi
 
-          echo 'All required historical-sample configuration is present.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'All required historical-sample configuration is present. The sample runs file-only and does not need DATABASE_URL.' >> "$GITHUB_STEP_SUMMARY"
       - name: Build the zero-credit execution plan
         id: request_plan
         shell: bash
@@ -133,6 +121,7 @@ jobs:
             echo "- Requested events: \`$INPUT_SAMPLE_EVENTS\`"
             echo "- Discovery-call cap: \`$INPUT_MAX_DISCOVERY_CALLS\`"
             echo "- Global provider credit cap: \`$INPUT_MAX_ODDS_CREDITS\`"
+            echo '- Storage: GitHub workflow files; PostgreSQL is not required for this sample.'
             echo '- No manual plan identifier is required or compared.'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Discover provider events within the global credit cap
@@ -156,6 +145,28 @@ jobs:
           fi
           echo "consumed_credits=$USED" >> "$GITHUB_OUTPUT"
           echo "remaining_credits=$REMAINING" >> "$GITHUB_OUTPUT"
+      - name: Verify file-only planner revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path("scripts/plan_historical_backfill.py").read_text(encoding="utf-8")
+          forbidden = ["init_database", "create_backfill_job", "CloudSettings"]
+          found = [token for token in forbidden if token in source]
+          if found:
+              raise SystemExit(
+                  "V3.8.6 hotfix is not installed at the repository root; "
+                  f"old database planner tokens remain: {found}"
+              )
+          if '"version": "3.8.6"' not in source:
+              raise SystemExit(
+                  "V3.8.6 planner marker is missing. Replace the root-level "
+                  "scripts/plan_historical_backfill.py file."
+              )
+          print("Planner verified: V3.8.6 file-only, DATABASE_URL ignored.")
+          PY
       - name: Build immutable budget-adapted provider plan
         run: |
           python -m scripts.plan_historical_backfill \
@@ -166,17 +177,15 @@ jobs:
             --max-credits '${{ steps.discovery.outputs.remaining_credits }}' \
             --sample-events "$INPUT_SAMPLE_EVENTS" \
             --plan-request-json artifacts/historical_sample_request.json \
-            --output-dir data/odds_api/backfill \
-            --register-job
-      - name: Execute resumable immutable sample
+            --output-dir data/odds_api/backfill
+      - name: Execute immutable file-only sample
         shell: bash
         run: |
           set -euo pipefail
-          JOB_ID=$(python -c "import json; print(json.load(open('data/odds_api/backfill/plan.json'))['database_job_id'])")
           python -m scripts.run_historical_backfill \
             --plan-dir data/odds_api/backfill \
             --max-credits '${{ steps.discovery.outputs.remaining_credits }}' \
-            --job-id "$JOB_ID" \
+            --storage files \
             --execute
       - name: Prepare leakage-safe model and market comparison
         id: prepare_benchmark
@@ -197,8 +206,7 @@ jobs:
               --exploratory-predictions 100 \
               --minimum-train 30 \
               --folds 5 \
-              --output artifacts/market_benchmark_v3_8.json \
-              --persist
+              --output artifacts/market_benchmark_v3_8.json
             BENCHMARK_CODE=$?
           else
             BENCHMARK_CODE=4

@@ -1,0 +1,9 @@
+{
+  "version": "3.8.5-hotfix",
+  "tests": {"passed": 130, "failed": 0},
+  "workflow_yaml_valid": true,
+  "python_compile_valid": true,
+  "javascript_syntax_valid": true,
+  "database_required_for_historical_sample": false,
+  "exact_malformed_database_url_regression_test": true
+}

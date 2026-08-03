@@ -281,3 +281,139 @@ def test_run_workflow_has_no_manual_plan_copy_or_expected_quality_failure() -> N
     assert "Plan request mismatch" not in workflow
     assert "EXECUTE_SAMPLE" in workflow
     assert "Record non-passing data-quality verdict" in workflow
+
+
+def test_historical_sample_workflow_is_file_only_and_does_not_require_database_url() -> None:
+    root = Path(__file__).resolve().parents[1]
+    workflow = (root / ".github" / "workflows" / "run-historical-sample.yml").read_text(encoding="utf-8")
+    assert "DATABASE_URL:" not in workflow
+    assert "secrets.DATABASE_URL" not in workflow
+    assert "--register-job" not in workflow
+    assert "--job-id" not in workflow
+    assert "--storage files" in workflow
+    assert "--persist" not in workflow
+
+
+def test_file_only_backfill_ignores_malformed_database_url(tmp_path: Path, monkeypatch) -> None:
+    import sys
+
+    from sports_predictor.backfill_control import build_plan_identity
+    from sports_predictor.data_sources.the_odds_api import OddsApiEnvelope, QuotaUsage
+    from sports_predictor.odds_backtest import build_historical_plan
+    import scripts.run_historical_backfill as runner
+
+    events = pd.DataFrame([
+        {
+            "sport_key": "soccer_epl",
+            "event_id": "event-1",
+            "commence_time": "2025-01-01T15:00:00Z",
+        }
+    ])
+    plan = build_historical_plan(
+        events,
+        horizons_hours=[1],
+        include_closing=False,
+        markets=["h2h"],
+        bookmakers=["winamax_fr"],
+    )
+    plan_dir = tmp_path / "plan"
+    plan_dir.mkdir()
+    plan.requests.to_csv(plan_dir / "requests.csv", index=False)
+    plan.targets.to_csv(plan_dir / "targets.csv", index=False)
+    summary = {
+        "sport_keys": ["soccer_epl"],
+        "markets": ["h2h"],
+        "bookmakers": ["winamax_fr"],
+        "estimated_credits": int(plan.estimated_credits),
+        "event_count": 1,
+    }
+    summary.update(build_plan_identity(summary, plan.requests, plan.targets))
+    (plan_dir / "plan.json").write_text(json.dumps(summary), encoding="utf-8")
+
+    class FakeClient:
+        def historical_odds(self, *args, **kwargs):
+            return OddsApiEnvelope(
+                payload=[],
+                quota=QuotaUsage(remaining=100, used=1, last_cost=10),
+                fetched_at="2025-01-01T14:00:00+00:00",
+                from_cache=False,
+                request_fingerprint="fake",
+            )
+
+    monkeypatch.setattr(runner, "OddsApiClient", lambda config: FakeClient())
+    monkeypatch.setenv("THE_ODDS_API_KEY", "dummy")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:password@example.com:/railway")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_historical_backfill.py",
+            "--plan-dir",
+            str(plan_dir),
+            "--max-credits",
+            "10",
+            "--storage",
+            "files",
+            "--execute",
+        ],
+    )
+
+    assert runner.main() == 0
+    state = json.loads((plan_dir / "state.json").read_text(encoding="utf-8"))
+    assert state["status"] == "completed"
+    assert (plan_dir / "historical_odds_long.csv").exists()
+
+
+def test_v386_planner_is_database_independent_even_with_legacy_flag(tmp_path: Path, monkeypatch) -> None:
+    import sys
+    import scripts.plan_historical_backfill as planner
+
+    events = pd.DataFrame([
+        {
+            "sport_key": "soccer_epl",
+            "event_id": "event-1",
+            "commence_time": "2025-01-01T15:00:00Z",
+        }
+    ])
+    events_csv = tmp_path / "events.csv"
+    output_dir = tmp_path / "plan"
+    events.to_csv(events_csv, index=False)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:password@example.com:/railway")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "plan_historical_backfill",
+            "--events-csv",
+            str(events_csv),
+            "--horizons",
+            "1",
+            "--no-closing",
+            "--bookmakers",
+            "winamax_fr",
+            "--max-credits",
+            "20",
+            "--sample-events",
+            "1",
+            "--output-dir",
+            str(output_dir),
+            "--register-job",
+        ],
+    )
+
+    assert planner.main() == 0
+    summary = json.loads((output_dir / "plan.json").read_text(encoding="utf-8"))
+    assert summary["version"] == "3.8.6"
+    assert summary["database_job_registration"] == "disabled_file_only"
+
+
+def test_v386_workflow_verifies_root_level_file_only_planner() -> None:
+    root = Path(__file__).resolve().parents[1]
+    workflow = (root / ".github" / "workflows" / "run-historical-sample.yml").read_text(encoding="utf-8")
+    planner = (root / "scripts" / "plan_historical_backfill.py").read_text(encoding="utf-8")
+    assert "Verify file-only planner revision" in workflow
+    assert "V3.8.6 planner marker is missing" in workflow
+    assert "init_database" not in planner
+    assert "create_backfill_job" not in planner
+    assert "CloudSettings" not in planner
+    assert '"version": "3.8.6"' in planner
