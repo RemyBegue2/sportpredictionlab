@@ -9,6 +9,8 @@ import shutil
 from typing import Any, Iterable
 
 import pandas as pd
+
+from .version import APP_VERSION
 import requests
 
 from .artifacts import write_artifact_manifest
@@ -198,7 +200,7 @@ def rebuild_candidate(
     evaluation = evaluation_obj.to_dict()
     decision = promotion_decision(dataset=dataset, evaluation=evaluation, as_of=as_of, policy=policy)
     report = {
-        "version": "4.0.0",
+        "version": APP_VERSION,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "dataset": {
             "path": str(data_path),

@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "app_version": "4.1.0",
+  "validated_at": "2026-08-03",
+  "status": "validated_in_preparation_environment",
+  "tests": {
+    "collected": 155,
+    "passed": 155,
+    "failed": 0,
+    "execution": "four independent batches",
+    "batches": [
+      32,
+      26,
+      41,
+      56
+    ]
+  },
+  "coverage": {
+    "scope": "sports_predictor,webapp",
+    "percent": 83
+  },
+  "static_validation": {
+    "python_compile": true,
+    "javascript_syntax": true,
+    "yaml_files_parsed": 12
+  },
+  "v41_controls": {
+    "canonical_decision_gate": true,
+    "continue_stage_bypass_blocked": true,
+    "baseline_specific_gate": true,
+    "bijective_matching": true,
+    "independent_consensus_minimum": 2,
+    "partial_discovery_resume": true,
+    "uncertain_call_explicit_retry": true,
+    "total_credit_accounting": true,
+    "readiness_probe": "/api/ready",
+    "production_concurrency_group": "production-change",
+    "no_events_hold_report": true,
+    "artifact_restore_permission": "actions: read",
+    "github_environment": "production"
+  },
+  "not_verified": {
+    "github_actions_execution": true,
+    "railway_deployment": true,
+    "real_provider_calls": true,
+    "real_provider_credits": true,
+    "real_stage_30_pass": true
+  },
+  "release_decision": {
+    "code": "GO",
+    "controlled_deployment": "GO",
+    "stage_100": "NO_GO_UNTIL_REAL_STAGE_30_PASS"
+  }
+}

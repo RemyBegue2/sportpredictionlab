@@ -8,12 +8,13 @@ permissions:
   actions: read
 
 concurrency:
-  group: recompute-latest-evidence
+  group: production-change
   cancel-in-progress: false
 
 jobs:
   recompute:
     runs-on: ubuntu-latest
+    environment: production
     timeout-minutes: 45
     env:
       GH_TOKEN: ${{ github.token }}
@@ -22,7 +23,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.0.0'
+      EXPECTED_VERSION: '4.1.0'
 
     steps:
       - uses: actions/checkout@v4

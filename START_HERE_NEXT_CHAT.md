@@ -1,27 +1,40 @@
-# Sports Prediction Lab — point de reprise V4.0
+# Sports Prediction Lab — point de reprise V4.1
 
-## État canonique
+## État préparé
 
-- Base stable avant upgrade : V3.9.2.
-- Version préparée : V4.0.0 Controlled Evidence Scale-Up.
-- Exploitation : GitHub Actions + Railway uniquement ; aucun Python local.
-- Nouveau workflow : `.github/workflows/run-evidence-campaign.yml`.
-- Stages : 30, 100, 300, 1 000.
-- Baseline par défaut : consensus.
-- Aucune promotion automatique, aucune mise, aucun pari automatique.
+- Version du code : **4.1.0 — Decision Integrity & Resumable Operations**.
+- Exploitation : GitHub Actions + Railway, sans Python local.
+- Workflow principal : **Run evidence campaign**.
+- Modes : `dry_run`, `recompute_only`, `continue_current_stage`, `start_next_stage`.
+- Stages contrôlés : 30, 100, 300 et 1 000 événements prêts pour benchmark.
+- Baselines : `consensus` ou `winamax`.
 
-## Première action après déploiement
+## Garanties ajoutées en V4.1
 
-```text
-Actions → Run evidence campaign → dry_run → stage 30 → 350 crédits → consensus
-```
+- verdict unique `PASS/HOLD/FAIL` ;
+- aucun contournement du stage suivant par le mode de reprise ;
+- matching bijectif et collisions bloquantes ;
+- consensus avec au moins deux bookmakers indépendants ;
+- décision spécifique à la baseline choisie ;
+- reprise depuis un checkpoint de découverte partiel ;
+- total des crédits = découverte + snapshots ;
+- readiness réelle via `/api/ready` ;
+- verrou commun pour les modifications de production.
 
-Le dry-run doit être vert avant toute exécution payante.
+## État de validation
 
-## Fichiers prioritaires à joindre dans une nouvelle conversation
+- 155 tests réussis par lots ;
+- couverture cœur : 83 % ;
+- Python, JavaScript et YAML validés ;
+- aucun appel réel à The Odds API effectué pendant la préparation ;
+- aucun déploiement GitHub Actions/Railway effectué pendant la préparation.
 
-- `START_HERE_NEXT_CHAT.md`
-- `handoff/HANDOFF_CURRENT.md`
-- `handoff/HANDOFF_CURRENT.json`
-- dernier `evidence_campaign_v4.json`
-- log exact du workflow en cas d’échec
+## Prochaine action sûre
+
+1. Fusionner la V4.1 dans GitHub.
+2. Lancer **Deploy production**.
+3. Vérifier `/api/ready` et `/api/release`.
+4. Lancer **Run evidence campaign → dry_run → stage 30**.
+5. N’autoriser une campagne payante ou le stage 100 qu’après lecture d’un rapport V4.1 réel.
+
+Ne jamais promouvoir automatiquement un modèle, recommander une mise ou placer un pari.

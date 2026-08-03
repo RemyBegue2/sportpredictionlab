@@ -40,17 +40,24 @@ on:
         description: Type EXECUTE_CAMPAIGN for paid modes; dry_run and recompute_only may be left blank
         required: false
         type: string
+      retry_uncertain_discovery:
+        description: Explicitly retry discovery calls whose billing outcome is uncertain
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
-  group: evidence-campaign
+  group: production-change
   cancel-in-progress: false
 
 jobs:
   campaign:
     runs-on: ubuntu-latest
+    environment: production
     timeout-minutes: 180
     env:
       THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
@@ -59,12 +66,13 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.0.0'
+      EXPECTED_VERSION: '4.1.0'
       INPUT_MODE: ${{ inputs.mode }}
       INPUT_TARGET_STAGE: ${{ inputs.target_stage }}
       INPUT_MAX_CREDITS: ${{ inputs.max_credits }}
       INPUT_BASELINE: ${{ inputs.baseline }}
       INPUT_CONFIRMATION: ${{ inputs.confirmation }}
+      INPUT_RETRY_UNCERTAIN_DISCOVERY: ${{ inputs.retry_uncertain_discovery }}
 
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +87,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Verify V4.0 source contract
+      - name: Verify V4.1 source contract
         shell: bash
         run: |
           set -euo pipefail
@@ -89,7 +97,7 @@ jobs:
           required = {
               "sports_predictor/evidence_campaign.py": "CAMPAIGN_STAGES",
               "scripts/plan_evidence_campaign.py": "ZERO-CREDIT CAMPAIGN PLAN",
-              "scripts/build_campaign_report.py": '"4.0.0"',
+              "sports_predictor/version.py": 'APP_VERSION = "4.1.0"',
               "sports_predictor/cloud_config.py": "cloud_runtime_detected",
           }
           errors = []
@@ -101,12 +109,41 @@ jobs:
               if marker not in path.read_text(encoding="utf-8"):
                   errors.append(f"missing marker {marker!r} in {filename}")
           if errors:
-              raise SystemExit("V4.0 mixed-version repository: " + "; ".join(errors))
-          print("V4.0 source contract verified.")
+              raise SystemExit("V4.1 mixed-version repository: " + "; ".join(errors))
+          print("V4.1 source contract verified.")
           PY
 
       - name: Test before any provider request
         run: pytest -q
+
+      - name: Find latest branch-compatible campaign checkpoint
+        if: ${{ inputs.mode == 'continue_current_stage' }}
+        id: checkpoint_artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT_BRANCH: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/campaign-checkpoint"
+          ARTIFACT_JSON=$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" |             jq -s --arg branch "$CURRENT_BRANCH" '[.[].artifacts[] | select(.expired == false and (.name | startswith("evidence-campaign-state-")) and (.workflow_run.head_branch == $branch))] | sort_by(.created_at) | reverse | .[0] // empty')
+          if [ -z "$ARTIFACT_JSON" ]; then
+            echo 'found=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ARTIFACT_ID=$(printf '%s' "$ARTIFACT_JSON" | jq -r '.id')
+          ARTIFACT_NAME=$(printf '%s' "$ARTIFACT_JSON" | jq -r '.name')
+          curl --fail --location --silent --show-error             -H "Authorization: Bearer $GH_TOKEN"             -H 'Accept: application/vnd.github+json'             "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip"             --output "$RUNNER_TEMP/campaign-checkpoint.zip"
+          unzip -q "$RUNNER_TEMP/campaign-checkpoint.zip" -d "$RUNNER_TEMP/campaign-checkpoint"
+          PREVIOUS_PLAN="$RUNNER_TEMP/campaign-checkpoint/artifacts/evidence_campaign_plan_v4.json"
+          if [ ! -f "$PREVIOUS_PLAN" ]; then
+            echo 'found=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p artifacts
+          cp "$PREVIOUS_PLAN" artifacts/evidence_campaign_plan_v4.json
+          echo 'found=true' >> "$GITHUB_OUTPUT"
+          echo "name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Build zero-credit campaign plan
         id: campaign_plan
@@ -136,7 +173,7 @@ jobs:
           echo "events_this_run=$EVENTS_THIS_RUN" >> "$GITHUB_OUTPUT"
 
           {
-            echo '### V4.0 campaign plan'
+            echo '### V4.1 campaign plan'
             echo
             echo "- Campaign: \`$CAMPAIGN_ID\`"
             echo "- Mode: \`$INPUT_MODE\`"
@@ -156,7 +193,7 @@ jobs:
         with:
           name: evidence-campaign-plan-${{ github.run_id }}
           path: artifacts/evidence_campaign_plan_v4.json
-          retention-days: 30
+          retention-days: 90
 
       - name: Validate execution gate and complete configuration
         if: ${{ inputs.mode != 'dry_run' }}
@@ -194,57 +231,89 @@ jobs:
         if: ${{ inputs.mode == 'recompute_only' }}
         run: python -m scripts.build_campaign_report
 
-      - name: Find latest campaign checkpoint artifact
-        if: ${{ inputs.mode == 'continue_current_stage' }}
-        id: checkpoint_artifact
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/campaign-checkpoint"
-          ARTIFACT_JSON=$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" |             jq -s '[.[].artifacts[] | select(.expired == false and (.name | startswith("evidence-campaign-state-")))] | sort_by(.created_at) | reverse | .[0] // empty')
-          if [ -z "$ARTIFACT_JSON" ]; then
-            echo 'found=false' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          ARTIFACT_ID=$(printf '%s' "$ARTIFACT_JSON" | jq -r '.id')
-          ARTIFACT_NAME=$(printf '%s' "$ARTIFACT_JSON" | jq -r '.name')
-          curl --fail --location --silent --show-error             -H "Authorization: Bearer $GH_TOKEN"             -H 'Accept: application/vnd.github+json'             "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip"             --output "$RUNNER_TEMP/campaign-checkpoint.zip"
-          unzip -q "$RUNNER_TEMP/campaign-checkpoint.zip" -d "$RUNNER_TEMP/campaign-checkpoint"
-          echo 'found=true' >> "$GITHUB_OUTPUT"
-          echo "name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
-
       - name: Restore compatible campaign checkpoint
         if: ${{ inputs.mode == 'continue_current_stage' }}
         id: restore_checkpoint
         shell: bash
         run: |
           set +e
+          RESTORE_JSON="$RUNNER_TEMP/restore-campaign-state.json"
           if [ '${{ steps.checkpoint_artifact.outputs.found }}' = 'true' ]; then
-            python -m scripts.restore_campaign_state               --artifact-root "$RUNNER_TEMP/campaign-checkpoint"
-            CODE=$?
+            python -m scripts.restore_campaign_state \
+              --artifact-root "$RUNNER_TEMP/campaign-checkpoint" | tee "$RESTORE_JSON"
+            CODE=${PIPESTATUS[0]}
           else
             CODE=3
           fi
           set -e
           if [ "$CODE" -eq 0 ]; then
             echo 'restored=true' >> "$GITHUB_OUTPUT"
+            echo "discovery_complete=$(jq -r '.discovery_complete' "$RESTORE_JSON")" >> "$GITHUB_OUTPUT"
+            echo "discovery_no_events=$(jq -r '.discovery_status == "no_events"' "$RESTORE_JSON")" >> "$GITHUB_OUTPUT"
+            echo "backfill_ready=$(jq -r '.backfill_ready' "$RESTORE_JSON")" >> "$GITHUB_OUTPUT"
           else
             echo 'restored=false' >> "$GITHUB_OUTPUT"
+            echo 'discovery_complete=false' >> "$GITHUB_OUTPUT"
+            echo 'discovery_no_events=false' >> "$GITHUB_OUTPUT"
+            echo 'backfill_ready=false' >> "$GITHUB_OUTPUT"
             echo '::notice::No compatible checkpoint was restored; this stage will start from a fresh immutable plan.'
           fi
 
       - name: Discover historical events
-        if: ${{ inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.restored != 'true') }}
+        if: ${{ inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.discovery_complete != 'true') }}
         id: discovery
         shell: bash
         run: |
           set -euo pipefail
-          python -m scripts.discover_historical_events             --sport-key soccer_epl             --start '${{ steps.campaign_plan.outputs.start_date }}'             --end '${{ steps.campaign_plan.outputs.end_date }}'             --max-calls '${{ steps.campaign_plan.outputs.discovery_calls }}'             --max-credits "$INPUT_MAX_CREDITS"             --output data/odds_api/campaign/events_all.csv             --execute
+          ARGS=(
+            --sport-key soccer_epl
+            --start '${{ steps.campaign_plan.outputs.start_date }}'
+            --end '${{ steps.campaign_plan.outputs.end_date }}'
+            --max-calls '${{ steps.campaign_plan.outputs.discovery_calls }}'
+            --max-credits "$INPUT_MAX_CREDITS"
+            --output data/odds_api/campaign/events_all.csv
+            --execute
+          )
+          if [ "$INPUT_RETRY_UNCERTAIN_DISCOVERY" = 'true' ]; then
+            ARGS+=(--retry-uncertain)
+          fi
+          set +e
+          python -m scripts.discover_historical_events "${ARGS[@]}"
+          CODE=$?
+          set -e
+          if [ "$CODE" -eq 4 ]; then
+            echo 'no_events=true' >> "$GITHUB_OUTPUT"
+            echo '::notice::Discovery completed with no events; the campaign will publish a HOLD report without a backfill.'
+          elif [ "$CODE" -ne 0 ]; then
+            exit "$CODE"
+          else
+            echo 'no_events=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve campaign data availability
+        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        id: campaign_data
+        shell: bash
+        run: |
+          set -euo pipefail
+          STATUS=$(jq -r '.status // "unknown"' data/odds_api/campaign/event_discovery_state.json)
+          ROWS=$(python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          path = Path('data/odds_api/campaign/events_all.csv')
+          print(len(pd.read_csv(path)) if path.exists() and path.stat().st_size else 0)
+          PY
+          )
+          if [ "$STATUS" = 'no_events' ] || [ "$ROWS" -eq 0 ]; then
+            echo 'has_events=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'has_events=true' >> "$GITHUB_OUTPUT"
+          fi
+          echo "discovery_status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "event_rows=$ROWS" >> "$GITHUB_OUTPUT"
 
       - name: Resolve immutable provider budget after discovery
-        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        if: ${{ (inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage') && steps.campaign_data.outputs.has_events == 'true' }}
         id: provider_budget
         shell: bash
         run: |
@@ -259,19 +328,19 @@ jobs:
           echo "remaining_credits=$REMAINING" >> "$GITHUB_OUTPUT"
 
       - name: Select deterministic campaign events
-        if: ${{ inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.restored != 'true') }}
+        if: ${{ steps.campaign_data.outputs.has_events == 'true' && (inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.backfill_ready != 'true')) }}
         run: |
           python -m scripts.select_campaign_events             --input data/odds_api/campaign/events_all.csv             --target '${{ steps.campaign_plan.outputs.events_this_run }}'             --output data/odds_api/campaign/events_selected.csv
 
       - name: Build immutable provider plan
-        if: ${{ inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.restored != 'true') }}
+        if: ${{ steps.campaign_data.outputs.has_events == 'true' && (inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.backfill_ready != 'true')) }}
         shell: bash
         run: |
           set -euo pipefail
           python -m scripts.plan_historical_backfill             --events-csv data/odds_api/campaign/events_selected.csv             --horizons 1             --no-closing             --bookmakers winamax_fr betclic_fr unibet_fr pmu_fr pinnacle             --max-credits '${{ steps.provider_budget.outputs.remaining_credits }}'             --full             --output-dir data/odds_api/campaign/backfill
 
       - name: Resolve immutable provider plan identity
-        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        if: ${{ (inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage') && steps.campaign_data.outputs.has_events == 'true' }}
         id: resolved_provider_plan
         shell: bash
         run: |
@@ -280,12 +349,12 @@ jobs:
           echo "plan_id=$PLAN_ID" >> "$GITHUB_OUTPUT"
 
       - name: Execute immutable provider plan
-        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        if: ${{ (inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage') && steps.campaign_data.outputs.has_events == 'true' }}
         run: |
           python -m scripts.run_historical_backfill             --plan-dir data/odds_api/campaign/backfill             --max-credits '${{ steps.provider_budget.outputs.remaining_credits }}'             --storage files             --approve-plan '${{ steps.resolved_provider_plan.outputs.plan_id }}'             --execute
 
       - name: Prepare market comparison
-        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        if: ${{ (inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage') && steps.campaign_data.outputs.has_events == 'true' }}
         shell: bash
         run: |
           set +e
@@ -308,8 +377,23 @@ jobs:
           set -e
           echo "Market preparation exit code: $PREPARE_CODE"
 
+      - name: Build no-events HOLD report
+        if: ${{ (inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage') && steps.campaign_data.outputs.has_events != 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/odds_api/historical data/odds_api/campaign/backfill
+          cp data/odds_api/campaign/events_all.csv data/odds_api/historical/events.csv
+          cp data/odds_api/campaign/event_discovery_plan.json data/odds_api/historical/event_discovery_plan.json
+          cp data/odds_api/campaign/event_discovery_state.json data/odds_api/historical/event_discovery_state.json
+          python -m scripts.build_evidence_report \
+            --plan-dir data/odds_api/campaign/backfill \
+            --events-csv data/odds_api/historical/events.csv \
+            --discovery-state-json data/odds_api/historical/event_discovery_state.json
+          python -m scripts.build_campaign_report
+
       - name: Build evidence and campaign reports
-        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        if: ${{ (inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage') && steps.campaign_data.outputs.has_events == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -363,7 +447,7 @@ jobs:
         if: ${{ inputs.mode != 'dry_run' }}
         run: |
           railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
-            --service "$RAILWAY_WEB_SERVICE" --message "V4 campaign ${{ steps.campaign_plan.outputs.campaign_id }}"
+            --service "$RAILWAY_WEB_SERVICE" --message "V4.1 campaign ${{ steps.campaign_plan.outputs.campaign_id }}"
 
       - name: Verify deployed release
         if: ${{ inputs.mode != 'dry_run' }}
@@ -403,14 +487,14 @@ jobs:
             data/odds_api/campaign/backfill/event_selection.csv
             data/odds_api/campaign/backfill/historical_odds_long.csv
           if-no-files-found: warn
-          retention-days: 30
+          retention-days: 90
 
       - name: Campaign summary
         if: always()
         shell: bash
         run: |
           {
-            echo '### V4.0 controlled evidence campaign'
+            echo '### V4.1 decision-integrity campaign'
             echo
             echo "- Campaign: \`${{ steps.campaign_plan.outputs.campaign_id }}\`"
             echo "- Mode: \`$INPUT_MODE\`"

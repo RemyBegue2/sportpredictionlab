@@ -5,8 +5,11 @@ from datetime import date, datetime, timezone
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
+
+from .version import APP_VERSION
 
 CAMPAIGN_STAGES: tuple[int, ...] = (30, 100, 300, 1000)
 CAMPAIGN_MODES: tuple[str, ...] = (
@@ -18,6 +21,9 @@ CAMPAIGN_MODES: tuple[str, ...] = (
 BASELINES: tuple[str, ...] = ("consensus", "winamax")
 DEFAULT_START_DATE = "2023-01-01"
 DEFAULT_SNAPSHOT_COST = 10.0
+PROVIDER_MIN_COVERAGE = 0.80
+MATCHING_MIN_COVERAGE = 0.95
+BASELINE_MIN_COVERAGE = 0.70
 
 
 def _canonical_json(value: Any) -> str:
@@ -50,21 +56,22 @@ def normalized_stage(value: int | str) -> int:
     return stage
 
 
-def next_stage(stage: int | None) -> int:
+def next_stage(stage: int | None) -> int | None:
     if stage is None:
         return CAMPAIGN_STAGES[0]
     stage = normalized_stage(stage)
     index = CAMPAIGN_STAGES.index(stage)
     if index + 1 >= len(CAMPAIGN_STAGES):
-        return stage
+        return None
     return CAMPAIGN_STAGES[index + 1]
 
 
 def estimate_snapshot_cost(previous_evidence: Mapping[str, Any] | None) -> float:
-    consumed = _ratio((previous_evidence or {}).get("consumed_credits"))
-    completed = _ratio(
-        _nested(previous_evidence, "funnel", "completed_event_snapshots", default=None)
-    )
+    credits = (previous_evidence or {}).get("credits") or {}
+    consumed = _ratio(credits.get("snapshot_credits"))
+    if consumed is None:
+        consumed = _ratio((previous_evidence or {}).get("consumed_credits"))
+    completed = _ratio(_nested(previous_evidence, "funnel", "completed_event_snapshots", default=None))
     if completed is None:
         completed = _ratio(_nested(previous_evidence, "counts", "events_with_odds", default=None))
     if consumed is None or completed is None or completed <= 0:
@@ -72,24 +79,56 @@ def estimate_snapshot_cost(previous_evidence: Mapping[str, Any] | None) -> float
     return max(1.0, min(50.0, consumed / completed))
 
 
-def evidence_stage(previous_evidence: Mapping[str, Any] | None) -> int | None:
+def _benchmark_ready_count(previous_evidence: Mapping[str, Any] | None, *, baseline: str) -> int:
     if not previous_evidence:
-        return None
-    completed = int(
-        _nested(previous_evidence, "funnel", "completed_event_snapshots", default=0)
-        or _nested(previous_evidence, "counts", "events_with_odds", default=0)
-        or 0
-    )
+        return 0
+    funnel = previous_evidence.get("funnel") or {}
+    by_baseline = funnel.get("benchmark_ready_events_by_baseline") or {}
+    if baseline in by_baseline:
+        return max(0, int(by_baseline.get(baseline) or 0))
+
+    report_baseline = str(previous_evidence.get("baseline") or "")
+    explicit = funnel.get("benchmark_ready_events")
+    if explicit is not None and (not report_baseline or report_baseline == baseline):
+        return max(0, int(explicit or 0))
+
+    benchmark_rows = _nested(previous_evidence, "benchmark", "evaluated_rows", default=None)
+    if benchmark_rows is not None and (not report_baseline or report_baseline == baseline):
+        return max(0, int(benchmark_rows or 0))
+
+    accepted = int(funnel.get("accepted_events") or (previous_evidence.get("counts") or {}).get("events_with_odds") or 0)
+    matched = int(funnel.get("reliably_matched_events") or accepted)
+    baseline_key = "consensus_ready_events" if baseline == "consensus" else "winamax_ready_events"
+    legacy_key = "consensus_ready_event_snapshots" if baseline == "consensus" else "winamax_ready_event_snapshots"
+    baseline_ready = int(funnel.get(baseline_key) or funnel.get(legacy_key) or 0)
+    if baseline_ready <= 0:
+        return 0
+    return max(0, min(accepted, matched, baseline_ready))
+
+
+def evidence_stage(previous_evidence: Mapping[str, Any] | None, *, baseline: str = "consensus") -> int | None:
+    if baseline not in BASELINES:
+        raise ValueError(f"baseline must be one of {list(BASELINES)}")
+    completed = _benchmark_ready_count(previous_evidence, baseline=baseline)
     eligible = [stage for stage in CAMPAIGN_STAGES if completed >= stage]
     return max(eligible) if eligible else None
 
 
-def evaluate_scale_gate(previous_evidence: Mapping[str, Any] | None) -> dict[str, Any]:
+def evaluate_scale_gate(
+    previous_evidence: Mapping[str, Any] | None,
+    *,
+    baseline: str = "consensus",
+) -> dict[str, Any]:
+    if baseline not in BASELINES:
+        raise ValueError(f"baseline must be one of {list(BASELINES)}")
     if not previous_evidence:
         return {
+            "status": "HOLD",
             "accepted": False,
             "reason": "no_previous_evidence",
+            "baseline": baseline,
             "checks": {},
+            "completed_stage": None,
         }
 
     rates = previous_evidence.get("rates") or {}
@@ -97,33 +136,65 @@ def evaluate_scale_gate(previous_evidence: Mapping[str, Any] | None) -> dict[str
     gates = previous_evidence.get("gates") or {}
     provider = _ratio(rates.get("provider_return_coverage"))
     matching = _ratio(rates.get("reliable_matching"))
-    consensus = _ratio(rates.get("consensus_coverage"))
+    baseline_rate = _ratio(rates.get(f"{baseline}_coverage"))
     temporal = int(counts.get("quarantined_temporal_rows") or 0)
     duplicates = int(counts.get("duplicate_rows") or 0)
+    matching_collisions = int(counts.get("matching_collisions") or 0)
 
     technical_gate = gates.get("technical_integrity") or {}
-    technical_ok = bool(technical_gate.get("accepted")) if technical_gate else temporal == 0 and duplicates == 0
+    technical_status = str(technical_gate.get("status") or "")
+    if technical_gate and not technical_status:
+        technical_status = "PASS" if bool(technical_gate.get("accepted")) else "HOLD"
+    technical_ok = technical_status == "PASS" if technical_gate else (
+        temporal == 0 and duplicates == 0 and matching_collisions == 0
+    )
     checks = {
         "technical_integrity": technical_ok,
         "temporal_violations_zero": temporal == 0,
         "duplicates_zero": duplicates == 0,
-        "provider_return_coverage_at_least_80_percent": provider is not None and provider >= 0.80,
-        "reliable_matching_at_least_95_percent": matching is not None and matching >= 0.95,
-        "consensus_coverage_at_least_70_percent": consensus is not None and consensus >= 0.70,
+        "matching_collisions_zero": matching_collisions == 0,
+        f"provider_return_coverage_at_least_{int(PROVIDER_MIN_COVERAGE * 100)}_percent": (
+            provider is not None and provider >= PROVIDER_MIN_COVERAGE
+        ),
+        f"reliable_matching_at_least_{int(MATCHING_MIN_COVERAGE * 100)}_percent": (
+            matching is not None and matching >= MATCHING_MIN_COVERAGE
+        ),
+        f"{baseline}_coverage_at_least_{int(BASELINE_MIN_COVERAGE * 100)}_percent": (
+            baseline_rate is not None and baseline_rate >= BASELINE_MIN_COVERAGE
+        ),
     }
     failed = [name for name, ok in checks.items() if not ok]
+    integrity_failed = technical_status == "FAIL" or any(
+        not checks[name]
+        for name in ("temporal_violations_zero", "duplicates_zero", "matching_collisions_zero")
+    )
+    status = "PASS" if not failed else ("FAIL" if integrity_failed else "HOLD")
     return {
-        "accepted": not failed,
+        "status": status,
+        "accepted": status == "PASS",
         "reason": "all_scale_checks_passed" if not failed else "failed:" + ",".join(failed),
+        "baseline": baseline,
         "checks": checks,
+        "completed_stage": evidence_stage(previous_evidence, baseline=baseline),
+        "benchmark_ready_events": _benchmark_ready_count(previous_evidence, baseline=baseline),
         "observed": {
             "provider_return_coverage": provider,
             "reliable_matching": matching,
-            "consensus_coverage": consensus,
+            f"{baseline}_coverage": baseline_rate,
             "temporal_violations": temporal,
             "duplicate_rows": duplicates,
+            "matching_collisions": matching_collisions,
         },
     }
+
+
+def _source_commit() -> str:
+    return (
+        os.getenv("SOURCE_COMMIT")
+        or os.getenv("GITHUB_SHA")
+        or os.getenv("RAILWAY_GIT_COMMIT_SHA")
+        or "unknown"
+    ).strip() or "unknown"
 
 
 @dataclass(frozen=True)
@@ -131,6 +202,8 @@ class CampaignPlan:
     schema_version: str
     app_version: str
     campaign_id: str
+    campaign_key: str
+    source_commit: str
     generated_at: str
     mode: str
     target_stage: int
@@ -162,9 +235,11 @@ def build_campaign_plan(
     max_credits: int,
     baseline: str,
     previous_evidence: Mapping[str, Any] | None = None,
+    current_campaign: Mapping[str, Any] | None = None,
     start_date: str = DEFAULT_START_DATE,
     end_date: str | None = None,
-    app_version: str = "4.0.0",
+    app_version: str = APP_VERSION,
+    source_commit: str | None = None,
 ) -> CampaignPlan:
     if mode not in CAMPAIGN_MODES:
         raise ValueError(f"mode must be one of {list(CAMPAIGN_MODES)}")
@@ -180,8 +255,8 @@ def build_campaign_plan(
     if end < start:
         raise ValueError("end_date must be on or after start_date")
 
-    previous_stage = evidence_stage(previous_evidence)
-    gate = evaluate_scale_gate(previous_evidence)
+    previous_stage = evidence_stage(previous_evidence, baseline=baseline)
+    gate = evaluate_scale_gate(previous_evidence, baseline=baseline)
     discovery_calls = min(180, max(14, math.ceil(stage / 8)))
     snapshot_cost = estimate_snapshot_cost(previous_evidence)
     available_for_snapshots = max(0, max_credits - discovery_calls)
@@ -202,41 +277,68 @@ def build_campaign_plan(
     elif estimated_events <= 0:
         execution_allowed = False
         reason = "no_snapshot_capacity"
+    elif estimated_events < stage:
+        execution_allowed = False
+        reason = "budget_cannot_fund_complete_target_stage"
     elif mode == "start_next_stage":
-        if estimated_events < stage:
-            execution_allowed = False
-            reason = "budget_cannot_fund_complete_target_stage"
         expected = next_stage(previous_stage)
-        if execution_allowed and stage != expected:
+        if expected is None:
+            execution_allowed = False
+            reason = "campaign_already_completed_at_stage_1000"
+        elif stage != expected:
             execution_allowed = False
             reason = f"target_stage_must_equal_next_stage_{expected}"
-        elif execution_allowed and stage > CAMPAIGN_STAGES[0] and not gate["accepted"]:
+        elif stage > CAMPAIGN_STAGES[0] and not gate["accepted"]:
             execution_allowed = False
             reason = "previous_stage_quality_gate_failed"
     elif mode == "continue_current_stage":
-        if previous_stage is not None and stage < previous_stage:
+        current = dict(current_campaign or {})
+        required_match = {
+            "target_stage": stage,
+            "baseline": baseline,
+            "max_credits": max_credits,
+            "start_date": start.isoformat(),
+            "end_date": end.isoformat(),
+        }
+        if not current:
             execution_allowed = False
-            reason = "target_stage_cannot_be_lower_than_completed_stage"
+            reason = "no_existing_campaign_to_continue"
+        elif any(current.get(key) != value for key, value in required_match.items()):
+            execution_allowed = False
+            reason = "continue_parameters_must_match_existing_campaign"
+        elif str(current.get("app_version") or app_version) != app_version:
+            execution_allowed = False
+            reason = "checkpoint_app_version_mismatch"
+        elif previous_stage is not None and stage <= previous_stage:
+            execution_allowed = False
+            reason = "current_stage_already_completed_use_start_next_stage"
 
-    identity = {
-        "schema_version": "1.0",
-        "mode": mode,
+    stable_identity = {
+        "schema_version": "2.0",
+        "app_version": app_version,
         "target_stage": stage,
         "baseline": baseline,
         "start_date": start.isoformat(),
         "end_date": end.isoformat(),
         "max_credits": max_credits,
+    }
+    campaign_key = "CPK-" + hashlib.sha256(_canonical_json(stable_identity).encode("utf-8")).hexdigest()[:24].upper()
+    run_identity = {
+        **stable_identity,
+        "mode": mode,
         "estimated_discovery_calls": discovery_calls,
         "estimated_snapshot_cost": round(snapshot_cost, 6),
         "previous_completed_stage": previous_stage,
         "scale_gate": gate,
     }
-    campaign_id = "CMP-" + hashlib.sha256(_canonical_json(identity).encode("utf-8")).hexdigest()[:24].upper()
+    campaign_id = "CMP-" + hashlib.sha256(_canonical_json(run_identity).encode("utf-8")).hexdigest()[:24].upper()
 
     return CampaignPlan(
-        schema_version="1.0",
+        schema_version="2.0",
         app_version=app_version,
         campaign_id=campaign_id,
+        campaign_key=campaign_key,
+        source_commit=source_commit or _source_commit(),
         generated_at=datetime.now(timezone.utc).isoformat(),
         mode=mode,
         target_stage=stage,

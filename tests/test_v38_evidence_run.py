@@ -109,15 +109,16 @@ def test_temporal_audit_quarantines_odds_at_or_after_kickoff() -> None:
     assert "odds_not_strictly_before_event" in issues.iloc[0]["issues"]
 
 
-def test_quality_report_passes_clean_technical_sample_without_profit_claim() -> None:
+def test_quality_report_holds_small_unmatched_sample_without_profit_claim() -> None:
     report = build_evidence_quality_report(
         plan={"plan_id": "p1", "plan_request_id": "REQ-1", "max_credits": 120},
         state={"status": "completed", "consumed_credits": 12},
         odds_rows=_odds(),
         events=_events(),
     )
-    assert report["quality_gate"]["accepted"] is True
-    assert report["quality_gate"]["status"] == "technical_validation"
+    assert report["quality_gate"]["accepted"] is False
+    assert report["quality_gate"]["status"] == "HOLD"
+    assert "result_matching_not_available" in report["blockers"]
     assert report["rates"]["event_coverage"] == 1.0
     assert report["rates"]["winamax_coverage"] == 1.0
     assert report["responsible_use"]["profitability_claim"] is False
@@ -271,7 +272,9 @@ def test_v383_workflow_uses_supported_historical_events_contract_and_global_cap(
 def test_discovery_counts_uncached_request_when_quota_cost_header_is_missing() -> None:
     root = Path(__file__).resolve().parents[1]
     source = (root / "scripts" / "discover_historical_events.py").read_text(encoding="utf-8")
-    assert "response.quota.last_cost is not None else 1" in source
+    assert "response.quota.last_cost is not None else int(args.max_cost_per_call)" in source
+    assert "completed_call_numbers" in source
+    assert "_atomic_json" in source
 
 
 def test_run_workflow_has_no_manual_plan_copy_or_expected_quality_failure() -> None:
@@ -404,7 +407,7 @@ def test_v386_planner_is_database_independent_even_with_legacy_flag(tmp_path: Pa
 
     assert planner.main() == 0
     summary = json.loads((output_dir / "plan.json").read_text(encoding="utf-8"))
-    assert summary["version"] == "3.9.0"
+    assert summary["version"] == "4.1.0"
     assert summary["database_job_registration"] == "disabled_file_only"
 
 
@@ -413,8 +416,9 @@ def test_v386_workflow_verifies_root_level_file_only_planner() -> None:
     workflow = (root / ".github" / "workflows" / "run-historical-sample.yml").read_text(encoding="utf-8")
     planner = (root / "scripts" / "plan_historical_backfill.py").read_text(encoding="utf-8")
     assert "Verify file-only planner revision" in workflow
-    assert "V3.9.0 planner marker is missing" in workflow
+    assert "V4.1 planner markers are missing" in workflow
     assert "init_database" not in planner
     assert "create_backfill_job" not in planner
     assert "CloudSettings" not in planner
-    assert '"version": "3.9.0"' in planner
+    assert "from sports_predictor.version import APP_VERSION" in planner
+    assert '"version": APP_VERSION' in planner

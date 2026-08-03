@@ -21,6 +21,6 @@ RUN python -m scripts.ensure_artifacts
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:' + __import__('os').environ.get('PORT','8000') + '/api/health', timeout=3)" || exit 1
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:' + __import__('os').environ.get('PORT','8000') + '/api/ready', timeout=3)" || exit 1
 
 CMD ["sh","-c","uvicorn webapp:app --host 0.0.0.0 --port ${PORT:-8000} --no-server-header"]

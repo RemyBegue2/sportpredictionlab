@@ -106,11 +106,12 @@ def test_v39_uses_completed_targets_not_discovered_pool_as_provider_denominator(
     assert report["rates"]["consensus_coverage"] == 1.0
     assert report["counts"]["planned_events"] == 10
     assert "event_coverage_below_95_percent" not in report["blockers"]
-    assert report["quality_gate"]["status"] == "technical_validation"
-    assert report["quality_gate"]["accepted"] is True
-    assert report["gates"]["winamax"]["status"] == "insufficient"
-    assert report["gates"]["consensus"]["status"] == "available"
-    assert report["gates"]["result_matching"]["status"] == "passed"
+    assert report["quality_gate"]["status"] == "HOLD"
+    assert report["quality_gate"]["accepted"] is False
+    assert report["funnel"]["benchmark_ready_events"] == 10
+    assert report["gates"]["winamax"]["status"] == "HOLD"
+    assert report["gates"]["consensus"]["status"] == "PASS"
+    assert report["gates"]["result_matching"]["status"] == "PASS"
     assert sum(report["event_outcome_counts"].values()) == 111
 
 
@@ -156,7 +157,7 @@ def test_v39_planner_writes_explicit_selection_funnel(tmp_path: Path, monkeypatc
     assert planner.main() == 0
     summary = json.loads((output_dir / "plan.json").read_text(encoding="utf-8"))
     selection = pd.read_csv(output_dir / "event_selection.csv")
-    assert summary["version"] == "3.9.0"
+    assert summary["version"] == "4.1.0"
     assert summary["discovered_event_count"] == 20
     assert summary["requested_event_count"] == 10
     assert summary["selected_event_count"] == 3
@@ -191,4 +192,4 @@ def test_v39_zero_credit_recompute_workflow_and_frontend_contract() -> None:
     ):
         assert f'id="{element_id}"' in html
         assert f"#{element_id}" in js
-    assert "app.js?v=4.0.0" in html
+    assert "app.js?v=4.1.0" in html

@@ -8,13 +8,13 @@ import urllib.request
 
 
 def fetch_json(url: str, timeout: float) -> dict:
-    request = urllib.request.Request(url, headers={"User-Agent": "sports-prediction-lab-deploy-verifier/3.7"})
+    request = urllib.request.Request(url, headers={"User-Agent": "sports-prediction-lab-deploy-verifier/4.1"})
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Verify the public Railway deployment evidence endpoint.")
+    parser = argparse.ArgumentParser(description="Verify Railway readiness and public release evidence.")
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--expected-version", required=True)
     parser.add_argument("--expected-commit")
@@ -24,30 +24,35 @@ def main() -> None:
     parser.add_argument("--timeout", type=float, default=8.0)
     args = parser.parse_args()
 
-    url = args.base_url.rstrip("/") + "/api/release"
+    base = args.base_url.rstrip("/")
     last_error: str | None = None
     for attempt in range(1, max(1, args.attempts) + 1):
         try:
-            payload = fetch_json(url, args.timeout)
+            readiness = fetch_json(base + "/api/ready", args.timeout)
+            release = fetch_json(base + "/api/release", args.timeout)
             problems: list[str] = []
-            if payload.get("version") != args.expected_version:
-                problems.append(f"version {payload.get('version')} != {args.expected_version}")
-            actual_commit = str(payload.get("source_commit") or "")
+            if readiness.get("status") != "ready":
+                problems.append("application readiness is not verified")
+            if readiness.get("version") != args.expected_version:
+                problems.append(f"readiness version {readiness.get('version')} != {args.expected_version}")
+            if release.get("version") != args.expected_version:
+                problems.append(f"release version {release.get('version')} != {args.expected_version}")
+            actual_commit = str(release.get("source_commit") or "")
             if args.expected_commit and not actual_commit.startswith(args.expected_commit):
                 problems.append(f"commit {actual_commit or 'unknown'} does not match {args.expected_commit}")
-            actual_model = str(payload.get("football_model_sha256") or "")
+            actual_model = str(release.get("football_model_sha256") or "")
             if args.expected_model_sha256 and actual_model != args.expected_model_sha256:
                 problems.append("football model hash mismatch")
-            if payload.get("artifact_integrity_ok") is not True:
+            if release.get("artifact_integrity_ok") is not True:
                 problems.append("artifact integrity is not verified")
-            if payload.get("automatic_model_promotion") is not False:
+            if release.get("automatic_model_promotion") is not False:
                 problems.append("automatic model promotion must remain disabled")
-            if payload.get("profitability_claim") is not False:
+            if release.get("profitability_claim") is not False:
                 problems.append("profitability claim flag must remain false")
-            if payload.get("automatic_bet_placement") is not False:
+            if release.get("automatic_bet_placement") is not False:
                 problems.append("automatic bet placement must remain disabled")
             if not problems:
-                print(json.dumps({"status": "verified", "attempt": attempt, "proof": payload}, ensure_ascii=False))
+                print(json.dumps({"status": "verified", "attempt": attempt, "readiness": readiness, "proof": release}, ensure_ascii=False))
                 return
             last_error = "; ".join(problems)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:

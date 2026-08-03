@@ -10,8 +10,7 @@ import shutil
 import subprocess
 
 from .artifacts import sha256_file, verify_artifact_manifest
-
-APP_VERSION = "4.0.0"
+from .version import APP_VERSION
 RELEASE_SCHEMA_VERSION = "1.0"
 SENSITIVE_MARKERS = (
     "password",

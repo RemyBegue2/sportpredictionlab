@@ -134,14 +134,36 @@ def match_events_to_results(
             "provider_home_team": event["home_team"],
             "provider_away_team": event["away_team"],
         })
-        if candidate.status == "matched":
-            result = results.loc[candidate.result_index]
-            row.update({
-                "result_date": pd.to_datetime(result["date"], utc=True, errors="coerce"),
-                "result_home_team": result["home_team"],
-                "result_away_team": result["away_team"],
-                "home_goals": result.get("home_goals"),
-                "away_goals": result.get("away_goals"),
-            })
         rows.append(row)
-    return pd.DataFrame(rows)
+
+    mapping = pd.DataFrame(rows)
+    if mapping.empty:
+        return mapping
+
+    # A result row may be proposed independently for several provider events.
+    # Keep one deterministic winner and quarantine every losing collision so a
+    # real-world fixture can never be counted twice in the evidence funnel.
+    matched = mapping[mapping["status"].eq("matched") & mapping["result_index"].ne(-1)].copy()
+    for result_index, group in matched.groupby("result_index", sort=False):
+        if len(group) <= 1:
+            continue
+        ranked = group.sort_values(
+            ["confidence", "time_delta_minutes", "provider_event_id"],
+            ascending=[False, True, True],
+            kind="stable",
+        )
+        winner_index = ranked.index[0]
+        losing_indices = [index for index in ranked.index if index != winner_index]
+        mapping.loc[losing_indices, "status"] = "collision"
+        mapping.loc[losing_indices, "reason"] = (
+            "result row already assigned to a higher-confidence provider event"
+        )
+
+    for index, row in mapping[mapping["status"].eq("matched")].iterrows():
+        result = results.loc[row["result_index"]]
+        mapping.loc[index, "result_date"] = pd.to_datetime(result["date"], utc=True, errors="coerce")
+        mapping.loc[index, "result_home_team"] = result["home_team"]
+        mapping.loc[index, "result_away_team"] = result["away_team"]
+        mapping.loc[index, "home_goals"] = result.get("home_goals")
+        mapping.loc[index, "away_goals"] = result.get("away_goals")
+    return mapping

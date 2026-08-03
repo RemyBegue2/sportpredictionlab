@@ -1,17 +1,19 @@
-# Sports Prediction Lab V4.0 — Controlled Evidence Scale-Up
+# Sports Prediction Lab V4.1 — Decision Integrity & Resumable Operations
 
-La V4.0 ajoute une campagne cloud progressive de 30, 100, 300 puis 1 000 observations, entièrement pilotée depuis GitHub Actions et Railway. Le workflow principal est `Run evidence campaign`. Il teste le code avant tout appel fournisseur, applique un plafond global de crédits, restaure uniquement les checkpoints compatibles et ne promeut jamais automatiquement un modèle.
+La V4.1 durcit la campagne de preuve cloud avant toute montée en volume. Elle impose un verdict canonique `PASS/HOLD/FAIL`, empêche le contournement des stages, compte uniquement les événements uniques réellement prêts pour le benchmark, exige deux bookmakers indépendants pour le consensus et reprend la découverte après interruption sans perdre silencieusement les crédits déjà consommés.
 
-Documents de départ :
+Le workflow principal reste `Run evidence campaign`, piloté depuis GitHub Actions et Railway, sans Python local. Les opérations responsables restent inchangées : aucun pari automatique, aucune recommandation de mise et aucune promotion automatique de modèle.
 
-- `UPGRADE_V4_0.md`
-- `AUDIT_MULTI_ROLES_V4_0.md`
-- `RESULTATS_V4_0.md`
-- `OPERATIONS_RUNBOOK_V4_0.md`
-- `START_HERE_NEXT_CHAT.md`
+Documents V4.1 :
+
+- `UPGRADE_V4_1.md`
+- `AUDIT_MULTI_ROLES_V4_1.md`
+- `RESULTATS_V4_1.md`
+- `KNOWN_ISSUES_AND_GATES_V4_1.md`
+- `OPERATIONS_RUNBOOK_V4_1.md`
+- `VALIDATION_V4_1.json`
 
 ---
-
 # Sports Prediction Lab V3.7 — Cloud Control Center
 
 Application privée de recherche football/tennis avec FastAPI, PostgreSQL, The Odds API, shadow mode pré-match et moteur champion–challenger.

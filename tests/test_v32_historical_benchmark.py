@@ -193,7 +193,7 @@ def test_prepare_market_benchmark_builds_complete_wina_consensus_row(monkeypatch
     monkeypatch.setattr(historical, "generate_football_walkforward_predictions", lambda *args, **kwargs: prediction)
     snapshot = pd.Timestamp("2025-01-01T14:00:00Z")
     odds_rows = []
-    for bookmaker, prices in [("winamax_fr", [2.0, 3.5, 4.2]), ("betclic_fr", [2.05, 3.4, 4.1])]:
+    for bookmaker, prices in [("winamax_fr", [2.0, 3.5, 4.2]), ("betclic_fr", [2.05, 3.4, 4.1]), ("pinnacle", [2.02, 3.45, 4.15])]:
         for name, price in zip(["Arsenal", "Draw", "Chelsea"], prices, strict=True):
             odds_rows.append({
                 "event_id": "evt-prep", "sport_key": "soccer_epl", "commence_time": "2025-01-01T15:00:00Z",
@@ -213,4 +213,4 @@ def test_prepare_market_benchmark_builds_complete_wina_consensus_row(monkeypatch
     assert report.benchmark_rows == 1
     assert prepared.iloc[0]["result_class"] == 2
     assert abs(prepared.iloc[0][["winamax_away", "winamax_draw", "winamax_home"]].sum() - 1.0) < 1e-10
-    assert prepared.iloc[0]["consensus_bookmakers"] == 1
+    assert prepared.iloc[0]["consensus_bookmakers"] == 2

@@ -1,5 +1,21 @@
 # Changelog
 
+## V4.1.0 — Decision Integrity & Resumable Operations
+
+- verdict canonique `PASS/HOLD/FAIL` partagé par le rapport, la porte de scale-up et le dashboard ;
+- progression calculée côté serveur et impossibilité de transformer `continue_current_stage` en passage au stage supérieur ;
+- stage fondé sur les événements uniques réellement prêts pour la baseline sélectionnée ;
+- matching bijectif avec mise en quarantaine des collisions ;
+- consensus composé d’au moins deux bookmakers indépendants après exclusion de Winamax ;
+- contrôles et compteurs spécifiques à la baseline `consensus` ou `winamax` ;
+- checkpoint atomique après chaque appel de découverte facturable et reprise depuis un checkpoint partiel ;
+- appels à facturation incertaine non rejoués sans autorisation explicite ;
+- comptabilité séparée des crédits de découverte, de snapshots et du total ;
+- readiness Railway/Docker sur `/api/ready` ;
+- verrou commun `production-change` pour les workflows modifiant la production ;
+- source de version centralisée ;
+- 155 tests réussis et couverture cœur de 83 %.
+
 ## V4.0.0
 
 - workflow unique `Run evidence campaign` ;

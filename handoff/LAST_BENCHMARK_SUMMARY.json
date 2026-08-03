@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "version": "3.6.0",
+  "status": "not_run",
+  "benchmark": null,
+  "decision": {
+    "status": "not_evaluable",
+    "reason": "No real historical champion–challenger benchmark was executed in the delivered package.",
+    "historical_predictions": 0,
+    "live_shadow_predictions": 0,
+    "automatic_promotion": false,
+    "profitability_claim": false,
+    "next_action": "Create and review the immutable 30-event EPL validation backfill plan."
+  },
+  "credits_consumed": 0,
+  "synthetic_metrics_published_as_real": false
+}

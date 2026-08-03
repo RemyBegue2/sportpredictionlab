@@ -139,7 +139,7 @@ def test_cloud_deployment_configs_are_safe_and_parseable():
     render = yaml.safe_load((ROOT / "render.yaml").read_text(encoding="utf-8"))
     assert {service["type"] for service in render["services"]} == {"web", "cron"}
     web = next(service for service in render["services"] if service["type"] == "web")
-    assert web["healthCheckPath"] == "/api/health"
+    assert web["healthCheckPath"] == "/api/ready"
     env = {item["key"]: item for item in web["envVars"]}
     assert env["APP_SESSION_SECRET"]["generateValue"] is True
     assert env["APP_PASSWORD"]["sync"] is False
@@ -148,7 +148,7 @@ def test_cloud_deployment_configs_are_safe_and_parseable():
 
     railway = (ROOT / "railway.toml").read_text(encoding="utf-8")
     cron = (ROOT / "railway.cron.toml").read_text(encoding="utf-8")
-    assert 'healthcheckPath = "/api/health"' in railway
+    assert 'healthcheckPath = "/api/ready"' in railway
     assert "python -m scripts.db_migrate" in railway
     assert 'cronSchedule = "*/15 * * * *"' in cron
     assert "python -m scripts.run_shadow_cycle" in cron

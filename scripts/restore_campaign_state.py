@@ -19,7 +19,7 @@ def _load(path: Path) -> dict:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Restore a compatible V4 campaign checkpoint extracted from a GitHub artifact.")
+    parser = argparse.ArgumentParser(description="Restore a compatible V4.1 campaign checkpoint extracted from a GitHub artifact.")
     parser.add_argument("--current-plan", default="artifacts/evidence_campaign_plan_v4.json")
     parser.add_argument("--artifact-root", required=True)
     parser.add_argument("--destination-root", default=".")
@@ -32,28 +32,28 @@ def main() -> int:
     artifact_root = Path(args.artifact_root).resolve()
     destination = (ROOT / args.destination_root).resolve()
     previous_path = artifact_root / "artifacts" / "evidence_campaign_plan_v4.json"
-    required = [
-        artifact_root / "data" / "odds_api" / "campaign" / "backfill" / "plan.json",
-        artifact_root / "data" / "odds_api" / "campaign" / "backfill" / "state.json",
-        artifact_root / "data" / "odds_api" / "campaign" / "event_discovery_state.json",
-    ]
-    if not previous_path.exists() or any(not path.exists() for path in required):
-        print(json.dumps({"restored": False, "reason": "artifact_has_no_complete_checkpoint"}))
+    source_campaign = artifact_root / "data" / "odds_api" / "campaign"
+    discovery_state_path = source_campaign / "event_discovery_state.json"
+    if not previous_path.exists() or not discovery_state_path.exists() or not source_campaign.exists():
+        print(json.dumps({"restored": False, "reason": "artifact_has_no_discovery_checkpoint"}))
         return 3
 
     current = _load(current_path)
     previous = _load(previous_path)
-    keys = ("target_stage", "baseline", "max_credits", "start_date", "end_date")
+    keys = ("app_version", "campaign_key", "target_stage", "baseline", "max_credits", "start_date", "end_date")
     mismatches = {
         key: {"current": current.get(key), "previous": previous.get(key)}
         for key in keys
         if current.get(key) != previous.get(key)
     }
+    current_commit = str(current.get("source_commit") or "unknown")
+    previous_commit = str(previous.get("source_commit") or "unknown")
+    if current_commit != "unknown" and previous_commit != "unknown" and current_commit != previous_commit:
+        mismatches["source_commit"] = {"current": current_commit, "previous": previous_commit}
     if mismatches:
         print(json.dumps({"restored": False, "reason": "checkpoint_plan_mismatch", "mismatches": mismatches}, indent=2))
         return 3
 
-    source_campaign = artifact_root / "data" / "odds_api" / "campaign"
     target_campaign = destination / "data" / "odds_api" / "campaign"
     if target_campaign.exists():
         shutil.rmtree(target_campaign)
@@ -67,14 +67,27 @@ def main() -> int:
             shutil.rmtree(target_benchmark)
         shutil.copytree(source_benchmark, target_benchmark)
 
-    state = _load(target_campaign / "backfill" / "state.json")
+    discovery_state = _load(target_campaign / "event_discovery_state.json")
+    discovery_status = str(discovery_state.get("status") or "in_progress")
+    discovery_complete = discovery_status in {"completed", "no_events"}
+    backfill_plan_path = target_campaign / "backfill" / "plan.json"
+    backfill_state_path = target_campaign / "backfill" / "state.json"
+    backfill_ready = backfill_plan_path.exists() and backfill_state_path.exists()
+    backfill_state = _load(backfill_state_path) if backfill_ready else {}
+
     print(
         json.dumps(
             {
                 "restored": True,
                 "reason": "compatible_checkpoint_restored",
-                "completed_requests": len(state.get("completed") or []),
-                "consumed_credits": int(state.get("consumed_credits") or 0),
+                "discovery_status": discovery_status,
+                "discovery_complete": discovery_complete,
+                "discovery_completed_calls": len(discovery_state.get("completed_call_numbers") or []),
+                "discovery_credits": int(discovery_state.get("consumed_credits") or 0),
+                "backfill_ready": backfill_ready,
+                "backfill_status": str(backfill_state.get("status") or "not_planned"),
+                "completed_requests": len(backfill_state.get("completed") or []),
+                "snapshot_credits": int(backfill_state.get("consumed_credits") or 0),
             },
             indent=2,
         )

@@ -160,7 +160,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V4.0 Controlled Evidence Scale-Up",
+    title="Sports Prediction Lab V4.1 Decision Integrity & Resumable Operations",
     version=APP_VERSION,
     description="Cloud-first data-reliability edition with explicit coverage denominators, zero-credit evidence recomputation, bookmaker matrices and leakage-safe quality gates.",
     lifespan=lifespan,
@@ -315,7 +315,7 @@ def resources() -> dict[str, Any]:
     fresh_rebuild_path = artifact_dir / "fresh_rebuild_report.json"
     fresh_rebuild = json.loads(fresh_rebuild_path.read_text(encoding="utf-8")) if fresh_rebuild_path.exists() else None
     football_model_version = (
-        f"{fresh_rebuild.get('version', '4.0.0')}-fresh"
+        f"{fresh_rebuild.get('version', APP_VERSION)}-fresh"
         if fresh_rebuild and fresh_rebuild.get("promoted")
         else "3.3.0-snapshot"
     )

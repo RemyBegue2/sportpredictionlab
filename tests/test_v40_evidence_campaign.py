@@ -20,15 +20,15 @@ ROOT = Path(__file__).resolve().parents[1]
 def _good_evidence(completed: int = 30) -> dict:
     return {
         "consumed_credits": completed * 10,
-        "funnel": {"completed_event_snapshots": completed},
+        "funnel": {"completed_event_snapshots": completed, "benchmark_ready_events": completed, "consensus_ready_events": completed, "reliably_matched_events": completed, "accepted_events": completed},
         "rates": {
             "provider_return_coverage": 0.95,
             "reliable_matching": 0.97,
             "consensus_coverage": 0.90,
         },
-        "counts": {"quarantined_temporal_rows": 0, "duplicate_rows": 0},
+        "counts": {"quarantined_temporal_rows": 0, "duplicate_rows": 0, "matching_collisions": 0},
         "gates": {"technical_integrity": {"accepted": True}},
-        "quality_gate": {"status": "technical_validation", "accepted": True},
+        "quality_gate": {"status": "PASS", "accepted": True},
     }
 
 
@@ -130,7 +130,7 @@ def test_v40_campaign_planner_cli_is_file_only(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["app_version"] == "4.0.0"
+    assert payload["app_version"] == "4.1.0"
     assert "ZERO-CREDIT CAMPAIGN PLAN" in result.stdout
 
 
@@ -174,7 +174,7 @@ def test_v40_api_frontend_and_workflow_contract() -> None:
         release = client.get("/api/release")
         campaign = client.get("/api/evidence-campaign")
     assert release.status_code == 200
-    assert release.json()["version"] == "4.0.0"
+    assert release.json()["version"] == "4.1.0"
     assert campaign.status_code == 200
     assert campaign.json()["report"]["automatic_model_promotion"] is False
 
@@ -184,7 +184,7 @@ def test_v40_api_frontend_and_workflow_contract() -> None:
     for element_id in ("campaignDecision", "campaignCompleted", "campaignNext", "campaignBudget"):
         assert f'id="{element_id}"' in html
         assert f"#{element_id}" in js
-    assert "app.js?v=4.0.0" in html
+    assert "app.js?v=4.1.0" in html
     assert "plan_request_id" not in workflow
     assert "Test before any provider request" in workflow
     assert workflow.index("Test before any provider request") < workflow.index("Discover historical events")

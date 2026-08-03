@@ -35,12 +35,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: historical-sample
+  group: production-change
   cancel-in-progress: false
 
 jobs:
   run:
     runs-on: ubuntu-latest
+    environment: production
     timeout-minutes: 90
     env:
       THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
@@ -49,7 +50,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.0.0'
+      EXPECTED_VERSION: '4.1.0'
       INPUT_START_DATE: ${{ inputs.start_date }}
       INPUT_END_DATE: ${{ inputs.end_date }}
       INPUT_SAMPLE_EVENTS: ${{ inputs.sample_events }}
@@ -157,15 +158,17 @@ jobs:
           found = [token for token in forbidden if token in source]
           if found:
               raise SystemExit(
-                  "V3.9 planner is not installed at the repository root; "
+                  "The file-only planner is not installed at the repository root; "
                   f"old database planner tokens remain: {found}"
               )
-          if '"version": "3.9.0"' not in source:
+          required = ["from sports_predictor.version import APP_VERSION", '"version": APP_VERSION']
+          missing = [token for token in required if token not in source]
+          if missing:
               raise SystemExit(
-                  "V3.9.0 planner marker is missing. Replace the root-level "
-                  "scripts/plan_historical_backfill.py file."
+                  "V4.1 planner markers are missing. Replace the root-level "
+                  f"scripts/plan_historical_backfill.py file: {missing}"
               )
-          print("Planner verified: V3.9 file-only with explicit selection funnel.")
+          print("Planner verified: V4.1 file-only with explicit selection funnel.")
           PY
       - name: Build immutable budget-adapted provider plan
         run: |

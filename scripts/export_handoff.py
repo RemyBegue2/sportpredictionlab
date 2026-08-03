@@ -68,7 +68,7 @@ def build_handoff() -> dict[str, Any]:
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Use GitHub Actions → Run evidence campaign → dry_run before any paid stage.",
+        "next_priority": "Deploy V4.1, verify /api/ready and /api/release, then run stage 30 in dry_run before any paid stage.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
             "Tennis remains experimental and uncalibrated.",
@@ -76,6 +76,8 @@ def build_handoff() -> dict[str, Any]:
             "The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.",
             "Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.",
             "Use Run evidence campaign in dry_run mode before approving a paid stage.",
+            "Stage 100 remains blocked until a real V4.1 stage-30 report returns PASS.",
+            "A consensus requires at least two independent bookmakers after Winamax exclusion.",
             "No model promotion is automatic, even when all evidence gates pass.",
         ],
         "safety": {
@@ -187,7 +189,7 @@ def active_model_card(payload: dict[str, Any]) -> str:
 
 def next_actions(payload: dict[str, Any]) -> str:
     decision = payload.get("model_decision") or {}
-    action = decision.get("next_action") or "Open GitHub Actions → Run evidence campaign in dry_run mode before approving a paid stage."
+    action = decision.get("next_action") or "Deploy V4.1, verify /api/ready and /api/release, then run the stage-30 dry run before any paid campaign."
     return f"""# NEXT ACTIONS
 
 1. {action}

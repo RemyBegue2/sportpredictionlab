@@ -15,12 +15,13 @@ from sports_predictor.evidence_quality import build_evidence_quality_report, loa
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build the V3.9 coverage-funnel and evidence report.")
+    parser = argparse.ArgumentParser(description="Build the canonical V4.1 coverage-funnel and evidence report.")
     parser.add_argument("--plan-dir", default="data/odds_api/backfill")
     parser.add_argument("--events-csv", default="data/odds_api/historical/events.csv")
     parser.add_argument("--discovery-state-json", default="data/odds_api/historical/event_discovery_state.json")
     parser.add_argument("--matches-csv")
     parser.add_argument("--benchmark-json")
+    parser.add_argument("--campaign-plan", default="artifacts/evidence_campaign_plan_v4.json")
     parser.add_argument("--output", default="artifacts/evidence_report_v3_9.json")
     return parser.parse_args()
 
@@ -43,6 +44,7 @@ def main() -> int:
         targets=_read_csv(plan_dir / "targets.csv"),
         discovery_state=load_json(ROOT / args.discovery_state_json),
         event_selection=_read_csv(plan_dir / "event_selection.csv"),
+        campaign_plan=load_json(ROOT / args.campaign_plan),
     )
     output = ROOT / args.output
     output.parent.mkdir(parents=True, exist_ok=True)

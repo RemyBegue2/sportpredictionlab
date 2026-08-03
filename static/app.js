@@ -210,7 +210,7 @@ function renderEvidence(data){
   if(!items.length) items.push({kind:'passed',label:'Contrôle',value:report.generated_at?'Aucune anomalie bloquante détectée.':'Aucun rapport publié.'});
   const issuesNode=$('#evidenceIssues');
   if(issuesNode){
-    issuesNode.innerHTML=items.map(item=>`<article class="gate-card ${esc(item.kind)}"><small>${esc(item.label)}</small><h3>${esc(String(item.value).replaceAll('_',' '))}</h3><p>${esc(report.next_action||'Les détails sont conservés dans l’artefact GitHub V4.0.')}</p></article>`).join('');
+    issuesNode.innerHTML=items.map(item=>`<article class="gate-card ${esc(item.kind)}"><small>${esc(item.label)}</small><h3>${esc(String(item.value).replaceAll('_',' '))}</h3><p>${esc(report.next_action||'Les détails sont conservés dans l’artefact GitHub V4.1.')}</p></article>`).join('');
   }
 }
 

@@ -4,6 +4,8 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 
+from .version import APP_VERSION
+
 
 def _truthy(value: str | None, *, default: bool = False) -> bool:
     if value is None:
@@ -89,7 +91,7 @@ class CloudSettings:
             database_url=raw_db,
             odds_sync_sports=_csv(os.getenv("ODDS_SYNC_SPORTS"), ("soccer_epl",)),
             odds_stale_minutes=stale,
-            model_version=os.getenv("MODEL_VERSION", "4.0.0"),
+            model_version=os.getenv("MODEL_VERSION", APP_VERSION),
             shadow_enabled=_truthy(os.getenv("SHADOW_MODE_ENABLED"), default=True),
             shadow_max_events=shadow_max_events,
             shadow_quota_floor=shadow_quota_floor,

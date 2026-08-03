@@ -148,7 +148,12 @@ def bookmaker_h2h_markets(rows: pd.DataFrame, *, method: str = "power") -> list[
     return results
 
 
-def consensus_h2h(markets: Sequence[Mapping[str, Any]], *, exclude: Iterable[str] = ()) -> dict[str, Any] | None:
+def consensus_h2h(
+    markets: Sequence[Mapping[str, Any]],
+    *,
+    exclude: Iterable[str] = (),
+    minimum_bookmakers: int = 2,
+) -> dict[str, Any] | None:
     excluded = set(exclude)
     usable = [m for m in markets if m.get("bookmaker_key") not in excluded]
     if not usable:
@@ -159,7 +164,7 @@ def consensus_h2h(markets: Sequence[Mapping[str, Any]], *, exclude: Iterable[str
         probs = market["probabilities"]
         if all(label in probs for label in labels):
             aligned.append([float(probs[label]) for label in labels])
-    if not aligned:
+    if len(aligned) < int(minimum_bookmakers):
         return None
     matrix = np.asarray(aligned, dtype=float)
     median = np.median(matrix, axis=0)

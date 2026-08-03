@@ -1,28 +1,44 @@
 {
   "artifact_manifest": {
-    "created_at_utc": "2026-08-02T11:18:26.210461+00:00",
+    "created_at_utc": "2026-08-02T18:54:15.925885+00:00",
     "files": [
       {
-        "bytes": 1188721,
+        "bytes": 1750957,
         "name": "football_model.joblib",
-        "sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5"
+        "sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4"
+      },
+      {
+        "bytes": 1615,
+        "name": "metrics.json",
+        "sha256": "35cbf2ddbbd2e82ba0fa0aef0c54899a2cba9d5a1ba5cddadda60752f44d4f25"
       },
       {
         "bytes": 625,
         "name": "tennis_model.joblib",
         "sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658"
-      },
-      {
-        "bytes": 1103,
-        "name": "metrics.json",
-        "sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6"
       }
     ],
     "schema_version": "2.1",
     "trust_note": "Integrity check only. Load artifacts only from a trusted distribution channel."
   },
-  "champion_challenger": null,
-  "current_version": "4.0.0",
+  "champion_challenger": {
+    "benchmark": null,
+    "credits_consumed": 0,
+    "decision": {
+      "automatic_promotion": false,
+      "historical_predictions": 0,
+      "live_shadow_predictions": 0,
+      "next_action": "Create and review the immutable 30-event EPL validation backfill plan.",
+      "profitability_claim": false,
+      "reason": "No real historical champion–challenger benchmark was executed in the delivered package.",
+      "status": "not_evaluable"
+    },
+    "schema_version": "1.0",
+    "status": "not_run",
+    "synthetic_metrics_published_as_real": false,
+    "version": "3.6.0"
+  },
+  "current_version": "4.1.0",
   "deployment": {
     "cloud_jobs": [
       "GitHub Actions evidence campaign"
@@ -38,14 +54,1110 @@
   },
   "evidence_campaign": null,
   "evidence_campaign_plan": null,
-  "fresh_rebuild_report": null,
-  "generated_at_utc": "2026-08-03T13:12:57.229937+00:00",
-  "git": {
-    "branch": "unknown",
-    "commit": "unknown",
-    "commit_short": "unknown"
+  "fresh_rebuild_report": {
+    "active_data": "/home/runner/work/sportpredictionlab/sportpredictionlab/data/real/football_active.csv",
+    "candidate_artifact": "football_model_candidate.joblib",
+    "created_at": "2026-08-02T18:54:15.916065+00:00",
+    "dataset": {
+      "distinct_timestamps": 583,
+      "first_date": "2021-08-13T00:00:00+00:00",
+      "last_date": "2026-05-24T00:00:00+00:00",
+      "path": "/home/runner/work/sportpredictionlab/sportpredictionlab/data/real/football_epl_2021_2026.csv",
+      "rows": 1900,
+      "seasons": [
+        "2021-22",
+        "2022-23",
+        "2023-24",
+        "2024-25",
+        "2025-26"
+      ],
+      "sha256": "ae48ba7dc4715936f8891177f054c5a4799c681c0b65fc4bd7aea8031478eac7"
+    },
+    "evaluation": {
+      "accuracy": 0.4605263157894737,
+      "brier": 0.6409275706193381,
+      "calibration_temperature": 1.9711817595785415,
+      "dixon_coles_rho": 0.015000000000000013,
+      "ece": 0.0958730475496105,
+      "log_loss": 1.0618926736262253,
+      "ml_blend_weight": 0.0,
+      "ml_only_log_loss": 1.0410196388251696,
+      "n_test": 380,
+      "naive_log_loss": 1.0846018600662934,
+      "poisson_dc_log_loss": 1.0618926736262253,
+      "rps": 0.43954820365378716
+    },
+    "promoted": true,
+    "promotion": {
+      "checks": {
+        "better_than_naive": true,
+        "calibration": true,
+        "finite_log_loss": true,
+        "fresh_cutoff": true,
+        "minimum_rows": true,
+        "minimum_test_rows": true
+      },
+      "eligible": true,
+      "reasons": []
+    },
+    "version": "3.4.0"
   },
-  "historical_evidence": null,
+  "generated_at_utc": "2026-08-03T14:52:43.774139+00:00",
+  "git": {
+    "branch": "master",
+    "commit": "8b67f7b002dc53910e7558855cbc6489871382c9",
+    "commit_short": "8b67f7b"
+  },
+  "historical_evidence": {
+    "app_version": "3.9.0",
+    "backfill_status": "completed",
+    "benchmark": {
+      "closing_line_value": null,
+      "comparisons": {
+        "blend_vs_winamax": null,
+        "model_vs_consensus": null,
+        "model_vs_winamax": null
+      },
+      "evaluated_rows": 3,
+      "verdict": {
+        "reason": "no expanding-window fold could be formed; descriptive metrics are not a promotion test",
+        "status": "not_evaluable"
+      }
+    },
+    "blockers": [],
+    "bookmaker_coverage": [
+      {
+        "bookmaker_key": "winamax_fr",
+        "complete_event_snapshots": 3,
+        "coverage": 0.3,
+        "missing_or_incomplete_event_snapshots": 7,
+        "requested_event_snapshots": 10
+      },
+      {
+        "bookmaker_key": "betclic_fr",
+        "complete_event_snapshots": 3,
+        "coverage": 0.3,
+        "missing_or_incomplete_event_snapshots": 7,
+        "requested_event_snapshots": 10
+      },
+      {
+        "bookmaker_key": "unibet_fr",
+        "complete_event_snapshots": 3,
+        "coverage": 0.3,
+        "missing_or_incomplete_event_snapshots": 7,
+        "requested_event_snapshots": 10
+      },
+      {
+        "bookmaker_key": "pmu_fr",
+        "complete_event_snapshots": 2,
+        "coverage": 0.2,
+        "missing_or_incomplete_event_snapshots": 8,
+        "requested_event_snapshots": 10
+      },
+      {
+        "bookmaker_key": "pinnacle",
+        "complete_event_snapshots": 10,
+        "coverage": 1.0,
+        "missing_or_incomplete_event_snapshots": 0,
+        "requested_event_snapshots": 10
+      }
+    ],
+    "consumed_credits": 100,
+    "counts": {
+      "accepted_rows": 63,
+      "bookmakers": 5,
+      "consensus_events": 3,
+      "discovered_events": 111,
+      "duplicate_rows": 0,
+      "events_with_odds": 10,
+      "historical_odds_rows": 63,
+      "planned_events": 10,
+      "quarantined_temporal_rows": 0,
+      "requested_events": 30,
+      "selected_events": 10,
+      "winamax_events": 3
+    },
+    "event_outcome_counts": {
+      "accepted": 10,
+      "not_selected_sample_or_budget_limit": 101
+    },
+    "event_outcomes": [
+      {
+        "away_team": "Aston Villa",
+        "commence_time": "2023-01-01T14:00:00Z",
+        "event_id": "037d7b6bb128546961e2a06680f63944",
+        "home_team": "Tottenham Hotspur",
+        "matching_confidence": 0.9533333333333334,
+        "status": "accepted"
+      },
+      {
+        "away_team": "Chelsea",
+        "commence_time": "2023-01-01T16:30:00Z",
+        "event_id": "2e4cf9e3e88011065edb63f7675eb562",
+        "home_team": "Nottingham Forest",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Liverpool",
+        "commence_time": "2023-01-02T17:30:00Z",
+        "event_id": "d5df84314c8348c36df5eaf3e3b09b66",
+        "home_team": "Brentford",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Newcastle United",
+        "commence_time": "2023-01-03T19:45:00Z",
+        "event_id": "0a2612d23753bb4f67238391f8c796c5",
+        "home_team": "Arsenal",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Fulham",
+        "commence_time": "2023-01-03T19:45:00Z",
+        "event_id": "8f3ad2131853e76cd8960e844d1b7930",
+        "home_team": "Leicester City",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brighton and Hove Albion",
+        "commence_time": "2023-01-03T19:45:00Z",
+        "event_id": "b5409b8adc851d8dcea6509f729f0081",
+        "home_team": "Everton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Bournemouth",
+        "commence_time": "2023-01-03T20:00:00Z",
+        "event_id": "7195582a03ee653e94a7fd049c4694e8",
+        "home_team": "Manchester United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Nottingham Forest",
+        "commence_time": "2023-01-04T19:30:00Z",
+        "event_id": "737d7f26ee63391ddd81c82a015c9f79",
+        "home_team": "Southampton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "West Ham United",
+        "commence_time": "2023-01-04T19:45:00Z",
+        "event_id": "ba18757841e8a22892bf54cba168d489",
+        "home_team": "Leeds United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Wolverhampton Wanderers",
+        "commence_time": "2023-01-04T20:00:00Z",
+        "event_id": "8c97c6817a8980aad9940e7126e8b8a0",
+        "home_team": "Aston Villa",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Tottenham Hotspur",
+        "commence_time": "2023-01-04T20:00:00Z",
+        "event_id": "f81a44dcad0d959da14cf374a457366c",
+        "home_team": "Crystal Palace",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester City",
+        "commence_time": "2023-01-05T20:00:00Z",
+        "event_id": "ef614a0cdf2f14e4e20a8f8c2f1f46c4",
+        "home_team": "Chelsea",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Newcastle United",
+        "commence_time": "2023-04-15T11:30:00Z",
+        "event_id": "03a3b68258fec09d606570d3cf6c5354",
+        "home_team": "Aston Villa",
+        "matching_confidence": 0.9616666666666668,
+        "status": "accepted"
+      },
+      {
+        "away_team": "Crystal Palace",
+        "commence_time": "2023-04-15T14:00:00Z",
+        "event_id": "33a9ea27c810d630a3106773dcb9b7f5",
+        "home_team": "Southampton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brighton and Hove Albion",
+        "commence_time": "2023-04-15T14:00:00Z",
+        "event_id": "60f95e803760b241f25dc49926f7b360",
+        "home_team": "Chelsea",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Fulham",
+        "commence_time": "2023-04-15T14:00:00Z",
+        "event_id": "71b1c704f12bbab37e873c11902ddbf6",
+        "home_team": "Everton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brentford",
+        "commence_time": "2023-04-15T14:00:00Z",
+        "event_id": "c910efd56e4424989a1b90685fcd0ffe",
+        "home_team": "Wolverhampton Wanderers",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Bournemouth",
+        "commence_time": "2023-04-15T14:00:00Z",
+        "event_id": "df23f7dad9dbb0d1c6f02df93b25837c",
+        "home_team": "Tottenham Hotspur",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Leicester City",
+        "commence_time": "2023-04-15T16:30:00Z",
+        "event_id": "b11cb36cd90e9f3a373545b32b6c5f55",
+        "home_team": "Manchester City",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Arsenal",
+        "commence_time": "2023-04-16T13:00:00Z",
+        "event_id": "f89a50fec7398306f080cdedd56379ef",
+        "home_team": "West Ham United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester United",
+        "commence_time": "2023-04-16T15:30:00Z",
+        "event_id": "4c91f559519b22e647b95d4c8d47cc92",
+        "home_team": "Nottingham Forest",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Liverpool",
+        "commence_time": "2023-04-17T19:00:00Z",
+        "event_id": "8082321e458b3bf57c62a9c2648ace85",
+        "home_team": "Leeds United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester United",
+        "commence_time": "2023-11-04T12:30:00Z",
+        "event_id": "439ae8b6e6ccb25359cae67ccee9a61c",
+        "home_team": "Fulham",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "West Ham United",
+        "commence_time": "2023-11-04T15:00:00Z",
+        "event_id": "197f71924f69a83fbd10a4f0daa2d8d6",
+        "home_team": "Brentford",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Wolverhampton Wanderers",
+        "commence_time": "2023-11-04T15:00:00Z",
+        "event_id": "330ccff0621fbd93b991703a55bc3045",
+        "home_team": "Sheffield United",
+        "matching_confidence": 0.95,
+        "status": "accepted"
+      },
+      {
+        "away_team": "Brighton and Hove Albion",
+        "commence_time": "2023-11-04T15:00:00Z",
+        "event_id": "95d920ae631e4c3d05782f74cafb8010",
+        "home_team": "Everton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Bournemouth",
+        "commence_time": "2023-11-04T15:00:00Z",
+        "event_id": "d42006aa25ebf9627c4146d69563b890",
+        "home_team": "Manchester City",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Crystal Palace",
+        "commence_time": "2023-11-04T15:00:00Z",
+        "event_id": "f77d9e4a963ee0e68fb0f71d51fa6855",
+        "home_team": "Burnley",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Arsenal",
+        "commence_time": "2023-11-04T17:30:00Z",
+        "event_id": "e23f284f9be1986a3bdcbc63fdfeb5e9",
+        "home_team": "Newcastle United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Aston Villa",
+        "commence_time": "2023-11-05T14:00:00Z",
+        "event_id": "2e4e068dd8799ba3fafa34acfab91fab",
+        "home_team": "Nottingham Forest",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Liverpool",
+        "commence_time": "2023-11-05T16:30:00Z",
+        "event_id": "d4be0bb766fcb90b5f0c7dfc5fe3e9fd",
+        "home_team": "Luton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Chelsea",
+        "commence_time": "2023-11-06T20:00:00Z",
+        "event_id": "f9797be65a325bc844892ebd2dd41a98",
+        "home_team": "Tottenham Hotspur",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Everton",
+        "commence_time": "2024-02-10T12:30:00Z",
+        "event_id": "b77623287f92d5e974b03e5e6753bf81",
+        "home_team": "Manchester City",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brighton and Hove Albion",
+        "commence_time": "2024-02-10T15:00:00Z",
+        "event_id": "11412f895c123f5db92ca80285a84db0",
+        "home_team": "Tottenham Hotspur",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Bournemouth",
+        "commence_time": "2024-02-10T15:00:00Z",
+        "event_id": "12cbd97947130cea55b684e859efd27e",
+        "home_team": "Fulham",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brentford",
+        "commence_time": "2024-02-10T15:00:00Z",
+        "event_id": "868607f200b926da16729c486916aa0e",
+        "home_team": "Wolverhampton Wanderers",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Burnley",
+        "commence_time": "2024-02-10T15:00:00Z",
+        "event_id": "9cf849d164fd53eaaa73ce1fa193f3e5",
+        "home_team": "Liverpool",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Sheffield United",
+        "commence_time": "2024-02-10T15:00:00Z",
+        "event_id": "a1a4d1662b05d017d4c869672bbf89b4",
+        "home_team": "Luton",
+        "matching_confidence": 0.95,
+        "status": "accepted"
+      },
+      {
+        "away_team": "Newcastle United",
+        "commence_time": "2024-02-10T17:30:00Z",
+        "event_id": "5a246b9f975b02ecc413b9fa026e09eb",
+        "home_team": "Nottingham Forest",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Arsenal",
+        "commence_time": "2024-02-11T14:00:00Z",
+        "event_id": "174a5f6082c6a4677e65b711b8f2055a",
+        "home_team": "West Ham United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester United",
+        "commence_time": "2024-02-11T16:30:00Z",
+        "event_id": "4f62745c3808b4649ff36f318b847f3a",
+        "home_team": "Aston Villa",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Chelsea",
+        "commence_time": "2024-02-12T20:00:00Z",
+        "event_id": "74ba465430204c6fca34874e2d913c85",
+        "home_team": "Crystal Palace",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "West Ham United",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "12c8092adaa57469145367ea74ed6872",
+        "home_team": "Manchester City",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Nottingham Forest",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "2afc81c23b9ef9ebdfc18a0db97e55ca",
+        "home_team": "Burnley",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester United",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "3c64fdd38cde33a37cee85c0cabff38f",
+        "home_team": "Brighton and Hove Albion",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Tottenham Hotspur",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "3fc76a90ce239f0cd3223cba025aa94f",
+        "home_team": "Sheffield United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Fulham",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "4ee651c4bbbd6eeb0bd534b848255a32",
+        "home_team": "Luton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Aston Villa",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "5866498ca2390a3c0cedf5037bd50b6a",
+        "home_team": "Crystal Palace",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Everton",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "672a1729a6b0323ecd5b47e4d5a33c23",
+        "home_team": "Arsenal",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Bournemouth",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "78983527cc9aee0d0b708fde9b91bd37",
+        "home_team": "Chelsea",
+        "matching_confidence": 0.95,
+        "status": "accepted"
+      },
+      {
+        "away_team": "Newcastle United",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "7f178786915e6ced46d0c76e34beb045",
+        "home_team": "Brentford",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Wolverhampton Wanderers",
+        "commence_time": "2024-05-19T15:00:00Z",
+        "event_id": "fd2bfff9d295143ca491e063daf57119",
+        "home_team": "Liverpool",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brighton and Hove Albion",
+        "commence_time": "2024-08-31T11:30:00Z",
+        "event_id": "055f48ea54ea77ffa2b16ef7310b04b6",
+        "home_team": "Arsenal",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Aston Villa",
+        "commence_time": "2024-08-31T14:00:00Z",
+        "event_id": "2e24cd63783632e9f73604e972e830a8",
+        "home_team": "Leicester City",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Fulham",
+        "commence_time": "2024-08-31T14:00:00Z",
+        "event_id": "3fdb1474ffc8380ef82bb299afbac88f",
+        "home_team": "Ipswich Town",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Southampton",
+        "commence_time": "2024-08-31T14:00:00Z",
+        "event_id": "5c835569c5bedfa3ef295b5ef1118dbf",
+        "home_team": "Brentford",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Wolverhampton Wanderers",
+        "commence_time": "2024-08-31T14:00:00Z",
+        "event_id": "8b1906ff17c3bb18eb23409f223a4895",
+        "home_team": "Nottingham Forest",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Bournemouth",
+        "commence_time": "2024-08-31T14:00:00Z",
+        "event_id": "dcf1380413740a8f8ee4c016c8550ea8",
+        "home_team": "Everton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester City",
+        "commence_time": "2024-08-31T16:30:00Z",
+        "event_id": "c9109e8a707da4eb673f2cfcef34bd15",
+        "home_team": "West Ham United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Tottenham Hotspur",
+        "commence_time": "2024-09-01T12:30:00Z",
+        "event_id": "36c348ee3ab335d09cabd3a112caaa4a",
+        "home_team": "Newcastle United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Crystal Palace",
+        "commence_time": "2024-09-01T12:30:00Z",
+        "event_id": "fc3ce4f31b7fe23e3d8eccd0c12ebfbf",
+        "home_team": "Chelsea",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Liverpool",
+        "commence_time": "2024-09-01T15:00:00Z",
+        "event_id": "eb749753d96a4af7d4a56f949573a279",
+        "home_team": "Manchester United",
+        "matching_confidence": 0.95,
+        "status": "accepted"
+      },
+      {
+        "away_team": "Brighton and Hove Albion",
+        "commence_time": "2024-12-05T19:30:00Z",
+        "event_id": "79ec8f88b4ba9da31ddd12fcb5ef5255",
+        "home_team": "Fulham",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Tottenham Hotspur",
+        "commence_time": "2024-12-05T20:15:00Z",
+        "event_id": "9d4b4b9aedc8b215eb1aefeccc88cfbb",
+        "home_team": "Bournemouth",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Liverpool",
+        "commence_time": "2024-12-07T12:30:00Z",
+        "event_id": "d6f8814e6aae9414e050ebef471ec70a",
+        "home_team": "Everton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Newcastle United",
+        "commence_time": "2024-12-07T15:00:00Z",
+        "event_id": "1179eb54e941669c6e4a7c76e7ac2652",
+        "home_team": "Brentford",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Southampton",
+        "commence_time": "2024-12-07T15:00:00Z",
+        "event_id": "441ec3f40dac37e0bda3ca779bd91d08",
+        "home_team": "Aston Villa",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester City",
+        "commence_time": "2024-12-07T15:00:00Z",
+        "event_id": "9299cecc64b75d89fa192e5b3361fbf9",
+        "home_team": "Crystal Palace",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Nottingham Forest",
+        "commence_time": "2024-12-07T17:30:00Z",
+        "event_id": "4b3a9dd04a516f725acd57a16c799fbd",
+        "home_team": "Manchester United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Bournemouth",
+        "commence_time": "2024-12-08T14:00:00Z",
+        "event_id": "8899ce68b0c9e451b17edc3f2e076a6b",
+        "home_team": "Ipswich Town",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Arsenal",
+        "commence_time": "2024-12-08T14:00:00Z",
+        "event_id": "ac9d59dd7555c122948f98b8b2a19c8e",
+        "home_team": "Fulham",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brighton and Hove Albion",
+        "commence_time": "2024-12-08T14:00:00Z",
+        "event_id": "d9163188e3e3d9a8bf2525e2f9e3a553",
+        "home_team": "Leicester City",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Chelsea",
+        "commence_time": "2024-12-08T16:30:00Z",
+        "event_id": "c87f3d3551a57bd560cb056ade831890",
+        "home_team": "Tottenham Hotspur",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Wolverhampton Wanderers",
+        "commence_time": "2024-12-09T20:00:00Z",
+        "event_id": "86df5e4f56b948cd24fab60e998a43fc",
+        "home_team": "West Ham United",
+        "matching_confidence": 0.9333333333333332,
+        "status": "accepted"
+      },
+      {
+        "away_team": "West Ham United",
+        "commence_time": "2025-03-15T15:00:00Z",
+        "event_id": "328e1a3488f74bf694b7660a4dc0174a",
+        "home_team": "Everton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brighton and Hove Albion",
+        "commence_time": "2025-03-15T15:00:00Z",
+        "event_id": "5ea4d4399f71ce7c1aae2adfd5405bf6",
+        "home_team": "Manchester City",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Nottingham Forest",
+        "commence_time": "2025-03-15T15:00:00Z",
+        "event_id": "78012d25c524b145d002d02c26d105d5",
+        "home_team": "Ipswich Town",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Wolverhampton Wanderers",
+        "commence_time": "2025-03-15T15:00:00Z",
+        "event_id": "9326a5cfebfb2f44eb932e1ad9686f2c",
+        "home_team": "Southampton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brentford",
+        "commence_time": "2025-03-15T17:30:00Z",
+        "event_id": "8e851d7fd1cf737a2f8f58d4482c16b2",
+        "home_team": "Bournemouth",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Tottenham Hotspur",
+        "commence_time": "2025-03-16T13:30:00Z",
+        "event_id": "01c1b188470ec92eeb8e88a989ef1b1a",
+        "home_team": "Fulham",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Chelsea",
+        "commence_time": "2025-03-16T13:30:00Z",
+        "event_id": "d86e00f7febeb44667711f90ce301ec2",
+        "home_team": "Arsenal",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester United",
+        "commence_time": "2025-03-16T19:00:00Z",
+        "event_id": "26f001bc7f494e5ea72b7010ff19587d",
+        "home_team": "Leicester City",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Fulham",
+        "commence_time": "2025-10-03T19:00:00Z",
+        "event_id": "20d0e0d5048691dde1d293735e50ba29",
+        "home_team": "Bournemouth",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Tottenham Hotspur",
+        "commence_time": "2025-10-04T11:30:00Z",
+        "event_id": "61e59a7f5fa664b288f99905303f9b8b",
+        "home_team": "Leeds United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Sunderland",
+        "commence_time": "2025-10-04T14:00:00Z",
+        "event_id": "18f638078d90839494fc30fa576645a5",
+        "home_team": "Manchester United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "West Ham United",
+        "commence_time": "2025-10-04T14:00:00Z",
+        "event_id": "f11d8d22f890ff34dc738eacc61a233c",
+        "home_team": "Arsenal",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Liverpool",
+        "commence_time": "2025-10-04T16:30:00Z",
+        "event_id": "87c12874bac6211a13e105dbfaaff0f5",
+        "home_team": "Chelsea",
+        "matching_confidence": 0.945,
+        "status": "accepted"
+      },
+      {
+        "away_team": "Crystal Palace",
+        "commence_time": "2025-10-05T13:00:00Z",
+        "event_id": "1a7d9a230fc5e77b5fbf420993a8eb93",
+        "home_team": "Everton",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Nottingham Forest",
+        "commence_time": "2025-10-05T13:00:00Z",
+        "event_id": "7bed3dc248b80795a4e705648bed405c",
+        "home_team": "Newcastle United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brighton and Hove Albion",
+        "commence_time": "2025-10-05T13:00:00Z",
+        "event_id": "81898d0beffe7df4df053b39ae9885e7",
+        "home_team": "Wolverhampton Wanderers",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Burnley",
+        "commence_time": "2025-10-05T13:00:00Z",
+        "event_id": "9a57d9fdfef63947afdd99445357da86",
+        "home_team": "Aston Villa",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester City",
+        "commence_time": "2025-10-05T15:30:00Z",
+        "event_id": "06a21a4e8bead908daaeb712499a0148",
+        "home_team": "Brentford",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester City",
+        "commence_time": "2026-01-17T12:30:00Z",
+        "event_id": "3fd1e970c718bfc0f99a7e4575e46f49",
+        "home_team": "Manchester United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "West Ham United",
+        "commence_time": "2026-01-17T15:00:00Z",
+        "event_id": "47e36aed7df3160f584a73fbd1fd0830",
+        "home_team": "Tottenham Hotspur",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Burnley",
+        "commence_time": "2026-01-17T15:00:00Z",
+        "event_id": "80cf233ec08173f3d8cf4645b687589d",
+        "home_team": "Liverpool",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Fulham",
+        "commence_time": "2026-01-17T15:00:00Z",
+        "event_id": "86609aa022312a15ec01d5bc0c172dbc",
+        "home_team": "Leeds United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brentford",
+        "commence_time": "2026-01-17T15:00:00Z",
+        "event_id": "876bd00ab1c4cff1c6635a8ac7f93d75",
+        "home_team": "Chelsea",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Crystal Palace",
+        "commence_time": "2026-01-17T15:00:00Z",
+        "event_id": "aa16a48d5e016963e076f7f5ecfc2f68",
+        "home_team": "Sunderland",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Arsenal",
+        "commence_time": "2026-01-17T17:30:00Z",
+        "event_id": "b145d15344a4fca80d42b39faa58a050",
+        "home_team": "Nottingham Forest",
+        "matching_confidence": 0.9416666666666668,
+        "status": "accepted"
+      },
+      {
+        "away_team": "Newcastle United",
+        "commence_time": "2026-01-18T14:00:00Z",
+        "event_id": "e15eb2362921b16a6b6a0397ce607a11",
+        "home_team": "Wolverhampton Wanderers",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Everton",
+        "commence_time": "2026-01-18T16:30:00Z",
+        "event_id": "80b312e80c4c6e8f267a99606665ac8c",
+        "home_team": "Aston Villa",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Chelsea",
+        "commence_time": "2026-04-21T19:00:00Z",
+        "event_id": "e6e88546df45a25ee81d07b597d91167",
+        "home_team": "Brighton and Hove Albion",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Manchester City",
+        "commence_time": "2026-04-22T19:00:00Z",
+        "event_id": "4a1a7f4a60859fc3ecc69d05f5729556",
+        "home_team": "Burnley",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Leeds United",
+        "commence_time": "2026-04-22T19:00:00Z",
+        "event_id": "690fef3d62fc4c8015481626d5aab274",
+        "home_team": "Bournemouth",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Nottingham Forest",
+        "commence_time": "2026-04-24T19:00:00Z",
+        "event_id": "1d779cd51003d8f01a9378594cea630e",
+        "home_team": "Sunderland",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Aston Villa",
+        "commence_time": "2026-04-25T11:30:00Z",
+        "event_id": "1cb5fdae7703fb61d1de571066050f9b",
+        "home_team": "Fulham",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Crystal Palace",
+        "commence_time": "2026-04-25T14:00:00Z",
+        "event_id": "8a5b7d24683637ab7350fe8a20af1a62",
+        "home_team": "Liverpool",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Tottenham Hotspur",
+        "commence_time": "2026-04-25T14:00:00Z",
+        "event_id": "c5137cd717098fbb38acd0236bc41b34",
+        "home_team": "Wolverhampton Wanderers",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Everton",
+        "commence_time": "2026-04-25T14:00:00Z",
+        "event_id": "e7eba73b41f6b75f5b4692376efb888a",
+        "home_team": "West Ham United",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Newcastle United",
+        "commence_time": "2026-04-25T16:30:00Z",
+        "event_id": "76829fec3394b52a992b0a21eedbccf6",
+        "home_team": "Arsenal",
+        "matching_confidence": null,
+        "status": "not_selected_sample_or_budget_limit"
+      },
+      {
+        "away_team": "Brentford",
+        "commence_time": "2026-04-27T19:00:00Z",
+        "event_id": "ea38471acf4d5944929f9025e151376d",
+        "home_team": "Manchester United",
+        "matching_confidence": 0.9366666666666666,
+        "status": "accepted"
+      }
+    ],
+    "funnel": {
+      "accepted_event_snapshots": 10,
+      "accepted_events": 10,
+      "completed_event_snapshots": 10,
+      "completed_requests": 10,
+      "consensus_ready_event_snapshots": 3,
+      "discovered_events": 111,
+      "not_selected_budget_limit": 20,
+      "not_selected_sample_limit": 81,
+      "planned_event_snapshots": 10,
+      "planned_requests": 10,
+      "provider_returned_event_snapshots": 10,
+      "reliably_matched_events": 10,
+      "requested_events": 30,
+      "selected_events": 10,
+      "winamax_ready_event_snapshots": 3
+    },
+    "gates": {
+      "consensus": {
+        "accepted": false,
+        "reason": "consensus_coverage_below_70_percent",
+        "status": "insufficient"
+      },
+      "provider_coverage": {
+        "accepted": true,
+        "reason": "provider coverage is calculated only on completed targets",
+        "status": "passed"
+      },
+      "result_matching": {
+        "accepted": true,
+        "reason": "reliable matching passed on returned events",
+        "status": "passed"
+      },
+      "statistical_evidence": {
+        "accepted": false,
+        "reason": "fewer than 30 accepted events; no statistical conclusion",
+        "status": "technical_validation"
+      },
+      "technical_integrity": {
+        "accepted": true,
+        "reason": "temporal, duplicate and budget controls passed",
+        "status": "passed"
+      },
+      "winamax": {
+        "accepted": false,
+        "reason": "winamax_coverage_below_70_percent",
+        "status": "insufficient"
+      }
+    },
+    "generated_at": "2026-08-03T12:33:35.891013+00:00",
+    "matching": {
+      "exact": 0,
+      "high_confidence": 10,
+      "manual_review": 0,
+      "rejected": 0
+    },
+    "next_action": "Keep this run as a technical validation; do not infer model performance from it.",
+    "plan_id": "bd891288074a30b2c01866e596afc4a4a5c355a812ccc6e3dd338d038512b64b",
+    "plan_request_id": "REQ-8D7E4D0D7D916A88FB23446C",
+    "quality_gate": {
+      "accepted": true,
+      "reason": "pipeline validated on a very small accepted sample",
+      "status": "technical_validation"
+    },
+    "rates": {
+      "consensus_coverage": 0.3,
+      "duplicate": 0.0,
+      "event_coverage": 1.0,
+      "provider_return_coverage": 1.0,
+      "reliable_matching": 1.0,
+      "temporal_violation": 0.0,
+      "winamax_coverage": 0.3
+    },
+    "responsible_use": {
+      "automatic_bet_placement": false,
+      "experimental_analysis": true,
+      "profitability_claim": false,
+      "stake_recommendation": false
+    },
+    "schema_version": "2.0",
+    "selection_status_source": "legacy_reconstructed",
+    "warnings": [
+      "consensus_coverage_below_70_percent",
+      "winamax_coverage_below_70_percent",
+      "fewer_than_30_accepted_events;_no_statistical_conclusion"
+    ]
+  },
   "integration_status": {
     "local_validation": {
       "javascript_syntax": "passed",
@@ -74,49 +1186,70 @@
     "The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.",
     "Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.",
     "Use Run evidence campaign in dry_run mode before approving a paid stage.",
+    "Stage 100 remains blocked until a real V4.1 stage-30 report returns PASS.",
+    "A consensus requires at least two independent bookmakers after Winamax exclusion.",
     "No model promotion is automatic, even when all evidence gates pass."
   ],
-  "model_decision": null,
-  "next_priority": "Use GitHub Actions → Run evidence campaign → dry_run before any paid stage.",
+  "model_decision": {
+    "automatic_promotion": false,
+    "historical_predictions": 0,
+    "live_shadow_predictions": 0,
+    "next_action": "Create and review the immutable 30-event EPL validation backfill plan.",
+    "profitability_claim": false,
+    "reason": "No real historical champion–challenger benchmark was executed in the delivered package.",
+    "status": "not_evaluable"
+  },
+  "next_priority": "Deploy V4.1, verify /api/ready and /api/release, then run stage 30 in dry_run before any paid stage.",
   "project": "Sports Prediction Lab",
   "release": {
     "app": {
       "deployment_id": null,
-      "environment": "test",
+      "environment": "development",
       "name": "sports-prediction-lab",
       "service_id": null,
-      "source_commit": "unknown",
-      "source_commit_short": "unknown",
-      "version": "4.0.0"
+      "source_commit": "8b67f7b002dc53910e7558855cbc6489871382c9",
+      "source_commit_short": "8b67f7b002dc",
+      "version": "4.1.0"
     },
     "football_model": {
-      "artifact_sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5",
-      "dataset_cutoff": null,
-      "dataset_rows": null,
-      "dataset_sha256": null,
-      "model_version": "snapshot",
-      "promoted": false,
-      "promotion": null,
-      "trained_until": null
+      "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
+      "dataset_cutoff": "2026-05-24T00:00:00+00:00",
+      "dataset_rows": 1900,
+      "dataset_sha256": "ae48ba7dc4715936f8891177f054c5a4799c681c0b65fc4bd7aea8031478eac7",
+      "model_version": "3.4.0-fresh",
+      "promoted": true,
+      "promotion": {
+        "checks": {
+          "better_than_naive": true,
+          "calibration": true,
+          "finite_log_loss": true,
+          "fresh_cutoff": true,
+          "minimum_rows": true,
+          "minimum_test_rows": true
+        },
+        "eligible": true,
+        "reasons": []
+      },
+      "trained_until": "2026-05-24T00:00:00+00:00"
     },
-    "generated_at_utc": "2026-08-03T13:12:57.229456+00:00",
+    "generated_at_utc": "2026-08-03T14:52:43.773509+00:00",
     "integrity": {
       "artifact_integrity_ok": true,
       "artifact_manifest_present": true,
       "artifacts": {
         "football_model.joblib": {
-          "bytes": 1188721,
-          "declared_sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5",
+          "bytes": 1750957,
+          "declared_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
           "matches_manifest": true,
           "present": true,
-          "sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5"
+          "sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4"
         },
         "metrics.json": {
-          "bytes": 1103,
-          "declared_sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6",
+          "bytes": 1615,
+          "declared_sha256": "35cbf2ddbbd2e82ba0fa0aef0c54899a2cba9d5a1ba5cddadda60752f44d4f25",
           "matches_manifest": true,
           "present": true,
-          "sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6"
+          "sha256": "35cbf2ddbbd2e82ba0fa0aef0c54899a2cba9d5a1ba5cddadda60752f44d4f25"
         },
         "tennis_model.joblib": {
           "bytes": 625,
@@ -128,8 +1261,8 @@
       },
       "code_files": {
         ".github/workflows/deploy-production.yml": {
-          "bytes": 5271,
-          "sha256": "fa89df98d975efa1bf937c764b62492b878cc0fb86917933d1263b6bbd23383b"
+          "bytes": 5299,
+          "sha256": "0ee269e55179bf124ce790118ef779de50573abf1241b0d320fa36ca0ebea4ea"
         },
         ".github/workflows/estimate-historical-sample.yml": {
           "bytes": 3864,
@@ -140,28 +1273,28 @@
           "sha256": "c9790d74ecc6313dd27d52a9d64fab23e4ea17d29bff5299781491718260d90b"
         },
         ".github/workflows/rebuild-fresh-football.yml": {
-          "bytes": 5954,
-          "sha256": "ac6896bc2791e8ecc62382ed4fa530a1b1252b6caa927e377718a8fd7d152433"
+          "bytes": 5977,
+          "sha256": "51831687232b77278a297a8fec0f66c0df047f6a0c5e323129244243ec7a4736"
         },
         ".github/workflows/run-historical-sample.yml": {
-          "bytes": 15117,
-          "sha256": "735bca7509cce8d020de488f67ce2c5cdb735cd0efbb913129fa14b230e55285"
+          "bytes": 15311,
+          "sha256": "20d42506eb68f77403616aa1efc3400472ef05a9b4bdb5471e61d4a8bdc6eda6"
         },
         ".github/workflows/verify-production.yml": {
           "bytes": 3214,
-          "sha256": "941b9d3f3b03b37da36903e562fdda771abf18ec438ced75dbfa3ed9466b921c"
+          "sha256": "01192b91935d7fbde5806a6a97c5ad7999712223cf56de39725eaec4f034da32"
         },
         "Dockerfile": {
-          "bytes": 1118,
-          "sha256": "21fa1400ade5f370d167c47a95bb8e41f1e59434e534755824d4be3c1e8deaea"
+          "bytes": 1117,
+          "sha256": "699a22b7c94633ba93d863e17d339abf79235c59824c5edfa80c582244f86b27"
         },
         "railway.cron.toml": {
           "bytes": 217,
           "sha256": "123971d861b52475ec000cd81ac9813b6ef50026b49005ced763b70494653961"
         },
         "railway.toml": {
-          "bytes": 417,
-          "sha256": "564201ccd04402e8dd18fbba76749b0269f193edc433d541c76f85523c373306"
+          "bytes": 416,
+          "sha256": "c43ca6879fef6ba96a2380a09e0621e5627e222003fcf858fe3f7f0702b4cd16"
         },
         "sports_predictor/control_center.py": {
           "bytes": 12016,
@@ -172,16 +1305,16 @@
           "sha256": "4b4aa35f3fbcf36380b9bb36c53f539ac4d46810469ebea8cea180599ccbde70"
         },
         "sports_predictor/evidence_quality.py": {
-          "bytes": 26249,
-          "sha256": "722e4220c056c31b43f05a1ba2679d0ecb92aee7f9158ea223926d7031455a8c"
+          "bytes": 30410,
+          "sha256": "9def350420cf5ae3ca02375b39441d264a0703a48f4b89c73c6c8ba9bb9a576a"
         },
         "sports_predictor/fresh_rebuild.py": {
-          "bytes": 10219,
-          "sha256": "7b17d8b0d33b5c04a6ba9d795c6ba307f77ba96ba52d0217a25138ef60eaf4ca"
+          "bytes": 10257,
+          "sha256": "19e088dfa6ad939ff8f4e2f079bfc14d2f13edbdd7834532ac1d0ba06532c23a"
         },
         "sports_predictor/release_registry.py": {
-          "bytes": 13294,
-          "sha256": "8b9a59dfd55aceb212d08707b6ca8507412c9ac080fa68c217e55ce98583c9f9"
+          "bytes": 13304,
+          "sha256": "bfd775e741f885595f84fb7dc16d3928bc79446bacf3c037ed85df53a2e6db2b"
         },
         "sports_predictor/sample_plan.py": {
           "bytes": 9057,
@@ -189,36 +1322,49 @@
         },
         "static/app.js": {
           "bytes": 37212,
-          "sha256": "96f169960fa60012b8bd9edfb3fb4a530e8768f27c803731e55718f67e0bf16d"
+          "sha256": "913fa31e45686b88ef01baba4e2e146fe6c1304de516ff55012403cf6208251b"
         },
         "static/index.html": {
-          "bytes": 24823,
-          "sha256": "36d88a4e9e26fc37b15b4580f4cf55f82d6c208c7c53359e01f44bb409555058"
+          "bytes": 24862,
+          "sha256": "817a58250cd24f0b5675cfcf2fe82fc6ad5be2ec0605f97367c5cfccf7f7c6e6"
         },
         "webapp.py": {
-          "bytes": 68296,
-          "sha256": "c61da1839c26a20a57995f352870f8d80aee3c37dbb8c896ab2bc6ff02a83636"
+          "bytes": 68313,
+          "sha256": "4c58c163fc8501e0d1b0cf0de67121c41e8e51fb3f6ec4db0c65a658c7c6cb5c"
         }
       }
     },
     "metrics_digest": {
       "football": {
-        "accuracy": 0.6,
-        "brier": 0.5666607699239754,
-        "calibration_temperature": 4.999971938328189,
-        "dixon_coles_rho": -0.15,
-        "ece": 0.07807664560356356,
-        "log_loss": 0.9398655005299267,
+        "accuracy": 0.4605263157894737,
+        "brier": 0.6409275706193381,
+        "calibration_temperature": 1.9711817595785415,
+        "dixon_coles_rho": 0.015000000000000013,
+        "ece": 0.0958730475496105,
+        "log_loss": 1.0618926736262253,
         "ml_blend_weight": 0.0,
-        "ml_only_log_loss": 1.041535499339392,
-        "n_test": 20,
-        "naive_log_loss": 1.1159396906095167,
-        "poisson_dc_log_loss": 0.9398655005299267,
-        "rps": 0.34204281372195094
+        "ml_only_log_loss": 1.0410196388251696,
+        "n_test": 380,
+        "naive_log_loss": 1.0846018600662934,
+        "poisson_dc_log_loss": 1.0618926736262253,
+        "rps": 0.43954820365378716
       },
-      "fresh_rebuild": null
+      "fresh_rebuild": {
+        "accuracy": 0.4605263157894737,
+        "brier": 0.6409275706193381,
+        "calibration_temperature": 1.9711817595785415,
+        "dixon_coles_rho": 0.015000000000000013,
+        "ece": 0.0958730475496105,
+        "log_loss": 1.0618926736262253,
+        "ml_blend_weight": 0.0,
+        "ml_only_log_loss": 1.0410196388251696,
+        "n_test": 380,
+        "naive_log_loss": 1.0846018600662934,
+        "poisson_dc_log_loss": 1.0618926736262253,
+        "rps": 0.43954820365378716
+      }
     },
-    "release_id": "31d852d41a4c2e8a0e70",
+    "release_id": "ca5bbdadc51d538dd902",
     "safety": {
       "automatic_bet_placement": false,
       "secrets_exported": false,
@@ -226,153 +1372,7 @@
     },
     "schema_version": "1.0"
   },
-  "release_manifest": {
-    "app": {
-      "deployment_id": null,
-      "environment": "development",
-      "name": "sports-prediction-lab",
-      "service_id": null,
-      "source_commit": "unknown",
-      "source_commit_short": "unknown",
-      "version": "3.9.0"
-    },
-    "football_model": {
-      "artifact_sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5",
-      "dataset_cutoff": null,
-      "dataset_rows": null,
-      "dataset_sha256": null,
-      "model_version": "snapshot",
-      "promoted": false,
-      "promotion": null,
-      "trained_until": null
-    },
-    "generated_at_utc": "2026-08-03T11:22:21.417198+00:00",
-    "integrity": {
-      "artifact_integrity_ok": true,
-      "artifact_manifest_present": true,
-      "artifacts": {
-        "football_model.joblib": {
-          "bytes": 1188721,
-          "declared_sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5",
-          "matches_manifest": true,
-          "present": true,
-          "sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5"
-        },
-        "metrics.json": {
-          "bytes": 1103,
-          "declared_sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6",
-          "matches_manifest": true,
-          "present": true,
-          "sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6"
-        },
-        "tennis_model.joblib": {
-          "bytes": 625,
-          "declared_sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658",
-          "matches_manifest": true,
-          "present": true,
-          "sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658"
-        }
-      },
-      "code_files": {
-        ".github/workflows/deploy-production.yml": {
-          "bytes": 5271,
-          "sha256": "c2c4d5dadca8584841661777d4c4870baa9145af08a57adba10ca2b91cadd4a0"
-        },
-        ".github/workflows/estimate-historical-sample.yml": {
-          "bytes": 3864,
-          "sha256": "33c143f53b24922c42efde2e68b6f67a0417ce5331df3beb6d40d0793487305c"
-        },
-        ".github/workflows/generate-handoff.yml": {
-          "bytes": 1279,
-          "sha256": "53f8a554f31012e76ca8c2fdefbe798cbc734a6660f3b48596d70af789430286"
-        },
-        ".github/workflows/rebuild-fresh-football.yml": {
-          "bytes": 5954,
-          "sha256": "7531dc09a438867f11d6d9a3250648cc2aa009029e1e087bdfeb205a4ef4f716"
-        },
-        ".github/workflows/run-historical-sample.yml": {
-          "bytes": 15117,
-          "sha256": "edf39df3d9c32df1b1fce398a3d7f6f41858142deda72c1802100da594dccbaa"
-        },
-        ".github/workflows/verify-production.yml": {
-          "bytes": 3214,
-          "sha256": "b0febf4ae826e839697673eb31d7f80fde9233eaeb5d8fc967d0a2bf61f9db5c"
-        },
-        "Dockerfile": {
-          "bytes": 1118,
-          "sha256": "21fa1400ade5f370d167c47a95bb8e41f1e59434e534755824d4be3c1e8deaea"
-        },
-        "railway.cron.toml": {
-          "bytes": 217,
-          "sha256": "123971d861b52475ec000cd81ac9813b6ef50026b49005ced763b70494653961"
-        },
-        "railway.toml": {
-          "bytes": 417,
-          "sha256": "564201ccd04402e8dd18fbba76749b0269f193edc433d541c76f85523c373306"
-        },
-        "sports_predictor/control_center.py": {
-          "bytes": 12016,
-          "sha256": "0dad0b3bb4595dbd2ce224043e00d37bb60da9294535602f09a2e23ff1bfb6ee"
-        },
-        "sports_predictor/database.py": {
-          "bytes": 58722,
-          "sha256": "4b4aa35f3fbcf36380b9bb36c53f539ac4d46810469ebea8cea180599ccbde70"
-        },
-        "sports_predictor/evidence_quality.py": {
-          "bytes": 26249,
-          "sha256": "e880dff82b498b11c9fe762cb71aa523a15c388f46fee3f1d41db924ef7c80f0"
-        },
-        "sports_predictor/fresh_rebuild.py": {
-          "bytes": 10219,
-          "sha256": "51045dcee82e23372c9b2cec9fd742841bc6efb488fc4c45379eeb0c3fa2d98f"
-        },
-        "sports_predictor/release_registry.py": {
-          "bytes": 13294,
-          "sha256": "11c4b89b31d3d87600ce100fb0628008c34805d95df694114f4175b5009ec6a1"
-        },
-        "sports_predictor/sample_plan.py": {
-          "bytes": 9057,
-          "sha256": "4d13557ec245d7c31e6f7d21e1756fb3ebc67b3b95f7b6f824ad2fb26d2193b5"
-        },
-        "static/app.js": {
-          "bytes": 35896,
-          "sha256": "84d7bba436f5603c29892f5a02535b2d71df5d32ba213406a7ac82a003846501"
-        },
-        "static/index.html": {
-          "bytes": 24054,
-          "sha256": "eea8b01fe35360565aea806d3f8f1dd61502ce28896bb28898fbc591ca11bf85"
-        },
-        "webapp.py": {
-          "bytes": 67168,
-          "sha256": "e099b399faaa27457aac07aee1c3c3bfcdaf814f6072813bd5f23cf3cc86e801"
-        }
-      }
-    },
-    "metrics_digest": {
-      "football": {
-        "accuracy": 0.6,
-        "brier": 0.5666607699239754,
-        "calibration_temperature": 4.999971938328189,
-        "dixon_coles_rho": -0.15,
-        "ece": 0.07807664560356356,
-        "log_loss": 0.9398655005299267,
-        "ml_blend_weight": 0.0,
-        "ml_only_log_loss": 1.041535499339392,
-        "n_test": 20,
-        "naive_log_loss": 1.1159396906095167,
-        "poisson_dc_log_loss": 0.9398655005299267,
-        "rps": 0.34204281372195094
-      },
-      "fresh_rebuild": null
-    },
-    "release_id": "69837ec080f93fa253b2",
-    "safety": {
-      "automatic_bet_placement": false,
-      "secrets_exported": false,
-      "staking_recommendations": false
-    },
-    "schema_version": "1.0"
-  },
+  "release_manifest": null,
   "safety": {
     "automatic_bet_placement": false,
     "secrets_exported": false,

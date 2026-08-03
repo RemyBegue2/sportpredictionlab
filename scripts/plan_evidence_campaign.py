@@ -13,7 +13,7 @@ from sports_predictor.evidence_campaign import build_campaign_plan, load_json
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build a zero-credit V4.0 evidence campaign plan.")
+    parser = argparse.ArgumentParser(description="Build a zero-credit V4.1 evidence campaign plan.")
     parser.add_argument("--mode", required=True)
     parser.add_argument("--target-stage", type=int, required=True)
     parser.add_argument("--max-credits", type=int, required=True)
@@ -47,6 +47,7 @@ def main() -> int:
         max_credits=args.max_credits,
         baseline=args.baseline,
         previous_evidence=previous,
+        current_campaign=previous_campaign,
         start_date=start_date,
         end_date=end_date,
     )

@@ -9,6 +9,14 @@ from typing import Any, Iterable, Mapping, Sequence
 
 import pandas as pd
 
+from .evidence_campaign import (
+    BASELINE_MIN_COVERAGE,
+    BASELINES,
+    MATCHING_MIN_COVERAGE,
+    PROVIDER_MIN_COVERAGE,
+)
+from .version import APP_VERSION
+
 
 @dataclass(frozen=True)
 class QualityGate:
@@ -92,7 +100,7 @@ def _target_key_frame(frame: pd.DataFrame | None, *, snapshot_column: str | None
 
 
 def _matching_counts(matches: pd.DataFrame | None, eligible_event_ids: set[str] | None = None) -> dict[str, int]:
-    statuses = {"exact": 0, "high_confidence": 0, "manual_review": 0, "rejected": 0}
+    statuses = {"exact": 0, "high_confidence": 0, "manual_review": 0, "collision": 0, "rejected": 0}
     if matches is None or matches.empty:
         return statuses
     data = matches.copy()
@@ -107,9 +115,22 @@ def _matching_counts(matches: pd.DataFrame | None, eligible_event_ids: set[str] 
             statuses["high_confidence"] += 1
         elif raw in {"ambiguous", "manual_review"}:
             statuses["manual_review"] += 1
+        elif raw == "collision":
+            statuses["collision"] += 1
         else:
             statuses["rejected"] += 1
     return statuses
+
+
+def _reliable_match_event_ids(matches: pd.DataFrame | None, eligible_event_ids: set[str] | None = None) -> set[str]:
+    if matches is None or matches.empty or "provider_event_id" not in matches.columns:
+        return set()
+    data = matches.copy()
+    if eligible_event_ids is not None:
+        data = data[data["provider_event_id"].astype(str).isin(eligible_event_ids)]
+    confidence = pd.to_numeric(data.get("confidence"), errors="coerce").fillna(0.0)
+    reliable = data[data.get("status").astype(str).eq("matched") & confidence.ge(0.90)]
+    return set(reliable["provider_event_id"].astype(str))
 
 
 def _complete_h2h_markets(clean: pd.DataFrame) -> pd.DataFrame:
@@ -153,13 +174,16 @@ def _bookmaker_coverage(
     *,
     targets: pd.DataFrame | None,
     requested_bookmakers: Sequence[str],
-) -> tuple[list[dict[str, Any]], int, int, int]:
+    winamax_key: str = "winamax_fr",
+) -> tuple[list[dict[str, Any]], int, int, int, set[str], set[str]]:
     target_keys = _target_key_frame(targets)
     if target_keys.empty:
         target_keys = _target_key_frame(clean, snapshot_column="requested_snapshot_at")
     denominator = int(len(target_keys))
     complete = _complete_h2h_markets(clean)
     complete = complete[complete["complete"]] if not complete.empty else complete
+    if not complete.empty and not target_keys.empty:
+        complete = complete.merge(target_keys, on=["event_id", "snapshot_key"], how="inner")
     rows: list[dict[str, Any]] = []
     for bookmaker in requested_bookmakers:
         present = complete[complete["bookmaker_key"].astype(str).eq(str(bookmaker))] if not complete.empty else complete
@@ -174,15 +198,20 @@ def _bookmaker_coverage(
             }
         )
     if complete.empty:
-        return rows, denominator, 0, 0
-    grouped = complete.groupby(["event_id", "snapshot_key"], dropna=False)["bookmaker_key"].nunique()
-    consensus_ready = int((grouped >= 2).sum())
-    winamax_ready = int(
-        complete.loc[complete["bookmaker_key"].astype(str).eq("winamax_fr"), ["event_id", "snapshot_key"]]
-        .drop_duplicates()
-        .shape[0]
-    )
-    return rows, denominator, consensus_ready, winamax_ready
+        return rows, denominator, 0, 0, set(), set()
+
+    independent = complete[~complete["bookmaker_key"].astype(str).eq(winamax_key)].copy()
+    independent_grouped = independent.groupby(["event_id", "snapshot_key"], dropna=False)["bookmaker_key"].nunique()
+    consensus_keys = {
+        (str(event_id), str(snapshot_key))
+        for (event_id, snapshot_key), count in independent_grouped.items()
+        if int(count) >= 2
+    }
+    winamax_rows = complete[complete["bookmaker_key"].astype(str).eq(winamax_key)][["event_id", "snapshot_key"]].drop_duplicates()
+    winamax_keys = {(str(row.event_id), str(row.snapshot_key)) for row in winamax_rows.itertuples(index=False)}
+    consensus_event_ids = {event_id for event_id, _ in consensus_keys}
+    winamax_event_ids = {event_id for event_id, _ in winamax_keys}
+    return rows, denominator, len(consensus_keys), len(winamax_keys), consensus_event_ids, winamax_event_ids
 
 
 def _gate(status: str, reason: str, accepted: bool) -> dict[str, Any]:
@@ -240,6 +269,8 @@ def _selection_ledger(
             match_status, confidence = match_by_event.get(event_id, ("not_evaluated", 0.0))
             if match_status == "ambiguous":
                 status = "matching_ambiguous"
+            elif match_status == "collision":
+                status = "matching_collision"
             elif match_status in {"unmatched", "rejected"}:
                 status = "result_missing_or_unmatched"
             else:
@@ -270,17 +301,29 @@ def build_evidence_quality_report(
     targets: pd.DataFrame | None = None,
     discovery_state: Mapping[str, Any] | None = None,
     event_selection: pd.DataFrame | None = None,
+    campaign_plan: Mapping[str, Any] | None = None,
+    baseline: str | None = None,
+    target_stage: int | None = None,
 ) -> dict[str, Any]:
-    """Build a V3.9 evidence report with explicit, non-overlapping denominators.
+    """Build a canonical V4.1 evidence report.
 
-    Discovered events are never treated as provider failures merely because the
-    immutable credit cap prevented them from being selected.  Provider coverage
-    is calculated only over event snapshots that the backfill actually planned
-    and completed.
+    Every consumer receives the same PASS/HOLD/FAIL verdict. Provider coverage
+    uses completed targets only, consensus excludes Winamax and requires two
+    independent bookmakers, and progression counts only unique events that are
+    temporal-valid, reliably matched and ready for the selected baseline.
     """
 
     plan = dict(plan or {})
     state = dict(state or {})
+    campaign_plan = dict(campaign_plan or {})
+    discovery_state = dict(discovery_state or {})
+    baseline = str(baseline or campaign_plan.get("baseline") or "consensus")
+    if baseline not in BASELINES:
+        raise ValueError(f"baseline must be one of {list(BASELINES)}")
+    resolved_target_stage = int(target_stage or campaign_plan.get("target_stage") or 30)
+    if resolved_target_stage <= 0:
+        raise ValueError("target_stage must be positive")
+
     events = events.copy() if events is not None else pd.DataFrame()
     requests = requests.copy() if requests is not None else pd.DataFrame()
     targets = targets.copy() if targets is not None else pd.DataFrame()
@@ -291,7 +334,6 @@ def build_evidence_quality_report(
         for column in ("event_id", "bookmaker_key", "market_key", "outcome_name", "requested_snapshot_at")
         if column in odds_rows.columns
     ]
-    duplicate_mask = odds_rows.duplicated(duplicate_columns, keep=False) if duplicate_columns else pd.Series(False, index=odds_rows.index)
     duplicate_rows = int(odds_rows.duplicated(duplicate_columns).sum()) if duplicate_columns else 0
     total_rows = int(len(odds_rows))
     accepted_rows = int(len(clean))
@@ -302,7 +344,7 @@ def build_evidence_quality_report(
         selected_event_ids = _unique_event_ids(clean)
     returned_event_ids = _unique_event_ids(clean)
 
-    discovered_events = len(discovered_event_ids) or _safe_int((discovery_state or {}).get("event_count"))
+    discovered_events = len(discovered_event_ids) or _safe_int(discovery_state.get("event_count"))
     requested_events = _safe_int(plan.get("requested_event_count"), discovered_events)
     selected_events = len(selected_event_ids) or _safe_int(plan.get("event_count"), discovered_events)
     requested_events = min(discovered_events, max(selected_events, requested_events)) if discovered_events else max(selected_events, requested_events)
@@ -329,6 +371,11 @@ def build_evidence_quality_report(
     completed_event_snapshots = int(len(completed_target_keys)) if not completed_target_keys.empty else (selected_events if completed_requests else 0)
 
     returned_keys = _target_key_frame(clean, snapshot_column="requested_snapshot_at")
+    if not returned_keys.empty and not completed_target_keys.empty:
+        returned_keys = returned_keys.merge(
+            completed_target_keys, on=["event_id", "snapshot_key"], how="inner"
+        ).drop_duplicates(["event_id", "snapshot_key"])
+    returned_event_ids = _unique_event_ids(returned_keys)
     returned_event_snapshots = int(len(returned_keys))
     accepted_event_snapshots = returned_event_snapshots
     accepted_events = len(returned_event_ids)
@@ -336,7 +383,14 @@ def build_evidence_quality_report(
     requested_bookmakers = [str(value) for value in plan.get("bookmakers") or []]
     if not requested_bookmakers and "bookmaker_key" in clean.columns:
         requested_bookmakers = sorted(clean["bookmaker_key"].dropna().astype(str).unique().tolist())
-    bookmaker_coverage, bookmaker_denominator, consensus_ready, winamax_ready = _bookmaker_coverage(
+    (
+        bookmaker_coverage,
+        bookmaker_denominator,
+        consensus_ready,
+        winamax_ready,
+        consensus_ready_ids,
+        winamax_ready_ids,
+    ) = _bookmaker_coverage(
         clean,
         targets=completed_target_keys,
         requested_bookmakers=requested_bookmakers,
@@ -346,6 +400,18 @@ def build_evidence_quality_report(
     matched_total = matching["exact"] + matching["high_confidence"]
     matching_denominator = sum(matching.values())
     matching_rate = matched_total / matching_denominator if matching_denominator else None
+    matching_collisions = int(matching.get("collision") or 0)
+    reliable_match_ids = _reliable_match_event_ids(matches, returned_event_ids if returned_event_ids else None)
+    consensus_benchmark_ready_ids = returned_event_ids & reliable_match_ids & consensus_ready_ids
+    winamax_benchmark_ready_ids = returned_event_ids & reliable_match_ids & winamax_ready_ids
+    benchmark_ready_events_by_baseline = {
+        "consensus": len(consensus_benchmark_ready_ids),
+        "winamax": len(winamax_benchmark_ready_ids),
+    }
+    benchmark_ready_ids = (
+        consensus_benchmark_ready_ids if baseline == "consensus" else winamax_benchmark_ready_ids
+    )
+    benchmark_ready_events = len(benchmark_ready_ids)
 
     temporal_violation_rate = len(temporal_issues) / total_rows if total_rows else 0.0
     duplicate_rate = duplicate_rows / total_rows if total_rows else 0.0
@@ -353,92 +419,96 @@ def build_evidence_quality_report(
     consensus_coverage_rate = consensus_ready / bookmaker_denominator if bookmaker_denominator else 0.0
     winamax_coverage_rate = winamax_ready / bookmaker_denominator if bookmaker_denominator else 0.0
 
-    integrity_reasons: list[str] = []
+    discovery_credits = _safe_int(discovery_state.get("consumed_credits"))
+    snapshot_credits = _safe_int(state.get("consumed_credits"))
+    total_credits = discovery_credits + snapshot_credits
+    global_credit_cap = _safe_int(campaign_plan.get("max_credits"), _safe_int(plan.get("max_credits")))
+
+    integrity_fail_reasons: list[str] = []
+    technical_hold_reasons: list[str] = []
     if total_rows == 0:
-        integrity_reasons.append("no_historical_odds_rows")
+        technical_hold_reasons.append("no_historical_odds_rows")
     if temporal_violation_rate > 0:
-        integrity_reasons.append("temporal_violations_detected")
-    if duplicate_rate > 0.01:
-        integrity_reasons.append("duplicate_rate_above_1_percent")
+        integrity_fail_reasons.append("temporal_violations_detected")
+    if duplicate_rows > 0:
+        integrity_fail_reasons.append("duplicate_rows_detected")
+    if matching_collisions > 0:
+        integrity_fail_reasons.append("matching_collisions_detected")
     if state and str(state.get("status") or "") != "completed":
-        integrity_reasons.append("backfill_not_completed")
-    max_credits = _safe_int(plan.get("max_credits"), 0)
-    if max_credits and _safe_int(state.get("consumed_credits")) > max_credits:
-        integrity_reasons.append("credit_cap_exceeded")
-    integrity_gate = (
-        _gate("blocked", integrity_reasons[0], False)
-        if integrity_reasons
-        else _gate("passed", "temporal, duplicate and budget controls passed", True)
-    )
+        technical_hold_reasons.append("backfill_not_completed")
+    if global_credit_cap and total_credits > global_credit_cap:
+        integrity_fail_reasons.append("credit_cap_exceeded")
+    if integrity_fail_reasons:
+        integrity_gate = _gate("FAIL", integrity_fail_reasons[0], False)
+    elif technical_hold_reasons:
+        integrity_gate = _gate("HOLD", technical_hold_reasons[0], False)
+    else:
+        integrity_gate = _gate("PASS", "temporal, duplicate, matching and budget controls passed", True)
 
     if completed_event_snapshots == 0:
-        provider_gate = _gate("not_evaluable", "no completed provider target exists", False)
-    elif provider_coverage_rate < 0.95:
-        provider_gate = _gate("blocked", "provider_return_rate_below_95_percent", False)
+        provider_gate = _gate("HOLD", "no_completed_provider_target", False)
+    elif provider_coverage_rate < PROVIDER_MIN_COVERAGE:
+        provider_gate = _gate("HOLD", "provider_return_rate_below_80_percent", False)
     else:
-        provider_gate = _gate("passed", "provider coverage is calculated only on completed targets", True)
+        provider_gate = _gate("PASS", "provider coverage passed on completed targets", True)
 
     if matches is None or matches.empty:
-        matching_gate = _gate("not_evaluated", "result matching was not available for this report", True)
+        matching_gate = _gate("HOLD", "result_matching_not_available", False)
     elif matching_denominator == 0:
-        matching_gate = _gate("not_evaluable", "no returned event was eligible for result matching", False)
-    elif matching_rate is not None and matching_rate < 0.95:
-        matching_gate = _gate("blocked", "reliable_matching_below_95_percent", False)
+        matching_gate = _gate("HOLD", "no_returned_event_eligible_for_matching", False)
+    elif matching_rate is not None and matching_rate < MATCHING_MIN_COVERAGE:
+        matching_gate = _gate("HOLD", "reliable_matching_below_95_percent", False)
     else:
-        matching_gate = _gate("passed", "reliable matching passed on returned events", True)
+        matching_gate = _gate("PASS", "reliable matching passed on returned events", True)
 
     if bookmaker_denominator == 0:
-        consensus_gate = _gate("not_evaluable", "no complete market target is available", False)
-        winamax_gate = _gate("not_evaluable", "no complete market target is available", False)
+        consensus_gate = _gate("HOLD", "no_complete_market_target", False)
+        winamax_gate = _gate("HOLD", "no_complete_market_target", False)
     else:
         consensus_gate = (
-            _gate("available", "at least two complete bookmakers cover most completed targets", True)
-            if consensus_coverage_rate >= 0.70
-            else _gate("insufficient", "consensus_coverage_below_70_percent", False)
+            _gate("PASS", "two independent bookmakers cover at least 70 percent of targets", True)
+            if consensus_coverage_rate >= BASELINE_MIN_COVERAGE
+            else _gate("HOLD", "consensus_coverage_below_70_percent", False)
         )
         winamax_gate = (
-            _gate("available", "Winamax coverage is sufficient for a dedicated comparison", True)
-            if winamax_coverage_rate >= 0.70
-            else _gate("insufficient", "winamax_coverage_below_70_percent", False)
+            _gate("PASS", "Winamax covers at least 70 percent of targets", True)
+            if winamax_coverage_rate >= BASELINE_MIN_COVERAGE
+            else _gate("HOLD", "winamax_coverage_below_70_percent", False)
         )
+    selected_baseline_gate = consensus_gate if baseline == "consensus" else winamax_gate
 
-    if accepted_events < 30:
-        statistical_gate = _gate("technical_validation", "fewer than 30 accepted events; no statistical conclusion", False)
-    elif accepted_events < 100:
-        statistical_gate = _gate("pipeline_validation", "30 to 99 accepted events; pipeline validation only", False)
-    elif accepted_events < 300:
-        statistical_gate = _gate("exploratory", "100 to 299 accepted events; exploratory evidence only", False)
-    elif accepted_events < 1000:
-        statistical_gate = _gate("preliminary", "300 to 999 accepted events; preliminary analysis only", False)
+    if benchmark_ready_events < 30:
+        statistical_gate = _gate("HOLD", "fewer_than_30_benchmark_ready_events", False)
+    elif benchmark_ready_events < 100:
+        statistical_gate = _gate("HOLD", "30_to_99_events_pipeline_validation_only", False)
+    elif benchmark_ready_events < 300:
+        statistical_gate = _gate("HOLD", "100_to_299_events_exploratory_only", False)
+    elif benchmark_ready_events < 1000:
+        statistical_gate = _gate("HOLD", "300_to_999_events_preliminary_only", False)
     else:
-        statistical_gate = _gate("analysis_ready", "at least 1000 accepted events", True)
+        statistical_gate = _gate("PASS", "at_least_1000_benchmark_ready_events", True)
 
-    blockers: list[str] = []
+    hold_reasons: list[str] = list(technical_hold_reasons)
+    for gate in (provider_gate, matching_gate, selected_baseline_gate):
+        if not gate["accepted"]:
+            hold_reasons.append(str(gate["reason"]))
+    if benchmark_ready_events < resolved_target_stage:
+        hold_reasons.append(f"benchmark_ready_events_below_target_{resolved_target_stage}")
+
+    if integrity_fail_reasons:
+        decision_gate = QualityGate("FAIL", integrity_fail_reasons[0], False)
+    elif hold_reasons:
+        decision_gate = QualityGate("HOLD", hold_reasons[0], False)
+    else:
+        decision_gate = QualityGate("PASS", "all canonical quality and stage checks passed", True)
+
     warnings: list[str] = []
-    blockers.extend(integrity_reasons)
-    if provider_gate["status"] == "blocked":
-        blockers.append(str(provider_gate["reason"]))
-    if matching_gate["status"] == "blocked":
-        blockers.append(str(matching_gate["reason"]))
-    if duplicate_rows and duplicate_rate <= 0.01:
-        warnings.append("duplicate_rows_present")
-    if consensus_gate["status"] == "insufficient":
-        warnings.append("consensus_coverage_below_70_percent")
-    if winamax_gate["status"] == "insufficient":
-        warnings.append("winamax_coverage_below_70_percent")
-    if statistical_gate["status"] != "analysis_ready":
-        warnings.append(str(statistical_gate["reason"]).replace(" ", "_"))
-
-    if blockers:
-        overall_gate = QualityGate("blocked", blockers[0], False)
-    elif accepted_events < 30:
-        overall_gate = QualityGate("technical_validation", "pipeline validated on a very small accepted sample", True)
-    elif accepted_events < 100:
-        overall_gate = QualityGate("pipeline_validation", "pipeline passed; sample remains too small for inference", True)
-    elif accepted_events < 1000:
-        overall_gate = QualityGate("exploratory", "data quality passed; statistical evidence remains preliminary", True)
-    else:
-        overall_gate = QualityGate("analysis_ready", "quality gates passed for a first serious statistical analysis", True)
+    if statistical_gate["status"] != "PASS":
+        warnings.append(str(statistical_gate["reason"]))
+    if baseline == "consensus" and not winamax_gate["accepted"]:
+        warnings.append("winamax_coverage_insufficient_for_dedicated_comparison")
+    if baseline == "winamax" and not consensus_gate["accepted"]:
+        warnings.append("consensus_coverage_insufficient_for_secondary_comparison")
 
     ledger, selection_source = _selection_ledger(
         events,
@@ -461,27 +531,41 @@ def build_evidence_quality_report(
             "closing_line_value": benchmark.get("closing_line_value"),
         }
 
-    next_action = "Recompute the latest evidence from the GitHub artifact; this consumes zero provider credits."
-    if not blockers and accepted_events < 30:
-        next_action = "Keep this run as a technical validation; do not infer model performance from it."
-    elif not blockers and consensus_gate["accepted"]:
-        next_action = "Review the consensus benchmark before approving any larger capped sample."
+    if decision_gate.status == "PASS":
+        next_action = "Review the canonical report before manually approving the next stage."
+    elif decision_gate.status == "FAIL":
+        next_action = "Stop progression and correct the integrity failure before any provider call."
+    else:
+        next_action = "Keep the campaign on hold until the reported coverage and stage requirements are met."
 
     return {
-        "schema_version": "2.0",
-        "app_version": "4.0.0",
+        "schema_version": "3.0",
+        "app_version": APP_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "plan_id": plan.get("plan_id"),
         "plan_request_id": plan.get("plan_request_id"),
+        "campaign_id": campaign_plan.get("campaign_id"),
+        "campaign_key": campaign_plan.get("campaign_key"),
+        "baseline": baseline,
+        "target_stage": resolved_target_stage,
         "backfill_status": state.get("status") or "not_run",
-        "consumed_credits": _safe_int(state.get("consumed_credits")),
-        "quality_gate": overall_gate.to_dict(),
+        "consumed_credits": total_credits,
+        "credits": {
+            "discovery_credits": discovery_credits,
+            "snapshot_credits": snapshot_credits,
+            "total_credits": total_credits,
+            "maximum_credits": global_credit_cap,
+            "remaining_credits": max(0, global_credit_cap - total_credits) if global_credit_cap else None,
+        },
+        "decision_gate": decision_gate.to_dict(),
+        "quality_gate": decision_gate.to_dict(),
         "gates": {
             "technical_integrity": integrity_gate,
             "provider_coverage": provider_gate,
             "result_matching": matching_gate,
             "consensus": consensus_gate,
             "winamax": winamax_gate,
+            "selected_baseline": selected_baseline_gate,
             "statistical_evidence": statistical_gate,
         },
         "funnel": {
@@ -500,24 +584,28 @@ def build_evidence_quality_report(
             "reliably_matched_events": matched_total,
             "consensus_ready_event_snapshots": consensus_ready,
             "winamax_ready_event_snapshots": winamax_ready,
+            "consensus_ready_events": len(consensus_ready_ids),
+            "winamax_ready_events": len(winamax_ready_ids),
+            "benchmark_ready_events": benchmark_ready_events,
+            "benchmark_ready_events_by_baseline": benchmark_ready_events_by_baseline,
         },
         "counts": {
-            # Backward-compatible keys now use the correct selected-target denominator.
             "planned_events": selected_events,
             "discovered_events": discovered_events,
             "requested_events": requested_events,
             "selected_events": selected_events,
             "events_with_odds": accepted_events,
+            "benchmark_ready_events": benchmark_ready_events,
             "historical_odds_rows": total_rows,
             "accepted_rows": accepted_rows,
             "quarantined_temporal_rows": int(len(temporal_issues)),
             "duplicate_rows": duplicate_rows,
+            "matching_collisions": matching_collisions,
             "bookmakers": len(requested_bookmakers),
             "winamax_events": winamax_ready,
             "consensus_events": consensus_ready,
         },
         "rates": {
-            # event_coverage is retained for the V3.8 frontend but corrected.
             "event_coverage": provider_coverage_rate,
             "provider_return_coverage": provider_coverage_rate,
             "consensus_coverage": consensus_coverage_rate,
@@ -531,7 +619,7 @@ def build_evidence_quality_report(
         "event_outcome_counts": outcome_counts,
         "event_outcomes": ledger,
         "selection_status_source": selection_source,
-        "blockers": list(dict.fromkeys(blockers)),
+        "blockers": list(dict.fromkeys(integrity_fail_reasons + hold_reasons)),
         "warnings": list(dict.fromkeys(warnings)),
         "benchmark": benchmark_summary,
         "next_action": next_action,

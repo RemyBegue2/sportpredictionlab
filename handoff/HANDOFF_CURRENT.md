@@ -1,20 +1,20 @@
 # HANDOFF CURRENT — Sports Prediction Lab
 
-Generated: `2026-08-03T13:12:57.229937+00:00`
+Generated: `2026-08-03T14:52:43.774139+00:00`
 
 ## Verified repository state
 
-- App version: **4.0.0**
-- Git branch: `unknown`
-- Git commit: `unknown`
-- Release ID: `31d852d41a4c2e8a0e70`
-- Running/source commit detected locally: `unknown`
+- App version: **4.1.0**
+- Git branch: `master`
+- Git commit: `8b67f7b002dc53910e7558855cbc6489871382c9`
+- Release ID: `ca5bbdadc51d538dd902`
+- Running/source commit detected locally: `8b67f7b002dc53910e7558855cbc6489871382c9`
 - Artifact integrity: **OK**
-- Football model version: `snapshot`
-- Football model SHA-256: `88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5`
-- Dataset SHA-256: `None`
-- Dataset cutoff: `None`
-- Model promoted by rebuild: `False`
+- Football model version: `3.4.0-fresh`
+- Football model SHA-256: `04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4`
+- Dataset SHA-256: `ae48ba7dc4715936f8891177f054c5a4799c681c0b65fc4bd7aea8031478eac7`
+- Dataset cutoff: `2026-05-24T00:00:00+00:00`
+- Model promoted by rebuild: `True`
 
 ## Architecture
 
@@ -65,6 +65,8 @@ GitHub Actions
 - The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.
 - Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.
 - Use Run evidence campaign in dry_run mode before approving a paid stage.
+- Stage 100 remains blocked until a real V4.1 stage-30 report returns PASS.
+- A consensus requires at least two independent bookmakers after Winamax exclusion.
 - No model promotion is automatic, even when all evidence gates pass.
 
 ## Files to attach in a new conversation

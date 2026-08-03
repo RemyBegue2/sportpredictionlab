@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
 
 from sports_predictor.backfill_control import VALIDATION_EVENT_LIMIT, build_plan_identity
 from sports_predictor.odds_backtest import HistoricalPlan, build_historical_plan
+from sports_predictor.version import APP_VERSION
 
 DEFAULT_BOOKMAKERS = ["winamax_fr", "betclic_fr", "unibet_fr", "pmu_fr", "pinnacle"]
 
@@ -141,7 +142,7 @@ def main() -> int:
     )
     selection.to_csv(output / "event_selection.csv", index=False)
     summary = {
-        "version": "3.9.0",
+        "version": APP_VERSION,
         "sport_keys": sorted(plan.requests["sport_key"].astype(str).unique().tolist()),
         "available_event_count": int(available_events),
         "discovered_event_count": int(available_events),
