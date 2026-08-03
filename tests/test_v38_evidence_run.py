@@ -183,9 +183,13 @@ def test_v38_workflows_are_browser_operated_and_capped() -> None:
     run = (workflows / "run-historical-sample.yml").read_text(encoding="utf-8")
     assert "workflow_dispatch:" in estimate
     assert "Provider API calls executed: **0**" in estimate
-    assert "EXECUTE_APPROVED_SAMPLE" in run
+    assert "EXECUTE_SAMPLE" in run
     assert "scripts.build_evidence_report" in run
-    assert "Enforce quality gate after publishing the diagnostic" in run
+    assert "Record non-passing data-quality verdict" in run
+    assert "exit 4" not in run.split("Record non-passing data-quality verdict", 1)[1]
+    assert "plan_request_id:" not in run
+    assert "Plan request mismatch" not in run
+    assert "No manual plan identifier is required or compared." in run
     assert "max_odds_credits" in run
     assert "railway up" in run
 
@@ -261,3 +265,19 @@ def test_v383_workflow_uses_supported_historical_events_contract_and_global_cap(
     assert "commenceTimeFrom" not in historical_method
     assert "commenceTimeTo" not in historical_method
     assert "dateFormat" not in historical_method
+
+
+def test_discovery_counts_uncached_request_when_quota_cost_header_is_missing() -> None:
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "scripts" / "discover_historical_events.py").read_text(encoding="utf-8")
+    assert "response.quota.last_cost is not None else 1" in source
+
+
+def test_run_workflow_has_no_manual_plan_copy_or_expected_quality_failure() -> None:
+    root = Path(__file__).resolve().parents[1]
+    workflow = (root / ".github" / "workflows" / "run-historical-sample.yml").read_text(encoding="utf-8")
+    input_block = workflow.split("inputs:", 1)[1].split("permissions:", 1)[0]
+    assert "plan_request_id" not in input_block
+    assert "Plan request mismatch" not in workflow
+    assert "EXECUTE_SAMPLE" in workflow
+    assert "Record non-passing data-quality verdict" in workflow

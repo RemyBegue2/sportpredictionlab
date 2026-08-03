@@ -57,7 +57,7 @@ def test_control_center_blocks_unproven_release_and_database() -> None:
 
 def test_workflow_catalog_is_cloud_only_and_guarded() -> None:
     workflows = {item["id"]: item for item in WORKFLOW_CATALOG}
-    assert workflows["run-historical-sample"]["confirmation"] == "EXECUTE_APPROVED_SAMPLE"
+    assert workflows["run-historical-sample"]["confirmation"] == "EXECUTE_SAMPLE"
     assert workflows["rollback-production"]["confirmation"] == "ROLLBACK"
     assert workflows["generate-handoff"]["required_configuration"] == []
 
@@ -108,7 +108,7 @@ def test_all_cloud_workflows_are_manual_and_write_readable_summaries() -> None:
         assert "workflow_dispatch:" in text
         assert "GITHUB_STEP_SUMMARY" in text
     historical = (root / ".github" / "workflows" / "run-historical-sample.yml").read_text(encoding="utf-8")
-    assert "EXECUTE_APPROVED_SAMPLE" in historical
+    assert "EXECUTE_SAMPLE" in historical
     assert "scripts.estimate_historical_sample" in historical
 
 
@@ -148,7 +148,7 @@ def test_cloud_workflow_caps_and_rollback_are_operational() -> None:
     root = Path(__file__).resolve().parents[1]
     workflows = root / ".github" / "workflows"
     historical = (workflows / "run-historical-sample.yml").read_text(encoding="utf-8")
-    assert "EXECUTE_APPROVED_SAMPLE" in historical
+    assert "EXECUTE_SAMPLE" in historical
     assert "--max-odds-credits" in historical
 
     rollback = (workflows / "rollback-production.yml").read_text(encoding="utf-8")

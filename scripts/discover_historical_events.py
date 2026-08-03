@@ -153,7 +153,12 @@ def main() -> int:
             snapshot_at=item["snapshot_at"],
             force_refresh=args.force_refresh,
         )
-        actual_cost = 0 if response.from_cache else int(response.quota.last_cost or 0)
+        # The provider normally reports the request cost in its quota headers.
+        # If the header is absent, count one credit conservatively instead of
+        # treating an external request as free and risking a cap overrun.
+        actual_cost = 0 if response.from_cache else int(
+            response.quota.last_cost if response.quota.last_cost is not None else 1
+        )
         if actual_cost < 0:
             raise RuntimeError("Le fournisseur a renvoyé un coût de quota négatif")
         if consumed_credits + actual_cost > int(args.max_credits):

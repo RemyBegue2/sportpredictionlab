@@ -30,7 +30,7 @@ Conditions :
 
 - mêmes paramètres que l'estimation ;
 - `REQ-...` exact ;
-- confirmation `EXECUTE_APPROVED_SAMPLE` ;
+- confirmation `EXECUTE_SAMPLE` ;
 - clé The Odds API et base PostgreSQL configurées dans GitHub Secrets.
 
 ## Interpréter un workflow rouge

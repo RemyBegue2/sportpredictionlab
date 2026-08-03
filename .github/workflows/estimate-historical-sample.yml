@@ -78,5 +78,6 @@ jobs:
             echo "- Maximum unique odds snapshots within the cap: \`${MAX_SNAPSHOTS}\`"
             echo '- The execution will reduce the event sample automatically if needed.'
             echo '- Provider API calls executed: **0**'
-            echo '- Copy the Plan request ID into **Run historical sample** with the same parameters.'
+            echo '- No Plan ID needs to be copied.'
+            echo '- Launch **Run historical sample** with the chosen dates and caps; it rebuilds and records the plan itself.'
           } >> "$GITHUB_STEP_SUMMARY"

@@ -3,35 +3,31 @@ name: Run historical sample
 on:
   workflow_dispatch:
     inputs:
-      plan_request_id:
-        description: Exact REQ-... identifier produced by Estimate historical sample
-        required: true
-        type: string
       start_date:
-        description: Same start date used for the estimate
+        description: Start date YYYY-MM-DD
         required: true
         type: string
       end_date:
-        description: Same end date used for the estimate
+        description: End date YYYY-MM-DD (long ranges are sampled within the call cap)
         required: true
         type: string
       sample_events:
-        description: Same event cap used for the estimate
+        description: Event cap (1 to 30)
         required: true
         type: number
         default: 30
       max_discovery_calls:
-        description: Same discovery snapshot cap used for the estimate
+        description: Discovery snapshots spread across the requested range (1 to 31)
         required: true
         type: number
         default: 14
       max_odds_credits:
-        description: Same historical-odds credit cap used for the estimate
+        description: Global provider credit cap (10 to 200)
         required: true
         type: number
         default: 120
       confirmation:
-        description: Type EXECUTE_APPROVED_SAMPLE
+        description: Type EXECUTE_SAMPLE
         required: true
         type: string
 
@@ -55,6 +51,12 @@ jobs:
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
       EXPECTED_VERSION: '3.8.0'
+      INPUT_START_DATE: ${{ inputs.start_date }}
+      INPUT_END_DATE: ${{ inputs.end_date }}
+      INPUT_SAMPLE_EVENTS: ${{ inputs.sample_events }}
+      INPUT_MAX_DISCOVERY_CALLS: ${{ inputs.max_discovery_calls }}
+      INPUT_MAX_ODDS_CREDITS: ${{ inputs.max_odds_credits }}
+      INPUT_CONFIRMATION: ${{ inputs.confirmation }}
 
     steps:
       - uses: actions/checkout@v4
@@ -72,8 +74,9 @@ jobs:
 
           errors=()
 
-          if [ '${{ inputs.confirmation }}' != 'EXECUTE_APPROVED_SAMPLE' ]; then
-            errors+=("confirmation must equal EXECUTE_APPROVED_SAMPLE")
+          NORMALIZED_CONFIRMATION=$(printf '%s' "${INPUT_CONFIRMATION:-}" | tr -d '\r\n' | xargs)
+          if [ "$NORMALIZED_CONFIRMATION" != 'EXECUTE_SAMPLE' ]; then
+            errors+=("confirmation must equal EXECUTE_SAMPLE")
           fi
           [ -n "${THE_ODDS_API_KEY:-}" ] || errors+=("missing repository secret: THE_ODDS_API_KEY")
           [ -n "${DATABASE_URL:-}" ] || errors+=("missing repository secret: DATABASE_URL (use Railway Postgres DATABASE_PUBLIC_URL)")
@@ -109,18 +112,29 @@ jobs:
           fi
 
           echo 'All required historical-sample configuration is present.' >> "$GITHUB_STEP_SUMMARY"
-      - name: Rebuild and verify the zero-credit request plan
+      - name: Build the zero-credit execution plan
+        id: request_plan
         shell: bash
         run: |
           set -euo pipefail
           python -m scripts.estimate_historical_sample \
-            --start '${{ inputs.start_date }}' \
-            --end '${{ inputs.end_date }}' \
-            --sample-events '${{ inputs.sample_events }}' \
-            --max-discovery-calls '${{ inputs.max_discovery_calls }}' \
-            --max-odds-credits '${{ inputs.max_odds_credits }}'
-          ACTUAL=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['plan_request_id'])")
-          [ "$ACTUAL" = '${{ inputs.plan_request_id }}' ] || { echo "Plan request mismatch: expected $ACTUAL"; exit 3; }
+            --start "$INPUT_START_DATE" \
+            --end "$INPUT_END_DATE" \
+            --sample-events "$INPUT_SAMPLE_EVENTS" \
+            --max-discovery-calls "$INPUT_MAX_DISCOVERY_CALLS" \
+            --max-odds-credits "$INPUT_MAX_ODDS_CREDITS"
+          PLAN_ID=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['plan_request_id'])")
+          echo "plan_id=$PLAN_ID" >> "$GITHUB_OUTPUT"
+          {
+            echo '### Approved execution plan'
+            echo
+            echo "- Internal plan ID: \`$PLAN_ID\`"
+            echo "- Date range: \`$INPUT_START_DATE → $INPUT_END_DATE\`"
+            echo "- Requested events: \`$INPUT_SAMPLE_EVENTS\`"
+            echo "- Discovery-call cap: \`$INPUT_MAX_DISCOVERY_CALLS\`"
+            echo "- Global provider credit cap: \`$INPUT_MAX_ODDS_CREDITS\`"
+            echo '- No manual plan identifier is required or compared.'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Discover provider events within the global credit cap
         id: discovery
         shell: bash
@@ -128,16 +142,16 @@ jobs:
           set -euo pipefail
           python -m scripts.discover_historical_events \
             --sport-key soccer_epl \
-            --start '${{ inputs.start_date }}' \
-            --end '${{ inputs.end_date }}' \
-            --max-calls '${{ inputs.max_discovery_calls }}' \
-            --max-credits '${{ inputs.max_odds_credits }}' \
+            --start "$INPUT_START_DATE" \
+            --end "$INPUT_END_DATE" \
+            --max-calls "$INPUT_MAX_DISCOVERY_CALLS" \
+            --max-credits "$INPUT_MAX_ODDS_CREDITS" \
             --output data/odds_api/historical/events.csv \
             --execute
           USED=$(python -c "import json; print(int(json.load(open('data/odds_api/historical/event_discovery_state.json'))['consumed_credits']))")
-          REMAINING=$(( ${{ inputs.max_odds_credits }} - USED ))
+          REMAINING=$(( $INPUT_MAX_ODDS_CREDITS - USED ))
           if [ "$REMAINING" -lt 1 ]; then
-            echo "Discovery consumed the complete credit cap ($USED/${{ inputs.max_odds_credits }})."
+            echo "Discovery consumed the complete credit cap ($USED/$INPUT_MAX_ODDS_CREDITS)."
             exit 4
           fi
           echo "consumed_credits=$USED" >> "$GITHUB_OUTPUT"
@@ -150,7 +164,7 @@ jobs:
             --no-closing \
             --bookmakers winamax_fr betclic_fr unibet_fr pmu_fr pinnacle \
             --max-credits '${{ steps.discovery.outputs.remaining_credits }}' \
-            --sample-events '${{ inputs.sample_events }}' \
+            --sample-events "$INPUT_SAMPLE_EVENTS" \
             --plan-request-json artifacts/historical_sample_request.json \
             --output-dir data/odds_api/backfill \
             --register-job
@@ -273,7 +287,7 @@ jobs:
           {
             echo '### V3.8 historical sample'
             echo
-            echo "- Request plan: \`${{ inputs.plan_request_id }}\`"
+            echo "- Internal request plan: \`${{ steps.request_plan.outputs.plan_id }}\`"
             echo "- Quality status: \`${{ steps.quality.outputs.status }}\`"
             echo "- Quality accepted: \`${{ steps.quality.outputs.accepted }}\`"
             echo "- Discovery credits: \`${{ steps.discovery.outputs.consumed_credits }}\`"
@@ -287,8 +301,15 @@ jobs:
             echo "- Event coverage: \`$(jq -r '((.rates.event_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
             echo "- Winamax coverage: \`$(jq -r '((.rates.winamax_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
           fi
-      - name: Enforce quality gate after publishing the diagnostic
+      - name: Record non-passing data-quality verdict
         if: ${{ steps.quality.outputs.accepted != 'true' }}
+        shell: bash
         run: |
-          echo 'The evidence report was published, but the data-quality gate is blocked.'
-          exit 4
+          echo '::warning::The cloud run completed and published its evidence report, but the data-quality verdict is blocked.'
+          {
+            echo
+            echo '#### Data-quality verdict'
+            echo
+            echo 'The technical workflow completed. The evidence is **not approved for model-performance conclusions**.'
+            echo 'This analytical verdict does not turn a completed collection into an infrastructure failure.'
+          } >> "$GITHUB_STEP_SUMMARY"
