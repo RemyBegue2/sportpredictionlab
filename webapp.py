@@ -160,9 +160,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V3.8 Cloud Evidence Run",
+    title="Sports Prediction Lab V3.9 Data Reliability",
     version=APP_VERSION,
-    description="Cloud-first evidence edition operated from GitHub Actions and Railway, with zero-credit estimates, capped historical samples, data-quality gates and secret-free handoff artifacts.",
+    description="Cloud-first data-reliability edition with explicit coverage denominators, zero-credit evidence recomputation, bookmaker matrices and leakage-safe quality gates.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -315,7 +315,7 @@ def resources() -> dict[str, Any]:
     fresh_rebuild_path = artifact_dir / "fresh_rebuild_report.json"
     fresh_rebuild = json.loads(fresh_rebuild_path.read_text(encoding="utf-8")) if fresh_rebuild_path.exists() else None
     football_model_version = (
-        f"{fresh_rebuild.get('version', '3.8.0')}-fresh"
+        f"{fresh_rebuild.get('version', '3.9.0')}-fresh"
         if fresh_rebuild and fresh_rebuild.get("promoted")
         else "3.3.0-snapshot"
     )
@@ -1351,26 +1351,58 @@ def market_benchmark_summary(sport_key: str = "soccer_epl") -> dict[str, Any]:
 
 @app.get("/api/evidence")
 def evidence_report() -> dict[str, Any]:
-    artifact = ROOT / "artifacts" / "evidence_report_v3_8.json"
-    if not artifact.exists():
+    candidates = [
+        ROOT / "artifacts" / "evidence_report_v3_9.json",
+        ROOT / "artifacts" / "evidence_report_v3_8.json",
+    ]
+    artifact = next((path for path in candidates if path.exists()), None)
+    if artifact is None:
         return {
             "source": "none",
             "report": {
+                "schema_version": "2.0",
                 "app_version": APP_VERSION,
                 "quality_gate": {"status": "not_run", "accepted": False, "reason": "no historical evidence report has been published"},
+                "gates": {},
+                "funnel": {},
                 "counts": {},
                 "rates": {},
+                "bookmaker_coverage": [],
                 "blockers": [],
                 "warnings": [],
                 "responsible_use": {"profitability_claim": False, "stake_recommendation": False, "automatic_bet_placement": False},
             },
-            "required_next_step": "GitHub Actions → Estimate historical sample → Run workflow.",
+            "required_next_step": "GitHub Actions → Recompute latest evidence → Run workflow (zero provider credits).",
         }
     try:
         report = json.loads(artifact.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise HTTPException(status_code=503, detail=f"Evidence report unreadable: {type(exc).__name__}") from exc
-    return {"source": "artifact", "report": report}
+    if artifact.name == "evidence_report_v3_8.json" or str(report.get("schema_version") or "1.0") != "2.0":
+        return {
+            "source": "legacy_v3_8_requires_recompute",
+            "report": {
+                "schema_version": "2.0",
+                "app_version": APP_VERSION,
+                "quality_gate": {
+                    "status": "needs_recompute",
+                    "accepted": False,
+                    "reason": "legacy V3.8 denominators are not displayed because discovered events were mixed with executed targets",
+                },
+                "gates": {},
+                "funnel": {},
+                "counts": {},
+                "rates": {},
+                "bookmaker_coverage": [],
+                "consumed_credits": report.get("consumed_credits", 0),
+                "plan_request_id": report.get("plan_request_id"),
+                "blockers": ["legacy_denominators_require_zero_credit_recompute"],
+                "warnings": [],
+                "next_action": "GitHub Actions → Recompute latest evidence → Run workflow. This uses the saved artifact and consumes zero provider credits.",
+                "responsible_use": {"profitability_claim": False, "stake_recommendation": False, "automatic_bet_placement": False},
+            },
+        }
+    return {"source": artifact.name, "report": report}
 
 
 @app.get("/api/admin/data-quality")

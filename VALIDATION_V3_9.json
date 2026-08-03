@@ -1,0 +1,29 @@
+{
+  "version": "3.9.0",
+  "validation_date": "2026-08-03",
+  "tests": {
+    "command": "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q",
+    "passed": 135,
+    "failed": 0,
+    "duration_seconds": 27.75
+  },
+  "syntax": {
+    "python_compileall": "passed",
+    "javascript_node_check": "passed",
+    "workflow_yaml_files": 10,
+    "workflow_yaml_parse": "passed"
+  },
+  "regressions": {
+    "wrong_discovered_event_denominator": "covered",
+    "budget_excluded_events_are_not_provider_failures": "covered",
+    "winamax_and_consensus_gates_are_separate": "covered",
+    "legacy_v3_8_report_hidden_until_recompute": "covered",
+    "zero_credit_artifact_recompute_workflow": "covered"
+  },
+  "external_actions_not_executed_here": [
+    "GitHub artifact download from the user repository",
+    "Railway deployment",
+    "The Odds API call"
+  ],
+  "provider_credits_consumed_during_validation": 0
+}

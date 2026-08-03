@@ -23,7 +23,7 @@ jobs:
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       RAILWAY_CRON_SERVICE_ID: ${{ vars.RAILWAY_CRON_SERVICE_ID }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '3.8.0'
+      EXPECTED_VERSION: '3.9.0'
 
     steps:
       - name: Checkout repository
@@ -69,13 +69,13 @@ jobs:
           SOURCE_COMMIT: ${{ steps.generated_commit.outputs.head_sha }}
         run: |
           python -m scripts.generate_release_manifest
-          python -m scripts.build_handoff_bundle --output dist/sports-prediction-handoff-v3.8.zip
+          python -m scripts.build_handoff_bundle --output dist/sports-prediction-handoff-v3.9.zip
 
       - name: Upload handoff artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sports-prediction-handoff-v3.8-${{ github.run_id }}
-          path: dist/sports-prediction-handoff-v3.8.zip
+          name: sports-prediction-handoff-v3.9-${{ github.run_id }}
+          path: dist/sports-prediction-handoff-v3.9.zip
           if-no-files-found: error
           retention-days: 30
 

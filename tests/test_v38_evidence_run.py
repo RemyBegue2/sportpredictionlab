@@ -145,10 +145,11 @@ def test_canonical_event_identity_is_stable() -> None:
 def test_evidence_endpoint_and_frontend_contract(tmp_path: Path, monkeypatch) -> None:
     import webapp
 
-    artifact = webapp.ROOT / "artifacts" / "evidence_report_v3_8.json"
+    artifact = webapp.ROOT / "artifacts" / "evidence_report_v3_9.json"
     original = artifact.read_bytes() if artifact.exists() else None
     payload = {
-        "app_version": "3.8.0",
+        "schema_version": "2.0",
+        "app_version": "3.9.0",
         "quality_gate": {"status": "technical_validation", "accepted": True, "reason": "pipeline validated"},
         "counts": {"planned_events": 2, "events_with_odds": 2, "accepted_rows": 12},
         "rates": {"event_coverage": 1.0, "winamax_coverage": 1.0},
@@ -403,7 +404,7 @@ def test_v386_planner_is_database_independent_even_with_legacy_flag(tmp_path: Pa
 
     assert planner.main() == 0
     summary = json.loads((output_dir / "plan.json").read_text(encoding="utf-8"))
-    assert summary["version"] == "3.8.6"
+    assert summary["version"] == "3.9.0"
     assert summary["database_job_registration"] == "disabled_file_only"
 
 
@@ -412,8 +413,8 @@ def test_v386_workflow_verifies_root_level_file_only_planner() -> None:
     workflow = (root / ".github" / "workflows" / "run-historical-sample.yml").read_text(encoding="utf-8")
     planner = (root / "scripts" / "plan_historical_backfill.py").read_text(encoding="utf-8")
     assert "Verify file-only planner revision" in workflow
-    assert "V3.8.6 planner marker is missing" in workflow
+    assert "V3.9.0 planner marker is missing" in workflow
     assert "init_database" not in planner
     assert "create_backfill_job" not in planner
     assert "CloudSettings" not in planner
-    assert '"version": "3.8.6"' in planner
+    assert '"version": "3.9.0"' in planner

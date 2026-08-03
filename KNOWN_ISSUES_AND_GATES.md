@@ -1,25 +1,39 @@
-# Risques et portes — V3.8
+# Risques et portes V3.9
 
-## Portes bloquantes
+## Porte 1 — Artefact historique disponible
 
-- zéro ligne historique ;
-- snapshot à l'heure du match ou après ;
+Le recalcul zéro crédit exige un artefact GitHub non expiré nommé `historical-sample-evidence-*`.
+
+## Porte 2 — Intégrité technique
+
+Bloquants :
+
+- aucune ligne historique ;
+- violation temporelle ;
 - plus de 1 % de doublons ;
-- couverture événementielle inférieure à 95 % ;
-- matching fiable inférieur à 95 % lorsqu'un mapping est disponible ;
-- backfill non terminé ;
-- coût déclaré supérieur au plafond.
+- backfill incomplet ;
+- plafond de crédits dépassé.
 
-## Avertissements non bloquants
+## Porte 3 — Couverture fournisseur
 
-- couverture Winamax inférieure à 70 % ;
-- quelques doublons sous le seuil de 1 % ;
-- benchmark impossible faute de résultats ou de lignes complètes ;
-- moins de 100 observations : validation technique uniquement.
+Calculée uniquement sur les cibles exécutées. Seuil de contrôle : 95 %.
 
-## Limites connues
+## Porte 4 — Matching
 
-- le petit lot ne démontre pas la rentabilité ;
-- le coût réel reste confirmé par les en-têtes quota du fournisseur ;
-- la publication automatique du rapport suppose que le bot GitHub puisse pousser sur la branche ;
-- aucune recommandation de mise n'est produite.
+Calculé uniquement sur les événements retournés. Seuil de contrôle : 95 %.
+
+## Porte 5 — Consensus
+
+Disponible si au moins 70 % des cibles exécutées possèdent deux marchés bookmaker complets.
+
+## Porte 6 — Winamax
+
+Disponible si au moins 70 % des cibles exécutées possèdent un marché Winamax complet. Cette porte ne bloque pas une analyse du consensus.
+
+## Porte 7 — Preuve statistique
+
+Moins de 100 événements : aucune conclusion sur le modèle.
+
+## Décision actuelle
+
+Ne pas lancer de nouvelle collecte payante avant d’avoir exécuté le recalcul V3.9 et lu le funnel corrigé.

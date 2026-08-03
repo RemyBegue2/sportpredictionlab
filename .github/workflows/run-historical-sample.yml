@@ -49,7 +49,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '3.8.0'
+      EXPECTED_VERSION: '3.9.0'
       INPUT_START_DATE: ${{ inputs.start_date }}
       INPUT_END_DATE: ${{ inputs.end_date }}
       INPUT_SAMPLE_EVENTS: ${{ inputs.sample_events }}
@@ -157,15 +157,15 @@ jobs:
           found = [token for token in forbidden if token in source]
           if found:
               raise SystemExit(
-                  "V3.8.6 hotfix is not installed at the repository root; "
+                  "V3.9 planner is not installed at the repository root; "
                   f"old database planner tokens remain: {found}"
               )
-          if '"version": "3.8.6"' not in source:
+          if '"version": "3.9.0"' not in source:
               raise SystemExit(
-                  "V3.8.6 planner marker is missing. Replace the root-level "
+                  "V3.9.0 planner marker is missing. Replace the root-level "
                   "scripts/plan_historical_backfill.py file."
               )
-          print("Planner verified: V3.8.6 file-only, DATABASE_URL ignored.")
+          print("Planner verified: V3.9 file-only with explicit selection funnel.")
           PY
       - name: Build immutable budget-adapted provider plan
         run: |
@@ -206,7 +206,7 @@ jobs:
               --exploratory-predictions 100 \
               --minimum-train 30 \
               --folds 5 \
-              --output artifacts/market_benchmark_v3_8.json
+              --output artifacts/market_benchmark_v3_9.json
             BENCHMARK_CODE=$?
           else
             BENCHMARK_CODE=4
@@ -222,14 +222,20 @@ jobs:
           set +e
           python -m scripts.build_evidence_report \
             --matches-csv data/benchmark/event_mapping.csv \
-            --benchmark-json artifacts/market_benchmark_v3_8.json
+            --benchmark-json artifacts/market_benchmark_v3_9.json
           CODE=$?
           set -e
-          ACCEPTED=$(python -c "import json; print(str(json.load(open('artifacts/evidence_report_v3_8.json'))['quality_gate']['accepted']).lower())")
-          STATUS=$(python -c "import json; print(json.load(open('artifacts/evidence_report_v3_8.json'))['quality_gate']['status'])")
+          ACCEPTED=$(python -c "import json; print(str(json.load(open('artifacts/evidence_report_v3_9.json'))['quality_gate']['accepted']).lower())")
+          STATUS=$(python -c "import json; print(json.load(open('artifacts/evidence_report_v3_9.json'))['quality_gate']['status'])")
           echo "accepted=$ACCEPTED" >> "$GITHUB_OUTPUT"
           echo "status=$STATUS" >> "$GITHUB_OUTPUT"
           echo "report_exit_code=$CODE" >> "$GITHUB_OUTPUT"
+      - name: Export readable funnel tables
+        run: |
+          python -m scripts.export_evidence_tables \
+            --report artifacts/evidence_report_v3_9.json \
+            --events-output artifacts/event_outcomes_v3_9.csv \
+            --bookmakers-output artifacts/bookmaker_coverage_v3_9.csv
       - name: Commit evidence report
         id: evidence_commit
         shell: bash
@@ -237,11 +243,11 @@ jobs:
           set -euo pipefail
           git config user.name 'sports-prediction-bot'
           git config user.email 'sports-prediction-bot@users.noreply.github.com'
-          git add artifacts/evidence_report_v3_8.json
+          git add artifacts/evidence_report_v3_9.json artifacts/event_outcomes_v3_9.csv artifacts/bookmaker_coverage_v3_9.csv
           if git diff --cached --quiet; then
             echo 'changed=false' >> "$GITHUB_OUTPUT"
           else
-            git commit -m 'chore: publish V3.8 historical evidence report'
+            git commit -m 'chore: publish V3.9 coverage funnel'
             git push
             echo 'changed=true' >> "$GITHUB_OUTPUT"
           fi
@@ -255,7 +261,7 @@ jobs:
       - name: Deploy evidence dashboard to Railway
         run: |
           railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
-            --service "$RAILWAY_WEB_SERVICE" --message "V3.8 evidence ${{ steps.evidence_commit.outputs.head_sha }}"
+            --service "$RAILWAY_WEB_SERVICE" --message "V3.9 evidence ${{ steps.evidence_commit.outputs.head_sha }}"
       - name: Verify deployed release
         shell: bash
         run: |
@@ -273,8 +279,10 @@ jobs:
           name: historical-sample-evidence-${{ github.run_id }}
           path: |
             artifacts/historical_sample_request.json
-            artifacts/evidence_report_v3_8.json
-            artifacts/market_benchmark_v3_8.json
+            artifacts/evidence_report_v3_9.json
+            artifacts/event_outcomes_v3_9.csv
+            artifacts/bookmaker_coverage_v3_9.csv
+            artifacts/market_benchmark_v3_9.json
             data/benchmark/event_mapping.csv
             data/benchmark/evaluation_t-1h.csv
             data/benchmark/preparation_report.json
@@ -285,6 +293,7 @@ jobs:
             data/odds_api/backfill/state.json
             data/odds_api/backfill/requests.csv
             data/odds_api/backfill/targets.csv
+            data/odds_api/backfill/event_selection.csv
             data/odds_api/backfill/historical_odds_long.csv
           if-no-files-found: warn
           retention-days: 30
@@ -293,7 +302,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo '### V3.8 historical sample'
+            echo '### V3.9 historical sample'
             echo
             echo "- Internal request plan: \`${{ steps.request_plan.outputs.plan_id }}\`"
             echo "- Quality status: \`${{ steps.quality.outputs.status }}\`"
@@ -302,12 +311,12 @@ jobs:
             echo "- Remaining odds cap: \`${{ steps.discovery.outputs.remaining_credits }}\`"
             echo "- Evidence commit: \`${{ steps.evidence_commit.outputs.head_sha }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [ -f artifacts/evidence_report_v3_8.json ]; then
-            echo "- Historical rows: \`$(jq -r '.counts.historical_odds_rows // 0' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Accepted rows: \`$(jq -r '.counts.accepted_rows // 0' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Temporal violations: \`$(jq -r '.counts.quarantined_temporal_rows // 0' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Event coverage: \`$(jq -r '((.rates.event_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Winamax coverage: \`$(jq -r '((.rates.winamax_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_8.json)\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f artifacts/evidence_report_v3_9.json ]; then
+            echo "- Historical rows: \`$(jq -r '.counts.historical_odds_rows // 0' artifacts/evidence_report_v3_9.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Accepted rows: \`$(jq -r '.counts.accepted_rows // 0' artifacts/evidence_report_v3_9.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Temporal violations: \`$(jq -r '.counts.quarantined_temporal_rows // 0' artifacts/evidence_report_v3_9.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Provider target coverage: \`$(jq -r '((.rates.event_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Winamax coverage: \`$(jq -r '((.rates.winamax_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`" >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Record non-passing data-quality verdict
         if: ${{ steps.quality.outputs.accepted != 'true' }}

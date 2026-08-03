@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.9.0 — Data Reliability & Coverage Funnel
+
+- corrige le dénominateur de couverture du premier lot historique ;
+- distingue les événements découverts, demandés, sélectionnés par le budget, exécutés et retournés ;
+- ajoute un statut final par événement et une matrice par bookmaker ;
+- sépare les portes intégrité, fournisseur, matching, consensus, Winamax et preuve statistique ;
+- ajoute le workflow zéro crédit `Recompute latest evidence` ;
+- empêche l’interface d’afficher les anciens ratios V3.8 avant recalcul ;
+- conserve l’exploitation GitHub Actions + Railway sans Python local.
+
 ## 3.5.0
 
 - preuve publique `/api/release` ;

@@ -149,19 +149,69 @@ function renderEvidence(data){
   const gate=report.quality_gate||{};
   const counts=report.counts||{};
   const rates=report.rates||{};
-  const labels={not_run:'Non exécutée',blocked:'Bloquée',technical_validation:'Validation technique',exploratory:'Exploratoire',analysis_ready:'Prête pour analyse'};
-  $('#evidenceGate').textContent=labels[gate.status]||gate.status||'Non exécutée';
-  $('#evidenceReason').textContent=gate.reason||data.required_next_step||'Aucun rapport historique publié.';
-  $('#evidenceCoverage').textContent=Number.isFinite(Number(rates.event_coverage))?`${(100*Number(rates.event_coverage)).toFixed(1)} %`:'0 %';
-  $('#evidenceWinamax').textContent=Number.isFinite(Number(rates.winamax_coverage))?`${(100*Number(rates.winamax_coverage)).toFixed(1)} %`:'0 %';
-  $('#evidenceCredits').textContent=report.consumed_credits??0;
-  $('#evidencePlan').textContent=report.plan_request_id?`Plan ${report.plan_request_id}`:'Aucun plan exécuté.';
-  $('#evidenceCounts').textContent=`${counts.events_with_odds??0}/${counts.planned_events??0} événements · ${counts.accepted_rows??0} lignes acceptées`;
+  const funnel=report.funnel||{};
+  const gates=report.gates||{};
+  const labels={not_run:'Non exécutée',needs_recompute:'Recalcul requis',blocked:'Bloquée',passed:'OK',available:'Disponible',insufficient:'Insuffisante',not_evaluable:'Non évaluable',not_evaluated:'Non évaluée',technical_validation:'Validation technique',pipeline_validation:'Validation du pipeline',exploratory:'Exploratoire',preliminary:'Préliminaire',analysis_ready:'Prête pour analyse'};
+  const labelStatus=value=>labels[value]||String(value||'Non évaluée').replaceAll('_',' ');
+  const pct=value=>Number.isFinite(Number(value))?`${(100*Number(value)).toFixed(1)} %`:'—';
+  const setText=(selector,value)=>{ const node=$(selector); if(node) node.textContent=value; };
+
+  setText('#evidenceGate',labelStatus(gate.status));
+  setText('#evidenceReason',gate.reason||report.next_action||data.required_next_step||'Aucun rapport historique publié.');
+  setText('#evidenceCoverage',pct(rates.provider_return_coverage??rates.event_coverage));
+  setText('#evidenceWinamax',pct(rates.winamax_coverage));
+  setText('#evidenceCredits',report.consumed_credits??0);
+  setText('#evidencePlan',report.plan_request_id?`Plan ${report.plan_request_id}`:(report.plan_id?`Plan ${report.plan_id}`:'Aucun plan exécuté.'));
+  setText('#evidenceCounts',`${funnel.provider_returned_event_snapshots??counts.events_with_odds??0}/${funnel.completed_event_snapshots??counts.planned_events??0} cibles retournées · ${counts.accepted_rows??0} lignes acceptées`);
+  setText('#evidenceWinamaxDetail',`${funnel.winamax_ready_event_snapshots??counts.winamax_events??0}/${funnel.planned_event_snapshots??counts.planned_events??0} cibles avec marché Winamax complet.`);
+
+  const gateCards=[
+    ['#evidenceIntegrity','#evidenceIntegrityReason',gates.technical_integrity],
+    ['#evidenceMatching','#evidenceMatchingReason',gates.result_matching],
+    ['#evidenceConsensus','#evidenceConsensusReason',gates.consensus],
+    ['#evidenceStatistical','#evidenceStatisticalReason',gates.statistical_evidence],
+  ];
+  gateCards.forEach(([titleSelector,reasonSelector,item])=>{
+    setText(titleSelector,labelStatus((item||{}).status));
+    setText(reasonSelector,(item||{}).reason||'Non évalué sur ce rapport.');
+  });
+
+  const funnelRows=[
+    ['Événements découverts',funnel.discovered_events??counts.discovered_events??0],
+    ['Demandés par le lot',funnel.requested_events??counts.requested_events??0],
+    ['Sélectionnés avec le budget',funnel.selected_events??counts.selected_events??counts.planned_events??0],
+    ['Écartés par limite d’échantillon',funnel.not_selected_sample_limit??0],
+    ['Écartés par plafond de crédits',funnel.not_selected_budget_limit??0],
+    ['Requêtes planifiées',funnel.planned_requests??0],
+    ['Requêtes terminées',funnel.completed_requests??0],
+    ['Cibles événement/snapshot exécutées',funnel.completed_event_snapshots??0],
+    ['Cibles retournées par le fournisseur',funnel.provider_returned_event_snapshots??0],
+    ['Événements acceptés',funnel.accepted_events??counts.events_with_odds??0],
+    ['Événements rapprochés avec confiance',funnel.reliably_matched_events??0],
+    ['Cibles avec consensus',funnel.consensus_ready_event_snapshots??counts.consensus_events??0],
+    ['Cibles avec Winamax',funnel.winamax_ready_event_snapshots??counts.winamax_events??0],
+  ];
+  const funnelNode=$('#evidenceFunnel');
+  if(funnelNode){
+    funnelNode.innerHTML=`<table class="market-table"><thead><tr><th>Étape</th><th>Nombre</th></tr></thead><tbody>${funnelRows.map(([label,value])=>`<tr><td>${esc(label)}</td><td>${esc(String(value??0))}</td></tr>`).join('')}</tbody></table>`;
+  }
+
+  const bookmakerRows=Array.isArray(report.bookmaker_coverage)?report.bookmaker_coverage:[];
+  const bookmakerNode=$('#evidenceBookmakers');
+  if(bookmakerNode){
+    bookmakerNode.innerHTML=bookmakerRows.length?`<table class="market-table"><thead><tr><th>Bookmaker</th><th>Cibles demandées</th><th>Marchés complets</th><th>Absents/incomplets</th><th>Couverture</th></tr></thead><tbody>${bookmakerRows.map(row=>`<tr><td>${esc(row.bookmaker_key||'—')}</td><td>${esc(String(row.requested_event_snapshots??0))}</td><td>${esc(String(row.complete_event_snapshots??0))}</td><td>${esc(String(row.missing_or_incomplete_event_snapshots??0))}</td><td>${esc(pct(row.coverage))}</td></tr>`).join('')}</tbody></table>`:'<p>Aucune matrice bookmaker publiée.</p>';
+  }
+
   const items=[];
   (report.blockers||[]).forEach(value=>items.push({kind:'blocked',label:'Blocage',value}));
   (report.warnings||[]).forEach(value=>items.push({kind:'attention',label:'Avertissement',value}));
+  const outcomes=report.event_outcome_counts||{};
+  Object.entries(outcomes).filter(([status])=>status!=='accepted').forEach(([status,count])=>items.push({kind:'attention',label:`Événements : ${count}`,value:status}));
   if(!items.length) items.push({kind:'passed',label:'Contrôle',value:report.generated_at?'Aucune anomalie bloquante détectée.':'Aucun rapport publié.'});
-  $('#evidenceIssues').innerHTML=items.map(item=>`<article class="gate-card ${esc(item.kind)}"><small>${esc(item.label)}</small><h3>${esc(String(item.value).replaceAll('_',' '))}</h3><p>Les détails complets sont conservés dans l’artefact GitHub V3.8.</p></article>`).join('');
+  const issuesNode=$('#evidenceIssues');
+  if(issuesNode){
+    issuesNode.innerHTML=items.map(item=>`<article class="gate-card ${esc(item.kind)}"><small>${esc(item.label)}</small><h3>${esc(String(item.value).replaceAll('_',' '))}</h3><p>${esc(report.next_action||'Les détails sont conservés dans l’artefact GitHub V3.9.')}</p></article>`).join('');
+  }
 }
 
 async function refreshEvidence(){

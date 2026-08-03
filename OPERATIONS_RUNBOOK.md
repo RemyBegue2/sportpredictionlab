@@ -1,4 +1,4 @@
-# Runbook cloud V3.8
+# Runbook V3.9 — navigateur uniquement
 
 ## Déployer
 
@@ -6,38 +6,38 @@
 GitHub → Actions → Deploy production → Run workflow
 ```
 
-## Vérifier sans redéployer
+Version attendue : `3.9.0`.
+
+## Recalculer le dernier lot sans crédit
 
 ```text
-GitHub → Actions → Verify production → Run workflow
+GitHub → Actions → Recompute latest evidence → Run workflow
 ```
 
-## Estimer un lot historique sans crédit
+Configuration requise :
 
 ```text
-GitHub → Actions → Estimate historical sample → Run workflow
+RAILWAY_TOKEN
+RAILWAY_PROJECT_ID
+APP_PUBLIC_URL
 ```
 
-Télécharger l'artefact ou copier le `REQ-...` depuis le résumé.
-
-## Exécuter le lot
+Non requis :
 
 ```text
-GitHub → Actions → Run historical sample → Run workflow
+THE_ODDS_API_KEY
+DATABASE_URL
 ```
 
-Conditions :
+## Vérifier
 
-- mêmes paramètres que l'estimation ;
-- `REQ-...` exact ;
-- confirmation `EXECUTE_SAMPLE` ;
-- clé The Odds API et base PostgreSQL configurées dans GitHub Secrets.
+```text
+/api/health
+/api/release
+/api/evidence
+```
 
-## Interpréter un workflow rouge
-
-- erreur avant la collecte : problème de configuration ou de code ;
-- rapport publié puis étape `Enforce quality gate` rouge : données insuffisantes ou invalides ;
-- lire `artifacts/evidence_report_v3_8.json` dans l'artefact du workflow.
+Le rapport doit afficher un funnel et une matrice bookmaker. Une ancienne métrique V3.8 doit être remplacée par `Recalcul requis` tant que le workflow n’a pas terminé.
 
 ## Générer le pack de reprise
 
@@ -45,4 +45,11 @@ Conditions :
 GitHub → Actions → Generate handoff package → Run workflow
 ```
 
-Télécharger `sports-prediction-handoff-v3.8` dans la section Artifacts.
+Télécharger l’artefact `sports-prediction-handoff-v3.9`.
+
+## Ne pas faire
+
+- ne pas relancer un lot payant pour corriger un problème de dénominateur ;
+- ne pas modifier le modèle sur un petit lot ;
+- ne pas coller de secret dans le dépôt ou une conversation ;
+- ne pas utiliser « Re-run jobs » après un changement de workflow : lancer un nouveau run.

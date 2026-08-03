@@ -198,7 +198,7 @@ def rebuild_candidate(
     evaluation = evaluation_obj.to_dict()
     decision = promotion_decision(dataset=dataset, evaluation=evaluation, as_of=as_of, policy=policy)
     report = {
-        "version": "3.8.0",
+        "version": "3.9.0",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "dataset": {
             "path": str(data_path),

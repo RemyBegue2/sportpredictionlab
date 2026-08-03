@@ -1,26 +1,38 @@
-# START HERE — Sports Prediction Lab V3.8
+# START HERE — Sports Prediction Lab V3.9
 
-## État attendu
+## État actuel
 
-- Version : **3.8.0 Cloud Evidence Run**
-- Exploitation : GitHub Actions + Railway uniquement
-- Python local : non requis
-- Paris automatiques : désactivés
-- Promotion automatique : désactivée
+- Version cible : **3.9.0 Data Reliability & Coverage Funnel**.
+- Exploitation : GitHub Actions + Railway, aucun Python local.
+- Modèle : inchangé par la V3.9.
+- Dernier lot observé avant recalcul : 111 événements découverts, 10 avec cotes, 63 lignes acceptées, 100 crédits.
+- Problème corrigé : le rapport V3.8 divisait les événements avec cotes par tout le vivier découvert, y compris les événements jamais sélectionnés à cause du budget.
 
-## Première action
+## Première action dans une nouvelle conversation
 
-1. Vérifier `/api/release` et le badge `v3.8.0`.
-2. Ouvrir GitHub Actions → `Estimate historical sample`.
-3. Lancer un plan de 30 événements maximum.
-4. Copier le `REQ-...`.
-5. Ouvrir `Run historical sample` avec les mêmes paramètres.
-6. Lire l'artefact et la section **Preuves et benchmark**.
+Lire dans cet ordre :
 
-## Fichiers prioritaires à joindre en cas de nouvelle conversation
+1. `handoff/HANDOFF_CURRENT.md`
+2. `handoff/HANDOFF_CURRENT.json`
+3. `AUDIT_MULTI_ROLES_V3_9.md`
+4. `KNOWN_ISSUES_AND_GATES.md`
+5. le dernier log GitHub en cas d’échec
 
-- ce fichier ;
-- `handoff/HANDOFF_CURRENT.md` ;
-- `handoff/HANDOFF_CURRENT.json` ;
-- `artifacts/evidence_report_v3_8.json` s'il existe ;
-- le log GitHub Actions en cas d'échec.
+## Première action opérationnelle
+
+```text
+GitHub
+→ Actions
+→ Recompute latest evidence
+→ Run workflow
+```
+
+Ce workflow doit consommer zéro crédit fournisseur.
+
+## Règles non négociables
+
+- aucune commande Python locale ;
+- aucune mise conseillée ;
+- aucun pari automatique ;
+- aucune promotion automatique de modèle ;
+- aucune nouvelle collecte payante avant lecture du funnel V3.9 corrigé.

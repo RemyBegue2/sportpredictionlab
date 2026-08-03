@@ -1,0 +1,21 @@
+{
+  "version": "3.9.0",
+  "status": "ready_for_user_deploy",
+  "local_validation": {
+    "pytest_passed": 135,
+    "pytest_failed": 0,
+    "workflow_yaml_parsed": 10,
+    "javascript_syntax": "passed",
+    "python_compileall": "passed"
+  },
+  "production_validation": {
+    "railway_deployed_from_this_environment": false,
+    "latest_artifact_download_executed_from_this_environment": false,
+    "provider_calls_executed": 0
+  },
+  "required_user_actions": [
+    "Deploy production version 3.9.0",
+    "Run Recompute latest evidence",
+    "Generate a fresh V3.9 handoff package after production verification"
+  ]
+}

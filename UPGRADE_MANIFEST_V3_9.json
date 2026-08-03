@@ -1,0 +1,203 @@
+{
+  "schema_version": "1.0",
+  "version": "3.9.0",
+  "flat_archive": true,
+  "preserves_active_models_and_data": true,
+  "files": [
+    {
+      "path": ".env.example",
+      "size": 402,
+      "sha256": "ef1ef378fc3f4639238fb3be571a26b283fd39b87348c94f1840eaacb55a2bc5"
+    },
+    {
+      "path": ".github/workflows/deploy-production.yml",
+      "size": 5271,
+      "sha256": "c2c4d5dadca8584841661777d4c4870baa9145af08a57adba10ca2b91cadd4a0"
+    },
+    {
+      "path": ".github/workflows/generate-handoff.yml",
+      "size": 1279,
+      "sha256": "53f8a554f31012e76ca8c2fdefbe798cbc734a6660f3b48596d70af789430286"
+    },
+    {
+      "path": ".github/workflows/rebuild-fresh-football.yml",
+      "size": 5954,
+      "sha256": "7531dc09a438867f11d6d9a3250648cc2aa009029e1e087bdfeb205a4ef4f716"
+    },
+    {
+      "path": ".github/workflows/recompute-latest-evidence.yml",
+      "size": 7945,
+      "sha256": "7f15291b096307c0f6d63d6ef1b4eb7356ccfe687bb180024e54db9f1260f244"
+    },
+    {
+      "path": ".github/workflows/rollback-production.yml",
+      "size": 6229,
+      "sha256": "1d4a39bc03f6614b593ebe45cddf6c2f885515347b484ac79a53d02653162530"
+    },
+    {
+      "path": ".github/workflows/run-historical-sample.yml",
+      "size": 15117,
+      "sha256": "edf39df3d9c32df1b1fce398a3d7f6f41858142deda72c1802100da594dccbaa"
+    },
+    {
+      "path": ".github/workflows/verify-production.yml",
+      "size": 3214,
+      "sha256": "b0febf4ae826e839697673eb31d7f80fde9233eaeb5d8fc967d0a2bf61f9db5c"
+    },
+    {
+      "path": "AUDIT_MULTI_ROLES_V3_9.md",
+      "size": 7815,
+      "sha256": "f1d163b9bc3ceae5eef8e237cdbc541f1cc166f7181c39186701e62f69ce7937"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "size": 3492,
+      "sha256": "def692d0337d475c525192a9544a8704ad2a6e4d6b2acf2119a5a148f390bffc"
+    },
+    {
+      "path": "DECISION_LOG.md",
+      "size": 709,
+      "sha256": "857a5ec1c2b62628036592d60d6391369f631d758b391e7ffb8d96f9bede764b"
+    },
+    {
+      "path": "KNOWN_ISSUES_AND_GATES.md",
+      "size": 1110,
+      "sha256": "b72e6739042c3247ce2751551da4685b35b7529d29f153bd73fb4a23609d5eeb"
+    },
+    {
+      "path": "Makefile",
+      "size": 1038,
+      "sha256": "0140c1ad5789441ff4dc5659bcd292525594e68fed62dca42ed3bb8036e2ae98"
+    },
+    {
+      "path": "NEXT_CHAT_PROMPT.txt",
+      "size": 706,
+      "sha256": "e0bd3795ceadb08c2c294223686b95c742fb85c8b9fcb4326bdf0af990f460b0"
+    },
+    {
+      "path": "OPERATIONS_RUNBOOK.md",
+      "size": 1136,
+      "sha256": "3cc8b8cc889c4eb4aaaa8416a237b50205feccf2721d3fd6d9b496fc37d52ddf"
+    },
+    {
+      "path": "README.md",
+      "size": 3214,
+      "sha256": "0e535164e87732fddde0e45a05bdd284cd7a7c9ffd81ab6772dfcaf2482c1dd3"
+    },
+    {
+      "path": "RESULTATS_V3_9.md",
+      "size": 1768,
+      "sha256": "95b506ccf7338eefcb6fbbf7b5a59f17d79d17da4ebfed506ed4408f5355acb5"
+    },
+    {
+      "path": "START_HERE_NEXT_CHAT.md",
+      "size": 1176,
+      "sha256": "36d5a648b361977d9b23ddedb334593a0b56f2f2a64c2a8d684f311a949e573f"
+    },
+    {
+      "path": "UPGRADE_V3_9.md",
+      "size": 2692,
+      "sha256": "13f06d16c2235c654f8551c82ec6615b3da2eb0a1bd4259c92a0b0a2658847fc"
+    },
+    {
+      "path": "VALIDATION_V3_9.json",
+      "size": 891,
+      "sha256": "400702629e5e93a50eb8c8c0480e261b9cc7adbd652941740a928e948beb6d5c"
+    },
+    {
+      "path": "artifacts/integration_status_v3_9.json",
+      "size": 615,
+      "sha256": "f689586a450d48d96d568f02b1825d410519b57d3e0ec7b7a2c028d589c230b0"
+    },
+    {
+      "path": "artifacts/security_scan_v3_9.json",
+      "size": 435,
+      "sha256": "fc8fbb94a28228135e699d847ca13c199a3d465d61109525ea833f2d01d61e6a"
+    },
+    {
+      "path": "pyproject.toml",
+      "size": 920,
+      "sha256": "20e7917ae8a8cca56558a27552629486c63de21a3a2ca07a55d4c93671a4064d"
+    },
+    {
+      "path": "render.yaml",
+      "size": 2086,
+      "sha256": "58a7d949aa0b5ab2a9ad4189a7e3e16b6833e62ea86568ab600b8a81c52b3a93"
+    },
+    {
+      "path": "scripts/build_evidence_report.py",
+      "size": 2285,
+      "sha256": "a5cb4b8b19a7807f308e8f281863ef3fe41f0cac11a1025c813d228dc0dddebc"
+    },
+    {
+      "path": "scripts/build_handoff_bundle.py",
+      "size": 3233,
+      "sha256": "18b82ad03ec1a4812ba8c87af46556e42d516c7d70e32a8e83341ebdd1b0084f"
+    },
+    {
+      "path": "scripts/export_evidence_tables.py",
+      "size": 1533,
+      "sha256": "5169fa27c135192de735d1d4f6c3a5dac1e9110f0875ec379208465441922cf2"
+    },
+    {
+      "path": "scripts/export_handoff.py",
+      "size": 10097,
+      "sha256": "6580e6dac177b2075f69089f5e9f4ef3a0d6e8c6b6e1be08332628d0d45b8df4"
+    },
+    {
+      "path": "scripts/plan_historical_backfill.py",
+      "size": 9594,
+      "sha256": "8d277b0d5d73dc509f660375cb2a05c2bdda1c13b1a8930dd6184ab6d8f3fb2c"
+    },
+    {
+      "path": "sports_predictor/cloud_config.py",
+      "size": 4333,
+      "sha256": "0c01d0fa26da2436422a686ac29f89e400e65607b9256c344d9a9809cc5a9328"
+    },
+    {
+      "path": "sports_predictor/evidence_quality.py",
+      "size": 26249,
+      "sha256": "e880dff82b498b11c9fe762cb71aa523a15c388f46fee3f1d41db924ef7c80f0"
+    },
+    {
+      "path": "sports_predictor/fresh_rebuild.py",
+      "size": 10219,
+      "sha256": "51045dcee82e23372c9b2cec9fd742841bc6efb488fc4c45379eeb0c3fa2d98f"
+    },
+    {
+      "path": "sports_predictor/release_registry.py",
+      "size": 13294,
+      "sha256": "11c4b89b31d3d87600ce100fb0628008c34805d95df694114f4175b5009ec6a1"
+    },
+    {
+      "path": "static/app.js",
+      "size": 35896,
+      "sha256": "84d7bba436f5603c29892f5a02535b2d71df5d32ba213406a7ac82a003846501"
+    },
+    {
+      "path": "static/index.html",
+      "size": 24054,
+      "sha256": "eea8b01fe35360565aea806d3f8f1dd61502ce28896bb28898fbc591ca11bf85"
+    },
+    {
+      "path": "tests/test_v37_cloud_control.py",
+      "size": 7734,
+      "sha256": "678d627aa43bdefe09f42121ceca02cc9745adbe42583960fb4b18064de3c001"
+    },
+    {
+      "path": "tests/test_v38_evidence_run.py",
+      "size": 16291,
+      "sha256": "727076eb0008890bd7d7243a64261d76fbd7df2fdf7cf3e9e7553d900200a19f"
+    },
+    {
+      "path": "tests/test_v39_data_reliability.py",
+      "size": 7234,
+      "sha256": "49117cf20bee2f6cbc5c8b828d917c8622e9f960e5ba2f39c6246de74864fd8d"
+    },
+    {
+      "path": "webapp.py",
+      "size": 67168,
+      "sha256": "e099b399faaa27457aac07aee1c3c3bfcdaf814f6072813bd5f23cf3cc86e801"
+    }
+  ]
+}

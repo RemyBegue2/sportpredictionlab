@@ -101,9 +101,10 @@ def main() -> int:
     if available_events == 0:
         raise ValueError("No historical events were discovered; no provider odds plan can be created")
 
-    requested_event_count = available_events if args.full else max(1, min(int(args.sample_events), VALIDATION_EVENT_LIMIT))
+    requested_event_count = available_events if args.full else max(1, min(int(args.sample_events), VALIDATION_EVENT_LIMIT, available_events))
+    requested_sample = events.copy() if args.full else _evenly_spaced_sample(events, requested_event_count)
     if args.full:
-        selected_events = events
+        selected_events = requested_sample
         plan = build_historical_plan(
             selected_events,
             horizons_hours=args.horizons,
@@ -114,7 +115,7 @@ def main() -> int:
         )
     else:
         selected_events, plan = build_budget_capped_validation_plan(
-            events,
+            requested_sample,
             requested_events=requested_event_count,
             max_credits=int(args.max_credits),
             horizons=args.horizons,
@@ -129,12 +130,27 @@ def main() -> int:
     plan.requests.to_csv(output / "requests.csv", index=False)
     plan.targets.to_csv(output / "targets.csv", index=False)
     selected_count = int(selected_events["event_id"].nunique())
+    selected_ids = set(selected_events["event_id"].astype(str))
+    requested_ids = set(requested_sample["event_id"].astype(str))
+    selection_columns = [column for column in ("sport_key", "event_id", "commence_time", "home_team", "away_team") if column in events.columns]
+    selection = events[selection_columns].copy()
+    selection["selection_status"] = selection["event_id"].astype(str).map(
+        lambda event_id: "selected" if event_id in selected_ids else (
+            "not_selected_budget_limit" if event_id in requested_ids else "not_selected_sample_limit"
+        )
+    )
+    selection.to_csv(output / "event_selection.csv", index=False)
     summary = {
-        "version": "3.8.6",
+        "version": "3.9.0",
         "sport_keys": sorted(plan.requests["sport_key"].astype(str).unique().tolist()),
         "available_event_count": int(available_events),
+        "discovered_event_count": int(available_events),
         "requested_event_count": int(requested_event_count),
         "event_count": selected_count,
+        "selected_event_count": selected_count,
+        "not_selected_sample_limit": max(0, int(available_events) - int(requested_event_count)),
+        "not_selected_budget_limit": max(0, int(requested_event_count) - selected_count),
+        "event_selection_file": "event_selection.csv",
         "budget_limited": bool(not args.full and selected_count < min(requested_event_count, available_events)),
         "execution_mode": "full" if args.full else "validation",
         "validation_event_limit": VALIDATION_EVENT_LIMIT,
@@ -155,7 +171,7 @@ def main() -> int:
         summary["plan_request_id"] = request_plan.get("plan_request_id")
         summary["plan_request_sha256"] = __import__("hashlib").sha256(request_plan_path.read_bytes()).hexdigest()
     summary.update(build_plan_identity(summary, plan.requests, plan.targets))
-    # V3.8.6: planning is deliberately file-only.  Keep the historical
+    # V3.9: planning remains deliberately file-only.  Keep the historical
     # flag accepted for compatibility with older workflow revisions, but
     # never initialise SQLAlchemy or read DATABASE_URL in this command.
     if args.register_job:

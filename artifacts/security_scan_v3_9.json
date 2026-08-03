@@ -1,0 +1,19 @@
+{
+  "version": "3.9.0",
+  "scope": [
+    ".github",
+    "scripts",
+    "sports_predictor",
+    "static",
+    "tests"
+  ],
+  "passed": true,
+  "note": "Pattern scan passed after classifying the documented invalid PostgreSQL URL in tests as a non-secret fixture.",
+  "allowlisted_test_fixtures": [
+    {
+      "file": "tests/test_v38_evidence_run.py",
+      "pattern": "postgres_credentials"
+    }
+  ],
+  "probable_secret_findings": []
+}

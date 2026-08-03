@@ -1,130 +1,85 @@
-# Sports Prediction Lab V3.7 — Cloud Control Center
+# Sports Prediction Lab V3.9 — Data Reliability & Coverage Funnel
 
-Application privée de recherche football/tennis avec FastAPI, PostgreSQL, The Odds API, shadow mode pré-match et moteur champion–challenger.
+Application privée de recherche football/tennis avec FastAPI, Railway, PostgreSQL, The Odds API, shadow mode et moteur champion–challenger.
 
-La V3.7 rend l’exploitation **100 % navigateur** : GitHub Actions exécute les scripts et Railway héberge les services. Aucun Python n’est requis sur l’ordinateur de l’utilisateur.
+La V3.9 corrige le principal défaut du premier lot historique : les événements découverts mais non sélectionnés par le budget ne sont plus comptés comme des échecs fournisseur.
 
-## Nouveautés V3.7
+## Ce qui change
 
-- page **Centre de contrôle** et endpoint privé `/api/control-center` ;
-- statuts déterministes : opérationnel, en attente, action nécessaire ou bloqué ;
-- prochaines actions reliées au workflow GitHub exact à lancer ;
-- workflow **Deploy production** : tests, déploiement Railway, preuve `/api/release`, puis test Chromium authentifié ;
-- workflow **Verify production** sans redéploiement ;
-- workflows **Estimate historical sample** et **Run historical sample** avec estimation zéro crédit puis exécution plafonnée à 30 événements ;
-- workflow **Backup and verify database** avec restauration de contrôle ;
-- workflow **Rollback model release** restaurant les artefacts depuis un commit Git connu et protégé par confirmation explicite ;
-- workflow **Generate handoff package** produisant un ZIP directement joignable dans une nouvelle conversation ;
-- commit embarqué dans le manifeste de release, même lors d’un déploiement `railway up` sans dossier `.git` ;
-- résumés lisibles dans `GITHUB_STEP_SUMMARY` pour chaque opération.
+- funnel explicite : découvert → demandé → sélectionné → exécuté → retourné → rapproché → accepté ;
+- couverture fournisseur calculée sur les cibles réellement exécutées ;
+- matching calculé uniquement sur les événements réellement retournés ;
+- portes séparées pour intégrité, fournisseur, matching, consensus, Winamax et preuve statistique ;
+- matrice de couverture par bookmaker ;
+- statut final pour chaque événement ;
+- workflow **Recompute latest evidence** utilisant le dernier artefact GitHub sans nouvel appel The Odds API ;
+- masquage des métriques V3.8 trompeuses tant que le recalcul V3.9 n’a pas été exécuté ;
+- aucune dépendance à Python sur l’ordinateur de l’utilisateur.
 
-## Opérations courantes
-
-Dans GitHub :
+## Parcours recommandé
 
 ```text
-Actions
-→ choisir le workflow
-→ Run workflow
-→ remplir les paramètres
-→ lire le résumé du run
+1. Copier l’upgrade V3.9 à la racine du dépôt GitHub
+2. Définir MODEL_VERSION=3.9.0 sur sportpredictionlab et shadow-cron
+3. Actions → Deploy production → Run workflow
+4. Actions → Recompute latest evidence → Run workflow
+5. Lire la page Preuves, couverture et funnel
 ```
 
-Workflows disponibles :
+Le recalcul V3.9 consomme **zéro crédit fournisseur**. Il télécharge le dernier artefact `historical-sample-evidence-*`, recalcule les dénominateurs, publie le rapport puis redéploie le dashboard.
+
+## Workflows principaux
 
 ```text
 Deploy production
 Verify production
+Run historical sample
+Recompute latest evidence
 Rebuild fresh football model
-Estimate historical sample puis Run historical sample
 Backup and verify database
 Rollback model release
 Generate handoff package
 ```
 
-## Configuration GitHub nécessaire
+## Configuration GitHub
 
 ### Secrets
 
 ```text
 RAILWAY_TOKEN
 RAILWAY_PROJECT_ID
-APP_PASSWORD              test navigateur privé
-THE_ODDS_API_KEY          collecte historique
-DATABASE_URL              benchmark et sauvegarde PostgreSQL
-BACKUP_ENCRYPTION_PASSPHRASE  chiffrement de la sauvegarde (20 caractères minimum)
+APP_PASSWORD
+THE_ODDS_API_KEY          uniquement pour une nouvelle collecte
+DATABASE_URL              sauvegardes et autres opérations PostgreSQL
+BACKUP_ENCRYPTION_PASSPHRASE
 ```
 
 ### Variables
 
 ```text
 APP_PUBLIC_URL
-RAILWAY_ENVIRONMENT       production par défaut
-RAILWAY_WEB_SERVICE       sportpredictionlab par défaut
-RAILWAY_CRON_SERVICE      shadow-cron par défaut
+RAILWAY_ENVIRONMENT
+RAILWAY_WEB_SERVICE
+RAILWAY_CRON_SERVICE_ID
 ```
 
-Les workflows expliquent précisément la configuration manquante lorsqu’une opération est bloquée.
+`Recompute latest evidence` n’utilise pas `THE_ODDS_API_KEY` et ne lit pas `DATABASE_URL`.
 
-## Déploiement après l’upgrade
+## Lecture des résultats
 
-1. Remplacer les fichiers du dépôt par le contenu de l’archive V3.7, sans écraser les modèles ni les données actives.
-2. Créer un commit dans GitHub.
-3. Ouvrir **Actions → Deploy production → Run workflow**.
-4. Garder `deploy_web`, `deploy_cron` et `verify_browser` activés.
-5. Le run est considéré réussi seulement après vérification de la version, du commit, du hash du modèle et, par défaut, de l’interface privée dans Chromium.
+- **Intégrité technique** : horodatage, doublons, fin du backfill et plafond de crédits.
+- **Couverture fournisseur** : réponses reçues / cibles exécutées.
+- **Matching** : événements rapprochés de façon fiable / événements retournés.
+- **Consensus** : cibles possédant au moins deux marchés bookmaker complets.
+- **Winamax** : cibles possédant un marché Winamax complet.
+- **Preuve statistique** : taille d’échantillon indépendante de la qualité technique.
 
-## Premier benchmark historique
+Une couverture Winamax faible ne bloque plus automatiquement un benchmark contre le consensus.
 
-1. Ouvrir **Actions → Estimate historical sample**.
-2. Choisir `plan_only` : aucun crédit API n’est consommé.
-3. Télécharger et lire l’artefact de planification.
-4. Relancer avec `execute_sample`, un maximum de 30 événements et la confirmation `EXECUTE_SAMPLE`.
-5. Ne jamais lancer une période ou un plafond plus large avant examen du premier lot.
-
-## Reprise dans une autre conversation
-
-```text
-Actions
-→ Generate handoff package
-→ Run workflow
-→ télécharger sports-prediction-handoff-v3.8
-→ joindre le ZIP dans la nouvelle conversation
-```
-
-Le ZIP exclut les variables d’environnement, clés, tokens, mots de passe, cookies et URL de base de données.
-
-## Limites inchangées
+## Limites
 
 - aucune rentabilité démontrée ;
-- aucune promotion automatique de challenger ;
-- aucune taille de mise ;
-- aucune connexion à un compte Winamax ;
+- aucune recommandation de mise ;
 - aucun pari automatique ;
-- le tennis reste expérimental et non calibré.
-
-## V3.8 — Cloud Evidence Run
-
-La V3.8 ajoute une chaîne entièrement cloud pour produire les premières preuves historiques sans Python local :
-
-```text
-GitHub Actions → Estimate historical sample
-→ REQ-... sans appel fournisseur
-→ Run historical sample avec plafonds identiques
-→ collecte et checkpoints PostgreSQL
-→ contrôle temporel et qualité
-→ benchmark modèle / Winamax / consensus lorsque possible
-→ rapport publié
-→ dashboard Railway redéployé
-```
-
-Endpoints :
-
-```text
-/api/evidence
-/api/benchmark/summary
-/api/model-decision
-/api/release
-```
-
-La V3.8 ne place aucun pari et ne promeut aucun modèle automatiquement.
+- aucune promotion automatique de modèle ;
+- un petit lot reste une validation technique, même lorsque les portes qualité passent.

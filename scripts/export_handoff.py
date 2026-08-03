@@ -34,10 +34,10 @@ def build_handoff() -> dict[str, Any]:
     report = read_json("artifacts/fresh_rebuild_report.json")
     artifact_manifest = read_json("artifacts/artifact_manifest.json")
     release_manifest = read_json("artifacts/release_manifest.json")
-    integration_status = read_json("artifacts/integration_status_v3_8.json") or read_json("artifacts/integration_status_v3_7.json") or read_json("artifacts/integration_status_v3_6.json") or read_json("artifacts/integration_status_v3_5.json")
-    security_scan = read_json("artifacts/security_scan_v3_8.json") or read_json("artifacts/security_scan_v3_7.json") or read_json("artifacts/security_scan_v3_6.json") or read_json("artifacts/security_scan_v3_5.json")
+    integration_status = read_json("artifacts/integration_status_v3_9.json") or read_json("artifacts/integration_status_v3_8.json") or read_json("artifacts/integration_status_v3_7.json") or read_json("artifacts/integration_status_v3_6.json") or read_json("artifacts/integration_status_v3_5.json")
+    security_scan = read_json("artifacts/security_scan_v3_9.json") or read_json("artifacts/security_scan_v3_8.json") or read_json("artifacts/security_scan_v3_7.json") or read_json("artifacts/security_scan_v3_6.json") or read_json("artifacts/security_scan_v3_5.json")
     evidence_bundle = read_json("artifacts/champion_challenger_v3_6.json")
-    evidence_report = read_json("artifacts/evidence_report_v3_8.json")
+    evidence_report = read_json("artifacts/evidence_report_v3_9.json") or read_json("artifacts/evidence_report_v3_8.json")
     return {
         "schema_version": "1.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -64,14 +64,14 @@ def build_handoff() -> dict[str, Any]:
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Use GitHub Actions → Estimate historical sample, copy the REQ identifier, then run the approved capped sample.",
+        "next_priority": "Use GitHub Actions → Recompute latest evidence. This reuses the latest historical artifact and consumes zero provider credits.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
             "Tennis remains experimental and uncalibrated.",
             "A green workflow is insufficient without /api/release post-deployment verification.",
             "The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.",
             "Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.",
-            "A full historical backfill requires exact plan-id approval and a reviewed credit cap.",
+            "Do not approve a larger paid sample before reviewing the corrected V3.9 funnel.",
             "No model promotion is automatic, even when all evidence gates pass.",
         ],
         "safety": {
@@ -120,7 +120,8 @@ GitHub Actions
 ├── verify-production.yml       read-only production proof
 ├── rebuild-fresh-football.yml  rebuild → tests → deploy → proof
 ├── estimate-historical-sample.yml  immutable zero-credit request plan
-├── run-historical-sample.yml       capped execution → quality report → Railway dashboard
+├── run-historical-sample.yml       capped execution → V3.9 funnel → Railway dashboard
+├── recompute-latest-evidence.yml   latest GitHub artifact → zero-credit recalculation
 ├── backup-database.yml         backup → temporary restore verification
 ├── rollback-production.yml     restore from known Git commit → tests → deploy → proof
 └── generate-handoff.yml        downloadable secret-free conversation bundle
@@ -139,12 +140,11 @@ GitHub Actions
 ## Evidence engine
 
 - Champion–challenger artifact: `artifacts/champion_challenger_v3_6.json`
-- Historical quality artifact: `artifacts/evidence_report_v3_8.json`
+- Historical quality artifact: `artifacts/evidence_report_v3_9.json`
 - Cloud control endpoint: `/api/control-center`
 - Local Python required for operations: **no**
 - Authenticated deterministic verdict: `/api/model-decision`
 - Controlled sample: at most 30 events, 31 discovery calls and 200 odds credits
-- Execution requires the exact `REQ-...` identifier produced by the zero-credit estimate
 - Automatic model promotion: **disabled**
 
 ## Open gates
@@ -182,7 +182,7 @@ def active_model_card(payload: dict[str, Any]) -> str:
 
 def next_actions(payload: dict[str, Any]) -> str:
     decision = payload.get("model_decision") or {}
-    action = decision.get("next_action") or "Open GitHub Actions → Estimate historical sample, copy the REQ identifier, then open Run historical sample with the same caps and explicit confirmation."
+    action = decision.get("next_action") or "Open GitHub Actions → Recompute latest evidence. It reuses the latest saved historical artifact and consumes zero provider credits."
     return f"""# NEXT ACTIONS
 
 1. {action}
