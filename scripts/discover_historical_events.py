@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from sports_predictor.data_sources.the_odds_api import OddsApiClient, OddsApiConfig
+from sports_predictor.sample_plan import select_discovery_dates
 
 
 def parse_args() -> argparse.Namespace:
@@ -22,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--end", required=True, help="YYYY-MM-DD inclus")
     p.add_argument("--snapshot-hour-utc", type=int, default=12)
     p.add_argument("--lookahead-days", type=int, default=7)
-    p.add_argument("--max-calls", type=int, default=400)
+    p.add_argument("--max-calls", type=int, default=14)
     p.add_argument("--output", default="data/odds_api/historical/events.csv")
     p.add_argument("--execute", action="store_true")
     p.add_argument("--force-refresh", action="store_true")
@@ -39,28 +40,39 @@ def main() -> int:
     end = date.fromisoformat(args.end)
     if end < start:
         raise SystemExit("--end doit être postérieur à --start")
-    days = (end - start).days + 1
-    if days > args.max_calls:
-        print(f"ABORT: {days} appels planifiés > plafond {args.max_calls}")
-        return 3
+
+    discovery_days = select_discovery_dates(start, end, int(args.max_calls))
+    range_days = (end - start).days + 1
+    strategy = "all_days" if len(discovery_days) == range_days else "evenly_spaced"
+
     schedule = []
-    for offset in range(days):
-        day = start + timedelta(days=offset)
+    for day in discovery_days:
         snapshot = datetime.combine(day, time(args.snapshot_hour_utc), tzinfo=timezone.utc)
         schedule.append({
             "snapshot_at": iso_z(snapshot),
             "commence_time_from": iso_z(datetime.combine(day, time.min, tzinfo=timezone.utc)),
             "commence_time_to": iso_z(datetime.combine(day + timedelta(days=args.lookahead_days), time.max, tzinfo=timezone.utc)),
         })
+
     output = ROOT / args.output
     output.parent.mkdir(parents=True, exist_ok=True)
     (output.parent / "event_discovery_plan.json").write_text(json.dumps({
         "sport_key": args.sport_key,
+        "requested_start_date": start.isoformat(),
+        "requested_end_date": end.isoformat(),
+        "requested_range_days": range_days,
+        "max_calls": int(args.max_calls),
+        "strategy": strategy,
         "calls": len(schedule),
+        "discovery_dates": [day.isoformat() for day in discovery_days],
         "schedule": schedule,
         "execute": args.execute,
     }, indent=2), encoding="utf-8")
-    print(f"{len(schedule)} appels historiques planifiés pour {args.sport_key}")
+
+    print(
+        f"{len(schedule)} appels historiques planifiés pour {args.sport_key} "
+        f"sur {range_days} jours (stratégie={strategy})"
+    )
     if not args.execute:
         print("DRY-RUN terminé. Ajoutez --execute après contrôle du nombre d'appels.")
         return 0
@@ -91,6 +103,7 @@ def main() -> int:
             })
             record["last_seen_snapshot"] = item["snapshot_at"]
         print(f"{i}/{len(schedule)} · événements uniques={len(events)} · quota restant={response.quota.remaining}")
+
     frame = pd.DataFrame(events.values())
     if not frame.empty:
         frame = frame.sort_values(["commence_time", "event_id"])

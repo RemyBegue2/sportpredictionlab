@@ -21,7 +21,7 @@ on:
         type: number
         default: 30
       max_discovery_calls:
-        description: Same discovery-call cap used for the estimate
+        description: Same discovery snapshot cap used for the estimate
         required: true
         type: number
         default: 14

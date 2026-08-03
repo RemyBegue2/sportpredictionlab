@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       end_date:
-        description: End date YYYY-MM-DD (maximum 31 discovery days)
+        description: End date YYYY-MM-DD (long ranges are sampled within the call cap)
         required: true
         type: string
       sample_events:
@@ -17,7 +17,7 @@ on:
         type: number
         default: 30
       max_discovery_calls:
-        description: Discovery-call cap (1 to 31)
+        description: Discovery snapshots spread across the requested range (1 to 31)
         required: true
         type: number
         default: 14
@@ -62,6 +62,9 @@ jobs:
           PLAN_ID=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['plan_request_id'])")
           CALLS=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['estimated_discovery_calls'])")
           SNAPSHOTS=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['estimated_snapshot_requests_upper_bound'])")
+          STRATEGY=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['discovery_strategy'])")
+          RANGE_DAYS=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['date_range_days'])")
+          DATES=$(python -c "import json; print(', '.join(json.load(open('artifacts/historical_sample_request.json'))['discovery_dates']))")
           {
             echo '### Historical sample estimate'
             echo

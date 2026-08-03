@@ -7,7 +7,7 @@ import pandas as pd
 from fastapi.testclient import TestClient
 
 from sports_predictor.evidence_quality import build_evidence_quality_report, canonical_event_id, temporal_row_audit
-from sports_predictor.sample_plan import build_sample_request_plan, validate_plan_request_id
+from sports_predictor.sample_plan import build_sample_request_plan, select_discovery_dates, validate_plan_request_id
 
 
 def _events() -> pd.DataFrame:
@@ -51,6 +51,33 @@ def test_zero_credit_request_plan_is_deterministic_and_guarded() -> None:
     assert first.estimated_discovery_calls == 7
     validate_plan_request_id(first, first.plan_request_id)
 
+
+
+def test_long_date_range_is_evenly_sampled_instead_of_rejected() -> None:
+    plan = build_sample_request_plan(
+        sport_key="soccer_epl",
+        start_date="2023-01-01",
+        end_date="2026-08-01",
+        sample_events=30,
+        horizons_hours=[1],
+        max_discovery_calls=14,
+        max_odds_credits=120,
+    )
+    assert plan.date_range_days > 1000
+    assert plan.discovery_strategy == "evenly_spaced"
+    assert plan.estimated_discovery_calls == 14
+    assert len(plan.discovery_dates) == 14
+    assert plan.discovery_dates[0] == "2023-01-01"
+    assert plan.discovery_dates[-1] == "2026-08-01"
+    assert tuple(sorted(plan.discovery_dates)) == plan.discovery_dates
+
+
+def test_discovery_schedule_uses_every_day_for_short_range() -> None:
+    dates = select_discovery_dates("2026-08-01", "2026-08-07", 14)
+    assert [value.isoformat() for value in dates] == [
+        "2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04",
+        "2026-08-05", "2026-08-06", "2026-08-07",
+    ]
 
 def test_request_plan_rejects_unsafe_caps_and_missing_winamax() -> None:
     try:

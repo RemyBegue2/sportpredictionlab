@@ -19,6 +19,24 @@ from sports_predictor.odds_backtest import build_historical_plan
 DEFAULT_BOOKMAKERS = ["winamax_fr", "betclic_fr", "unibet_fr", "pmu_fr", "netbet_fr", "pinnacle"]
 
 
+def _evenly_spaced_sample(events: pd.DataFrame, sample_size: int) -> pd.DataFrame:
+    """Select a deterministic sample covering the whole available period."""
+    if sample_size >= len(events):
+        return events.copy()
+    if sample_size <= 1:
+        return events.head(1).copy()
+    positions = [round(i * (len(events) - 1) / (sample_size - 1)) for i in range(sample_size)]
+    positions = sorted(set(positions))
+    if len(positions) < sample_size:
+        for position in range(len(events)):
+            if position not in positions:
+                positions.append(position)
+                if len(positions) == sample_size:
+                    break
+        positions.sort()
+    return events.iloc[positions[:sample_size]].copy()
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Create an immutable, auditable, budget-capped historical odds backfill plan.")
     parser.add_argument("--events-csv", required=True)
@@ -48,7 +66,7 @@ def main() -> int:
     available_events = len(events)
     if not args.full:
         sample = max(1, min(int(args.sample_events), VALIDATION_EVENT_LIMIT))
-        events = events.head(sample).copy()
+        events = _evenly_spaced_sample(events, sample)
 
     plan = build_historical_plan(
         events,
@@ -68,6 +86,7 @@ def main() -> int:
         "event_count": int(events["event_id"].nunique()),
         "execution_mode": "full" if args.full else "validation",
         "validation_event_limit": VALIDATION_EVENT_LIMIT,
+        "event_sampling_strategy": "all_events" if args.full or len(events) == available_events else "evenly_spaced",
         "request_count": int(len(plan.requests)),
         "target_count": int(len(plan.targets)),
         "estimated_credits": int(plan.estimated_credits),
