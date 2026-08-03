@@ -1,0 +1,401 @@
+{
+  "artifact_manifest": {
+    "created_at_utc": "2026-08-02T11:18:26.210461+00:00",
+    "files": [
+      {
+        "bytes": 1188721,
+        "name": "football_model.joblib",
+        "sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5"
+      },
+      {
+        "bytes": 625,
+        "name": "tennis_model.joblib",
+        "sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658"
+      },
+      {
+        "bytes": 1103,
+        "name": "metrics.json",
+        "sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6"
+      }
+    ],
+    "schema_version": "2.1",
+    "trust_note": "Integrity check only. Load artifacts only from a trusted distribution channel."
+  },
+  "champion_challenger": null,
+  "current_version": "4.0.0",
+  "deployment": {
+    "cloud_jobs": [
+      "GitHub Actions evidence campaign"
+    ],
+    "platform": "Railway",
+    "public_url": "not_exported",
+    "services": [
+      "sportpredictionlab",
+      "shadow-cron",
+      "Postgres"
+    ],
+    "verification_endpoint": "/api/release"
+  },
+  "evidence_campaign": null,
+  "evidence_campaign_plan": null,
+  "fresh_rebuild_report": null,
+  "generated_at_utc": "2026-08-03T13:12:57.229937+00:00",
+  "git": {
+    "branch": "unknown",
+    "commit": "unknown",
+    "commit_short": "unknown"
+  },
+  "historical_evidence": null,
+  "integration_status": {
+    "local_validation": {
+      "javascript_syntax": "passed",
+      "pytest_failed": 0,
+      "pytest_passed": 135,
+      "python_compileall": "passed",
+      "workflow_yaml_parsed": 10
+    },
+    "production_validation": {
+      "latest_artifact_download_executed_from_this_environment": false,
+      "provider_calls_executed": 0,
+      "railway_deployed_from_this_environment": false
+    },
+    "required_user_actions": [
+      "Deploy production version 3.9.0",
+      "Run Recompute latest evidence",
+      "Generate a fresh V3.9 handoff package after production verification"
+    ],
+    "status": "ready_for_user_deploy",
+    "version": "3.9.0"
+  },
+  "known_gates": [
+    "No profitability claim before a sufficiently large temporally valid sample.",
+    "Tennis remains experimental and uncalibrated.",
+    "A green workflow is insufficient without /api/release post-deployment verification.",
+    "The authenticated Chromium smoke test requires APP_PASSWORD as a GitHub Actions secret.",
+    "Managed PostgreSQL backup restoration must be verified through the cloud backup workflow.",
+    "Use Run evidence campaign in dry_run mode before approving a paid stage.",
+    "No model promotion is automatic, even when all evidence gates pass."
+  ],
+  "model_decision": null,
+  "next_priority": "Use GitHub Actions → Run evidence campaign → dry_run before any paid stage.",
+  "project": "Sports Prediction Lab",
+  "release": {
+    "app": {
+      "deployment_id": null,
+      "environment": "test",
+      "name": "sports-prediction-lab",
+      "service_id": null,
+      "source_commit": "unknown",
+      "source_commit_short": "unknown",
+      "version": "4.0.0"
+    },
+    "football_model": {
+      "artifact_sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5",
+      "dataset_cutoff": null,
+      "dataset_rows": null,
+      "dataset_sha256": null,
+      "model_version": "snapshot",
+      "promoted": false,
+      "promotion": null,
+      "trained_until": null
+    },
+    "generated_at_utc": "2026-08-03T13:12:57.229456+00:00",
+    "integrity": {
+      "artifact_integrity_ok": true,
+      "artifact_manifest_present": true,
+      "artifacts": {
+        "football_model.joblib": {
+          "bytes": 1188721,
+          "declared_sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5",
+          "matches_manifest": true,
+          "present": true,
+          "sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5"
+        },
+        "metrics.json": {
+          "bytes": 1103,
+          "declared_sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6",
+          "matches_manifest": true,
+          "present": true,
+          "sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6"
+        },
+        "tennis_model.joblib": {
+          "bytes": 625,
+          "declared_sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658",
+          "matches_manifest": true,
+          "present": true,
+          "sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658"
+        }
+      },
+      "code_files": {
+        ".github/workflows/deploy-production.yml": {
+          "bytes": 5271,
+          "sha256": "fa89df98d975efa1bf937c764b62492b878cc0fb86917933d1263b6bbd23383b"
+        },
+        ".github/workflows/estimate-historical-sample.yml": {
+          "bytes": 3864,
+          "sha256": "33c143f53b24922c42efde2e68b6f67a0417ce5331df3beb6d40d0793487305c"
+        },
+        ".github/workflows/generate-handoff.yml": {
+          "bytes": 1279,
+          "sha256": "c9790d74ecc6313dd27d52a9d64fab23e4ea17d29bff5299781491718260d90b"
+        },
+        ".github/workflows/rebuild-fresh-football.yml": {
+          "bytes": 5954,
+          "sha256": "ac6896bc2791e8ecc62382ed4fa530a1b1252b6caa927e377718a8fd7d152433"
+        },
+        ".github/workflows/run-historical-sample.yml": {
+          "bytes": 15117,
+          "sha256": "735bca7509cce8d020de488f67ce2c5cdb735cd0efbb913129fa14b230e55285"
+        },
+        ".github/workflows/verify-production.yml": {
+          "bytes": 3214,
+          "sha256": "941b9d3f3b03b37da36903e562fdda771abf18ec438ced75dbfa3ed9466b921c"
+        },
+        "Dockerfile": {
+          "bytes": 1118,
+          "sha256": "21fa1400ade5f370d167c47a95bb8e41f1e59434e534755824d4be3c1e8deaea"
+        },
+        "railway.cron.toml": {
+          "bytes": 217,
+          "sha256": "123971d861b52475ec000cd81ac9813b6ef50026b49005ced763b70494653961"
+        },
+        "railway.toml": {
+          "bytes": 417,
+          "sha256": "564201ccd04402e8dd18fbba76749b0269f193edc433d541c76f85523c373306"
+        },
+        "sports_predictor/control_center.py": {
+          "bytes": 12016,
+          "sha256": "0dad0b3bb4595dbd2ce224043e00d37bb60da9294535602f09a2e23ff1bfb6ee"
+        },
+        "sports_predictor/database.py": {
+          "bytes": 58722,
+          "sha256": "4b4aa35f3fbcf36380b9bb36c53f539ac4d46810469ebea8cea180599ccbde70"
+        },
+        "sports_predictor/evidence_quality.py": {
+          "bytes": 26249,
+          "sha256": "722e4220c056c31b43f05a1ba2679d0ecb92aee7f9158ea223926d7031455a8c"
+        },
+        "sports_predictor/fresh_rebuild.py": {
+          "bytes": 10219,
+          "sha256": "7b17d8b0d33b5c04a6ba9d795c6ba307f77ba96ba52d0217a25138ef60eaf4ca"
+        },
+        "sports_predictor/release_registry.py": {
+          "bytes": 13294,
+          "sha256": "8b9a59dfd55aceb212d08707b6ca8507412c9ac080fa68c217e55ce98583c9f9"
+        },
+        "sports_predictor/sample_plan.py": {
+          "bytes": 9057,
+          "sha256": "4d13557ec245d7c31e6f7d21e1756fb3ebc67b3b95f7b6f824ad2fb26d2193b5"
+        },
+        "static/app.js": {
+          "bytes": 37212,
+          "sha256": "96f169960fa60012b8bd9edfb3fb4a530e8768f27c803731e55718f67e0bf16d"
+        },
+        "static/index.html": {
+          "bytes": 24823,
+          "sha256": "36d88a4e9e26fc37b15b4580f4cf55f82d6c208c7c53359e01f44bb409555058"
+        },
+        "webapp.py": {
+          "bytes": 68296,
+          "sha256": "c61da1839c26a20a57995f352870f8d80aee3c37dbb8c896ab2bc6ff02a83636"
+        }
+      }
+    },
+    "metrics_digest": {
+      "football": {
+        "accuracy": 0.6,
+        "brier": 0.5666607699239754,
+        "calibration_temperature": 4.999971938328189,
+        "dixon_coles_rho": -0.15,
+        "ece": 0.07807664560356356,
+        "log_loss": 0.9398655005299267,
+        "ml_blend_weight": 0.0,
+        "ml_only_log_loss": 1.041535499339392,
+        "n_test": 20,
+        "naive_log_loss": 1.1159396906095167,
+        "poisson_dc_log_loss": 0.9398655005299267,
+        "rps": 0.34204281372195094
+      },
+      "fresh_rebuild": null
+    },
+    "release_id": "31d852d41a4c2e8a0e70",
+    "safety": {
+      "automatic_bet_placement": false,
+      "secrets_exported": false,
+      "staking_recommendations": false
+    },
+    "schema_version": "1.0"
+  },
+  "release_manifest": {
+    "app": {
+      "deployment_id": null,
+      "environment": "development",
+      "name": "sports-prediction-lab",
+      "service_id": null,
+      "source_commit": "unknown",
+      "source_commit_short": "unknown",
+      "version": "3.9.0"
+    },
+    "football_model": {
+      "artifact_sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5",
+      "dataset_cutoff": null,
+      "dataset_rows": null,
+      "dataset_sha256": null,
+      "model_version": "snapshot",
+      "promoted": false,
+      "promotion": null,
+      "trained_until": null
+    },
+    "generated_at_utc": "2026-08-03T11:22:21.417198+00:00",
+    "integrity": {
+      "artifact_integrity_ok": true,
+      "artifact_manifest_present": true,
+      "artifacts": {
+        "football_model.joblib": {
+          "bytes": 1188721,
+          "declared_sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5",
+          "matches_manifest": true,
+          "present": true,
+          "sha256": "88914b6b6ee265b93ced073dc68c90c88756700c01e20352585e307147defba5"
+        },
+        "metrics.json": {
+          "bytes": 1103,
+          "declared_sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6",
+          "matches_manifest": true,
+          "present": true,
+          "sha256": "66431061e71a0264ae88da16f4de72cf589ede488d45cbf2b5fe31dad73ee9a6"
+        },
+        "tennis_model.joblib": {
+          "bytes": 625,
+          "declared_sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658",
+          "matches_manifest": true,
+          "present": true,
+          "sha256": "fb515c4ce634af22d5e5ba242ae69775fc7260ef8b68577566b091ff160c6658"
+        }
+      },
+      "code_files": {
+        ".github/workflows/deploy-production.yml": {
+          "bytes": 5271,
+          "sha256": "c2c4d5dadca8584841661777d4c4870baa9145af08a57adba10ca2b91cadd4a0"
+        },
+        ".github/workflows/estimate-historical-sample.yml": {
+          "bytes": 3864,
+          "sha256": "33c143f53b24922c42efde2e68b6f67a0417ce5331df3beb6d40d0793487305c"
+        },
+        ".github/workflows/generate-handoff.yml": {
+          "bytes": 1279,
+          "sha256": "53f8a554f31012e76ca8c2fdefbe798cbc734a6660f3b48596d70af789430286"
+        },
+        ".github/workflows/rebuild-fresh-football.yml": {
+          "bytes": 5954,
+          "sha256": "7531dc09a438867f11d6d9a3250648cc2aa009029e1e087bdfeb205a4ef4f716"
+        },
+        ".github/workflows/run-historical-sample.yml": {
+          "bytes": 15117,
+          "sha256": "edf39df3d9c32df1b1fce398a3d7f6f41858142deda72c1802100da594dccbaa"
+        },
+        ".github/workflows/verify-production.yml": {
+          "bytes": 3214,
+          "sha256": "b0febf4ae826e839697673eb31d7f80fde9233eaeb5d8fc967d0a2bf61f9db5c"
+        },
+        "Dockerfile": {
+          "bytes": 1118,
+          "sha256": "21fa1400ade5f370d167c47a95bb8e41f1e59434e534755824d4be3c1e8deaea"
+        },
+        "railway.cron.toml": {
+          "bytes": 217,
+          "sha256": "123971d861b52475ec000cd81ac9813b6ef50026b49005ced763b70494653961"
+        },
+        "railway.toml": {
+          "bytes": 417,
+          "sha256": "564201ccd04402e8dd18fbba76749b0269f193edc433d541c76f85523c373306"
+        },
+        "sports_predictor/control_center.py": {
+          "bytes": 12016,
+          "sha256": "0dad0b3bb4595dbd2ce224043e00d37bb60da9294535602f09a2e23ff1bfb6ee"
+        },
+        "sports_predictor/database.py": {
+          "bytes": 58722,
+          "sha256": "4b4aa35f3fbcf36380b9bb36c53f539ac4d46810469ebea8cea180599ccbde70"
+        },
+        "sports_predictor/evidence_quality.py": {
+          "bytes": 26249,
+          "sha256": "e880dff82b498b11c9fe762cb71aa523a15c388f46fee3f1d41db924ef7c80f0"
+        },
+        "sports_predictor/fresh_rebuild.py": {
+          "bytes": 10219,
+          "sha256": "51045dcee82e23372c9b2cec9fd742841bc6efb488fc4c45379eeb0c3fa2d98f"
+        },
+        "sports_predictor/release_registry.py": {
+          "bytes": 13294,
+          "sha256": "11c4b89b31d3d87600ce100fb0628008c34805d95df694114f4175b5009ec6a1"
+        },
+        "sports_predictor/sample_plan.py": {
+          "bytes": 9057,
+          "sha256": "4d13557ec245d7c31e6f7d21e1756fb3ebc67b3b95f7b6f824ad2fb26d2193b5"
+        },
+        "static/app.js": {
+          "bytes": 35896,
+          "sha256": "84d7bba436f5603c29892f5a02535b2d71df5d32ba213406a7ac82a003846501"
+        },
+        "static/index.html": {
+          "bytes": 24054,
+          "sha256": "eea8b01fe35360565aea806d3f8f1dd61502ce28896bb28898fbc591ca11bf85"
+        },
+        "webapp.py": {
+          "bytes": 67168,
+          "sha256": "e099b399faaa27457aac07aee1c3c3bfcdaf814f6072813bd5f23cf3cc86e801"
+        }
+      }
+    },
+    "metrics_digest": {
+      "football": {
+        "accuracy": 0.6,
+        "brier": 0.5666607699239754,
+        "calibration_temperature": 4.999971938328189,
+        "dixon_coles_rho": -0.15,
+        "ece": 0.07807664560356356,
+        "log_loss": 0.9398655005299267,
+        "ml_blend_weight": 0.0,
+        "ml_only_log_loss": 1.041535499339392,
+        "n_test": 20,
+        "naive_log_loss": 1.1159396906095167,
+        "poisson_dc_log_loss": 0.9398655005299267,
+        "rps": 0.34204281372195094
+      },
+      "fresh_rebuild": null
+    },
+    "release_id": "69837ec080f93fa253b2",
+    "safety": {
+      "automatic_bet_placement": false,
+      "secrets_exported": false,
+      "staking_recommendations": false
+    },
+    "schema_version": "1.0"
+  },
+  "safety": {
+    "automatic_bet_placement": false,
+    "secrets_exported": false,
+    "staking_recommendations": false
+  },
+  "schema_version": "1.0",
+  "security_scan": {
+    "allowlisted_test_fixtures": [
+      {
+        "file": "tests/test_v38_evidence_run.py",
+        "pattern": "postgres_credentials"
+      }
+    ],
+    "note": "Pattern scan passed after classifying the documented invalid PostgreSQL URL in tests as a non-secret fixture.",
+    "passed": true,
+    "probable_secret_findings": [],
+    "scope": [
+      ".github",
+      "scripts",
+      "sports_predictor",
+      "static",
+      "tests"
+    ],
+    "version": "3.9.0"
+  }
+}

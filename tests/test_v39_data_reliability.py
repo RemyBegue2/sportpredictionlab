@@ -191,4 +191,4 @@ def test_v39_zero_credit_recompute_workflow_and_frontend_contract() -> None:
     ):
         assert f'id="{element_id}"' in html
         assert f"#{element_id}" in js
-    assert "app.js?v=3.9.0" in html
+    assert "app.js?v=4.0.0" in html

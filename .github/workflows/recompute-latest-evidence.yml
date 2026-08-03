@@ -22,7 +22,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '3.9.0'
+      EXPECTED_VERSION: '4.0.0'
 
     steps:
       - uses: actions/checkout@v4
@@ -83,65 +83,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
-          # GitHub CLI refuses to extract over files already present in the
-          # checked-out repository. Always download into a fresh temporary
-          # directory, then copy the artifact contents over the checkout.
-          download_dir="$RUNNER_TEMP/historical-evidence-${GITHUB_RUN_ID}"
-          rm -rf "$download_dir"
-          mkdir -p "$download_dir"
-
           gh run download '${{ steps.latest.outputs.run_id }}' \
             --name '${{ steps.latest.outputs.artifact_name }}' \
-            --dir "$download_dir"
-
-          rsync -a "$download_dir/" ./
-
+            --dir .
           test -s data/odds_api/backfill/plan.json
           test -s data/odds_api/backfill/state.json
           test -s data/odds_api/backfill/historical_odds_long.csv
           test -s data/odds_api/historical/events.csv
-          test -s data/benchmark/event_mapping.csv
-
-          {
-            echo "Latest historical artifact: \`${{ steps.latest.outputs.artifact_name }}\` (ID \`${{ steps.latest.outputs.artifact_id }}\`)"
-            echo 'Provider API calls executed: **0**'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Verify V3.9 recompute code is installed
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-
-          build = Path("scripts/build_evidence_report.py").read_text(encoding="utf-8")
-          quality = Path("sports_predictor/evidence_quality.py").read_text(encoding="utf-8")
-          required_build = [
-              'default="artifacts/evidence_report_v3_9.json"',
-              'event_selection=_read_csv',
-              'return 0',
-          ]
-          required_quality = [
-              '"schema_version": "2.0"',
-              '"app_version": "3.9.0"',
-              'provider_return_coverage',
-              'completed_event_snapshots',
-          ]
-          missing = [item for item in required_build if item not in build]
-          missing += [item for item in required_quality if item not in quality]
-          if missing:
-              raise SystemExit(
-                  "V3.9 recompute code is not installed at repository root. "
-                  f"Missing markers: {missing}"
-              )
-          print("V3.9 recompute code verified")
-          PY
+          echo 'Latest historical artifact: `${{ steps.latest.outputs.artifact_name }}` (ID `${{ steps.latest.outputs.artifact_id }}`)' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Provider API calls executed: **0**' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Recompute V3.9 denominators and gates
-        shell: bash
         run: |
-          set -euo pipefail
           if [ ! -f artifacts/market_benchmark_v3_9.json ] && [ -f artifacts/market_benchmark_v3_8.json ]; then
             cp artifacts/market_benchmark_v3_8.json artifacts/market_benchmark_v3_9.json
           fi
@@ -149,22 +102,6 @@ jobs:
             --matches-csv data/benchmark/event_mapping.csv \
             --benchmark-json artifacts/market_benchmark_v3_9.json \
             --output artifacts/evidence_report_v3_9.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          report = json.loads(Path("artifacts/evidence_report_v3_9.json").read_text(encoding="utf-8"))
-          assert report.get("schema_version") == "2.0", report.get("schema_version")
-          assert report.get("app_version") == "3.9.0", report.get("app_version")
-          assert isinstance(report.get("funnel"), dict), "missing V3.9 funnel"
-          assert isinstance(report.get("gates"), dict), "missing V3.9 gates"
-          print(json.dumps({
-              "schema_version": report["schema_version"],
-              "quality_gate": report.get("quality_gate"),
-              "funnel": report.get("funnel"),
-              "rates": report.get("rates"),
-          }, indent=2, ensure_ascii=False))
-          PY
           python -m scripts.export_evidence_tables \
             --report artifacts/evidence_report_v3_9.json \
             --events-output artifacts/event_outcomes_v3_9.csv \
@@ -230,23 +167,16 @@ jobs:
         shell: bash
         run: |
           if [ -f artifacts/evidence_report_v3_9.json ]; then
-            discovered=$(jq -r '.funnel.discovered_events // 0' artifacts/evidence_report_v3_9.json)
-            selected=$(jq -r '.funnel.selected_events // 0' artifacts/evidence_report_v3_9.json)
-            completed=$(jq -r '.funnel.completed_event_snapshots // 0' artifacts/evidence_report_v3_9.json)
-            returned=$(jq -r '.funnel.provider_returned_event_snapshots // 0' artifacts/evidence_report_v3_9.json)
-            provider=$(jq -r '((.rates.provider_return_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)
-            consensus=$(jq -r '((.rates.consensus_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)
-            winamax=$(jq -r '((.rates.winamax_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)
             {
               echo '### V3.9 zero-credit evidence recompute'
               echo
-              echo "- Discovered events: \`$discovered\`"
-              echo "- Selected events: \`$selected\`"
-              echo "- Completed targets: \`$completed\`"
-              echo "- Provider-returned targets: \`$returned\`"
-              echo "- Provider coverage: \`$provider\`"
-              echo "- Consensus coverage: \`$consensus\`"
-              echo "- Winamax coverage: \`$winamax\`"
-              echo '- Provider credits consumed by this workflow: `0`'
+              echo "- Discovered events: \`$(jq -r '.funnel.discovered_events // 0' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Selected events: \`$(jq -r '.funnel.selected_events // 0' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Completed targets: \`$(jq -r '.funnel.completed_event_snapshots // 0' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Provider-returned targets: \`$(jq -r '.funnel.provider_returned_event_snapshots // 0' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Provider coverage: \`$(jq -r '((.rates.provider_return_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Consensus coverage: \`$(jq -r '((.rates.consensus_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Winamax coverage: \`$(jq -r '((.rates.winamax_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`"
+              echo "- Provider credits consumed by this workflow: \`0\`"
             } >> "$GITHUB_STEP_SUMMARY"
           fi

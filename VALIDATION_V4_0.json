@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "app_version": "4.0.0",
+  "base_version": "3.9.2",
+  "tests": {
+    "passed": 145,
+    "failed": 0,
+    "coverage_percent": 83
+  },
+  "static_validation": {
+    "python_compile": true,
+    "javascript_syntax": true,
+    "yaml_workflows_valid": 11
+  },
+  "campaign_validation": {
+    "zero_credit_plan": true,
+    "stage_100_immutable_plan_dry_run": true,
+    "invalid_database_url_ignored": true,
+    "checkpoint_compatibility_tested": true,
+    "date_reuse_tested": true,
+    "tests_run_before_provider": true,
+    "manual_plan_id_required": false
+  },
+  "external_validation_not_performed": [
+    "real The Odds API call",
+    "real GitHub artifact API download",
+    "real Railway deployment"
+  ],
+  "safety": {
+    "automatic_model_promotion": false,
+    "profitability_claim": false,
+    "stake_recommendation": false,
+    "automatic_bet_placement": false
+  }
+}

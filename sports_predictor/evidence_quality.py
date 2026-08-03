@@ -469,7 +469,7 @@ def build_evidence_quality_report(
 
     return {
         "schema_version": "2.0",
-        "app_version": "3.9.0",
+        "app_version": "4.0.0",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "plan_id": plan.get("plan_id"),
         "plan_request_id": plan.get("plan_request_id"),

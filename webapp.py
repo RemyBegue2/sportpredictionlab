@@ -160,7 +160,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V3.9 Data Reliability",
+    title="Sports Prediction Lab V4.0 Controlled Evidence Scale-Up",
     version=APP_VERSION,
     description="Cloud-first data-reliability edition with explicit coverage denominators, zero-credit evidence recomputation, bookmaker matrices and leakage-safe quality gates.",
     lifespan=lifespan,
@@ -315,7 +315,7 @@ def resources() -> dict[str, Any]:
     fresh_rebuild_path = artifact_dir / "fresh_rebuild_report.json"
     fresh_rebuild = json.loads(fresh_rebuild_path.read_text(encoding="utf-8")) if fresh_rebuild_path.exists() else None
     football_model_version = (
-        f"{fresh_rebuild.get('version', '3.9.0')}-fresh"
+        f"{fresh_rebuild.get('version', '4.0.0')}-fresh"
         if fresh_rebuild and fresh_rebuild.get("promoted")
         else "3.3.0-snapshot"
     )
@@ -1117,7 +1117,7 @@ def _system_status_payload() -> dict[str, Any]:
         "continuity": {
             "operation": "GitHub Actions → Generate handoff package → Run workflow",
             "workflow": "generate-handoff.yml",
-            "artifact": "sports-prediction-handoff-v3.8",
+            "artifact": "sports-prediction-handoff-v4.0",
             "local_python_required": False,
             "files": [
                 "START_HERE_NEXT_CHAT.md",
@@ -1402,6 +1402,33 @@ def evidence_report() -> dict[str, Any]:
                 "responsible_use": {"profitability_claim": False, "stake_recommendation": False, "automatic_bet_placement": False},
             },
         }
+    return {"source": artifact.name, "report": report}
+
+
+@app.get("/api/evidence-campaign")
+def evidence_campaign() -> dict[str, Any]:
+    artifact = ROOT / "artifacts" / "evidence_campaign_v4.json"
+    if not artifact.exists():
+        return {
+            "source": "none",
+            "report": {
+                "schema_version": "1.0",
+                "app_version": APP_VERSION,
+                "decision": "not_run",
+                "completed_stage": None,
+                "next_stage": 30,
+                "scale_gate": {"accepted": False, "reason": "no_campaign_report"},
+                "budget": {},
+                "automatic_model_promotion": False,
+                "profitability_claim": False,
+                "automatic_bet_placement": False,
+            },
+            "required_next_step": "GitHub Actions → Run evidence campaign → dry_run.",
+        }
+    try:
+        report = json.loads(artifact.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=503, detail=f"Campaign report unreadable: {type(exc).__name__}") from exc
     return {"source": artifact.name, "report": report}
 
 

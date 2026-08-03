@@ -1,0 +1,425 @@
+name: Run evidence campaign
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Campaign action
+        required: true
+        type: choice
+        default: dry_run
+        options:
+          - dry_run
+          - recompute_only
+          - continue_current_stage
+          - start_next_stage
+      target_stage:
+        description: Target number of event snapshots
+        required: true
+        type: choice
+        default: '30'
+        options:
+          - '30'
+          - '100'
+          - '300'
+          - '1000'
+      max_credits:
+        description: Immutable global provider credit cap (0 to 20000)
+        required: true
+        type: number
+        default: 350
+      baseline:
+        description: Primary market baseline
+        required: true
+        type: choice
+        default: consensus
+        options:
+          - consensus
+          - winamax
+      confirmation:
+        description: Type EXECUTE_CAMPAIGN for paid modes; dry_run and recompute_only may be left blank
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: evidence-campaign
+  cancel-in-progress: false
+
+jobs:
+  campaign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
+      RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
+      APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+      EXPECTED_VERSION: '4.0.0'
+      INPUT_MODE: ${{ inputs.mode }}
+      INPUT_TARGET_STAGE: ${{ inputs.target_stage }}
+      INPUT_MAX_CREDITS: ${{ inputs.max_credits }}
+      INPUT_BASELINE: ${{ inputs.baseline }}
+      INPUT_CONFIRMATION: ${{ inputs.confirmation }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify V4.0 source contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          required = {
+              "sports_predictor/evidence_campaign.py": "CAMPAIGN_STAGES",
+              "scripts/plan_evidence_campaign.py": "ZERO-CREDIT CAMPAIGN PLAN",
+              "scripts/build_campaign_report.py": '"4.0.0"',
+              "sports_predictor/cloud_config.py": "cloud_runtime_detected",
+          }
+          errors = []
+          for filename, marker in required.items():
+              path = Path(filename)
+              if not path.exists():
+                  errors.append(f"missing {filename}")
+                  continue
+              if marker not in path.read_text(encoding="utf-8"):
+                  errors.append(f"missing marker {marker!r} in {filename}")
+          if errors:
+              raise SystemExit("V4.0 mixed-version repository: " + "; ".join(errors))
+          print("V4.0 source contract verified.")
+          PY
+
+      - name: Test before any provider request
+        run: pytest -q
+
+      - name: Build zero-credit campaign plan
+        id: campaign_plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m scripts.plan_evidence_campaign \
+            --mode "$INPUT_MODE" \
+            --target-stage "$INPUT_TARGET_STAGE" \
+            --max-credits "$INPUT_MAX_CREDITS" \
+            --baseline "$INPUT_BASELINE"
+
+          CAMPAIGN_ID=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['campaign_id'])")
+          ALLOWED=$(python -c "import json; print(str(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['execution_allowed']).lower())")
+          REASON=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['execution_reason'])")
+          START_DATE=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['start_date'])")
+          END_DATE=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['end_date'])")
+          DISCOVERY_CALLS=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['estimated_discovery_calls'])")
+          EVENTS_THIS_RUN=$(python -c "import json; print(json.load(open('artifacts/evidence_campaign_plan_v4.json'))['estimated_events_this_run'])")
+
+          echo "campaign_id=$CAMPAIGN_ID" >> "$GITHUB_OUTPUT"
+          echo "allowed=$ALLOWED" >> "$GITHUB_OUTPUT"
+          echo "reason=$REASON" >> "$GITHUB_OUTPUT"
+          echo "start_date=$START_DATE" >> "$GITHUB_OUTPUT"
+          echo "end_date=$END_DATE" >> "$GITHUB_OUTPUT"
+          echo "discovery_calls=$DISCOVERY_CALLS" >> "$GITHUB_OUTPUT"
+          echo "events_this_run=$EVENTS_THIS_RUN" >> "$GITHUB_OUTPUT"
+
+          {
+            echo '### V4.0 campaign plan'
+            echo
+            echo "- Campaign: \`$CAMPAIGN_ID\`"
+            echo "- Mode: \`$INPUT_MODE\`"
+            echo "- Target stage: \`$INPUT_TARGET_STAGE\`"
+            echo "- Baseline: \`$INPUT_BASELINE\`"
+            echo "- Credit cap: \`$INPUT_MAX_CREDITS\`"
+            echo "- Estimated events this run: \`$EVENTS_THIS_RUN\`"
+            echo "- Execution allowed: \`$ALLOWED\`"
+            echo "- Reason: \`$REASON\`"
+            echo
+            echo 'No manual plan ID is required.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish dry-run plan
+        if: ${{ inputs.mode == 'dry_run' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-campaign-plan-${{ github.run_id }}
+          path: artifacts/evidence_campaign_plan_v4.json
+          retention-days: 30
+
+      - name: Validate execution gate and complete configuration
+        if: ${{ inputs.mode != 'dry_run' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          errors=()
+
+          if [ '${{ steps.campaign_plan.outputs.allowed }}' != 'true' ]; then
+            errors+=("campaign plan blocked: ${{ steps.campaign_plan.outputs.reason }}")
+          fi
+
+          if [ "$INPUT_MODE" = 'continue_current_stage' ] || [ "$INPUT_MODE" = 'start_next_stage' ]; then
+            NORMALIZED=$(printf '%s' "${INPUT_CONFIRMATION:-}" | tr -d '\r\n' | xargs)
+            [ "$NORMALIZED" = 'EXECUTE_CAMPAIGN' ] || errors+=("confirmation must equal EXECUTE_CAMPAIGN")
+            [ -n "${THE_ODDS_API_KEY:-}" ] || errors+=("missing repository secret: THE_ODDS_API_KEY")
+          fi
+
+          [ -n "${RAILWAY_TOKEN:-}" ] || errors+=("missing repository secret: RAILWAY_TOKEN")
+          [ -n "${RAILWAY_PROJECT_ID:-}" ] || errors+=("missing repository secret: RAILWAY_PROJECT_ID")
+          [ -n "${APP_PUBLIC_URL:-}" ] || errors+=("missing repository variable: APP_PUBLIC_URL")
+
+          if [ ${#errors[@]} -gt 0 ]; then
+            {
+              echo '### Campaign blocked'
+              echo
+              printf -- '- %s\n' "${errors[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            printf 'Configuration errors:\n'
+            printf ' - %s\n' "${errors[@]}"
+            exit 2
+          fi
+
+      - name: Recompute campaign report from saved repository evidence
+        if: ${{ inputs.mode == 'recompute_only' }}
+        run: python -m scripts.build_campaign_report
+
+      - name: Find latest campaign checkpoint artifact
+        if: ${{ inputs.mode == 'continue_current_stage' }}
+        id: checkpoint_artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/campaign-checkpoint"
+          ARTIFACT_JSON=$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" |             jq -s '[.[].artifacts[] | select(.expired == false and (.name | startswith("evidence-campaign-state-")))] | sort_by(.created_at) | reverse | .[0] // empty')
+          if [ -z "$ARTIFACT_JSON" ]; then
+            echo 'found=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ARTIFACT_ID=$(printf '%s' "$ARTIFACT_JSON" | jq -r '.id')
+          ARTIFACT_NAME=$(printf '%s' "$ARTIFACT_JSON" | jq -r '.name')
+          curl --fail --location --silent --show-error             -H "Authorization: Bearer $GH_TOKEN"             -H 'Accept: application/vnd.github+json'             "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip"             --output "$RUNNER_TEMP/campaign-checkpoint.zip"
+          unzip -q "$RUNNER_TEMP/campaign-checkpoint.zip" -d "$RUNNER_TEMP/campaign-checkpoint"
+          echo 'found=true' >> "$GITHUB_OUTPUT"
+          echo "name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Restore compatible campaign checkpoint
+        if: ${{ inputs.mode == 'continue_current_stage' }}
+        id: restore_checkpoint
+        shell: bash
+        run: |
+          set +e
+          if [ '${{ steps.checkpoint_artifact.outputs.found }}' = 'true' ]; then
+            python -m scripts.restore_campaign_state               --artifact-root "$RUNNER_TEMP/campaign-checkpoint"
+            CODE=$?
+          else
+            CODE=3
+          fi
+          set -e
+          if [ "$CODE" -eq 0 ]; then
+            echo 'restored=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'restored=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::No compatible checkpoint was restored; this stage will start from a fresh immutable plan.'
+          fi
+
+      - name: Discover historical events
+        if: ${{ inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.restored != 'true') }}
+        id: discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m scripts.discover_historical_events             --sport-key soccer_epl             --start '${{ steps.campaign_plan.outputs.start_date }}'             --end '${{ steps.campaign_plan.outputs.end_date }}'             --max-calls '${{ steps.campaign_plan.outputs.discovery_calls }}'             --max-credits "$INPUT_MAX_CREDITS"             --output data/odds_api/campaign/events_all.csv             --execute
+
+      - name: Resolve immutable provider budget after discovery
+        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        id: provider_budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          USED=$(python -c "import json; print(int(json.load(open('data/odds_api/campaign/event_discovery_state.json'))['consumed_credits']))")
+          REMAINING=$(( INPUT_MAX_CREDITS - USED ))
+          if [ "$REMAINING" -lt 1 ]; then
+            echo "Discovery consumed the complete immutable cap ($USED/$INPUT_MAX_CREDITS)."
+            exit 4
+          fi
+          echo "discovery_credits=$USED" >> "$GITHUB_OUTPUT"
+          echo "remaining_credits=$REMAINING" >> "$GITHUB_OUTPUT"
+
+      - name: Select deterministic campaign events
+        if: ${{ inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.restored != 'true') }}
+        run: |
+          python -m scripts.select_campaign_events             --input data/odds_api/campaign/events_all.csv             --target '${{ steps.campaign_plan.outputs.events_this_run }}'             --output data/odds_api/campaign/events_selected.csv
+
+      - name: Build immutable provider plan
+        if: ${{ inputs.mode == 'start_next_stage' || (inputs.mode == 'continue_current_stage' && steps.restore_checkpoint.outputs.restored != 'true') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m scripts.plan_historical_backfill             --events-csv data/odds_api/campaign/events_selected.csv             --horizons 1             --no-closing             --bookmakers winamax_fr betclic_fr unibet_fr pmu_fr pinnacle             --max-credits '${{ steps.provider_budget.outputs.remaining_credits }}'             --full             --output-dir data/odds_api/campaign/backfill
+
+      - name: Resolve immutable provider plan identity
+        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        id: resolved_provider_plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          PLAN_ID=$(python -c "import json; print(json.load(open('data/odds_api/campaign/backfill/plan.json'))['plan_id'])")
+          echo "plan_id=$PLAN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Execute immutable provider plan
+        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        run: |
+          python -m scripts.run_historical_backfill             --plan-dir data/odds_api/campaign/backfill             --max-credits '${{ steps.provider_budget.outputs.remaining_credits }}'             --storage files             --approve-plan '${{ steps.resolved_provider_plan.outputs.plan_id }}'             --execute
+
+      - name: Prepare market comparison
+        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        shell: bash
+        run: |
+          set +e
+          python -m scripts.prepare_market_benchmark \
+            --results-csv data/real/football_active.csv \
+            --events-csv data/odds_api/campaign/events_all.csv \
+            --odds-csv data/odds_api/campaign/backfill/historical_odds_long.csv \
+            --stage t-1h \
+            --output-dir data/benchmark
+          PREPARE_CODE=$?
+          if [ -s data/benchmark/evaluation_t-1h.csv ]; then
+            python -m scripts.run_market_benchmark \
+              --input data/benchmark/evaluation_t-1h.csv \
+              --minimum-predictions 1000 \
+              --exploratory-predictions 100 \
+              --minimum-train 30 \
+              --folds 5 \
+              --output artifacts/market_benchmark_v4.json
+          fi
+          set -e
+          echo "Market preparation exit code: $PREPARE_CODE"
+
+      - name: Build evidence and campaign reports
+        if: ${{ inputs.mode == 'continue_current_stage' || inputs.mode == 'start_next_stage' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp data/odds_api/campaign/events_all.csv data/odds_api/historical/events.csv
+          cp data/odds_api/campaign/event_discovery_plan.json data/odds_api/historical/event_discovery_plan.json
+          cp data/odds_api/campaign/event_discovery_state.json data/odds_api/historical/event_discovery_state.json
+          mkdir -p data/odds_api/backfill
+          cp -a data/odds_api/campaign/backfill/. data/odds_api/backfill/
+          python -m scripts.build_evidence_report \
+            --matches-csv data/benchmark/event_mapping.csv \
+            --benchmark-json artifacts/market_benchmark_v4.json
+          python -m scripts.export_evidence_tables \
+            --report artifacts/evidence_report_v3_9.json \
+            --events-output artifacts/event_outcomes_v4.csv \
+            --bookmakers-output artifacts/bookmaker_coverage_v4.csv
+          python -m scripts.build_campaign_report
+
+      - name: Commit campaign evidence
+        if: ${{ inputs.mode != 'dry_run' }}
+        id: evidence_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'sports-prediction-bot'
+          git config user.email 'sports-prediction-bot@users.noreply.github.com'
+          git add artifacts/evidence_campaign_plan_v4.json artifacts/evidence_campaign_v4.json
+          [ ! -f artifacts/evidence_report_v3_9.json ] || git add artifacts/evidence_report_v3_9.json
+          [ ! -f artifacts/event_outcomes_v4.csv ] || git add artifacts/event_outcomes_v4.csv
+          [ ! -f artifacts/bookmaker_coverage_v4.csv ] || git add artifacts/bookmaker_coverage_v4.csv
+          [ ! -f artifacts/market_benchmark_v4.json ] || git add artifacts/market_benchmark_v4.json
+          if git diff --cached --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "chore: publish V4 evidence campaign ${{ steps.campaign_plan.outputs.campaign_id }}"
+            git push
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release proof
+        if: ${{ inputs.mode != 'dry_run' }}
+        env:
+          SOURCE_COMMIT: ${{ steps.evidence_commit.outputs.head_sha }}
+        run: python -m scripts.generate_release_manifest
+
+      - name: Install Railway CLI
+        if: ${{ inputs.mode != 'dry_run' }}
+        run: npm install --global @railway/cli
+
+      - name: Deploy campaign dashboard
+        if: ${{ inputs.mode != 'dry_run' }}
+        run: |
+          railway up --ci --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT" \
+            --service "$RAILWAY_WEB_SERVICE" --message "V4 campaign ${{ steps.campaign_plan.outputs.campaign_id }}"
+
+      - name: Verify deployed release
+        if: ${{ inputs.mode != 'dry_run' }}
+        shell: bash
+        run: |
+          MODEL_SHA=$(python -c "import json; print(json.load(open('artifacts/release_manifest.json'))['football_model']['artifact_sha256'] or '')")
+          python -m scripts.post_deploy_verify \
+            --base-url "$APP_PUBLIC_URL" \
+            --expected-version "$EXPECTED_VERSION" \
+            --expected-commit '${{ steps.evidence_commit.outputs.head_sha }}' \
+            --expected-model-sha256 "$MODEL_SHA" \
+            --attempts 30 --delay-seconds 10
+
+      - name: Upload complete campaign state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-campaign-state-${{ github.run_id }}
+          path: |
+            artifacts/evidence_campaign_plan_v4.json
+            artifacts/evidence_campaign_v4.json
+            artifacts/evidence_report_v3_9.json
+            artifacts/event_outcomes_v4.csv
+            artifacts/bookmaker_coverage_v4.csv
+            artifacts/market_benchmark_v4.json
+            data/benchmark/event_mapping.csv
+            data/benchmark/evaluation_t-1h.csv
+            data/benchmark/preparation_report.json
+            data/odds_api/campaign/events_all.csv
+            data/odds_api/campaign/events_selected.csv
+            data/odds_api/campaign/event_discovery_plan.json
+            data/odds_api/campaign/event_discovery_state.json
+            data/odds_api/campaign/backfill/plan.json
+            data/odds_api/campaign/backfill/state.json
+            data/odds_api/campaign/backfill/requests.csv
+            data/odds_api/campaign/backfill/targets.csv
+            data/odds_api/campaign/backfill/event_selection.csv
+            data/odds_api/campaign/backfill/historical_odds_long.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Campaign summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### V4.0 controlled evidence campaign'
+            echo
+            echo "- Campaign: \`${{ steps.campaign_plan.outputs.campaign_id }}\`"
+            echo "- Mode: \`$INPUT_MODE\`"
+            echo "- Target stage: \`$INPUT_TARGET_STAGE\`"
+            echo "- Baseline: \`$INPUT_BASELINE\`"
+            echo "- Immutable credit cap: \`$INPUT_MAX_CREDITS\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -f artifacts/evidence_campaign_v4.json ]; then
+            echo "- Decision: \`$(jq -r '.decision' artifacts/evidence_campaign_v4.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Completed stage: \`$(jq -r '.completed_stage // 0' artifacts/evidence_campaign_v4.json)\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Next stage: \`$(jq -r '.next_stage // 30' artifacts/evidence_campaign_v4.json)\`" >> "$GITHUB_STEP_SUMMARY"
+          fi

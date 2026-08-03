@@ -210,12 +210,31 @@ function renderEvidence(data){
   if(!items.length) items.push({kind:'passed',label:'Contrôle',value:report.generated_at?'Aucune anomalie bloquante détectée.':'Aucun rapport publié.'});
   const issuesNode=$('#evidenceIssues');
   if(issuesNode){
-    issuesNode.innerHTML=items.map(item=>`<article class="gate-card ${esc(item.kind)}"><small>${esc(item.label)}</small><h3>${esc(String(item.value).replaceAll('_',' '))}</h3><p>${esc(report.next_action||'Les détails sont conservés dans l’artefact GitHub V3.9.')}</p></article>`).join('');
+    issuesNode.innerHTML=items.map(item=>`<article class="gate-card ${esc(item.kind)}"><small>${esc(item.label)}</small><h3>${esc(String(item.value).replaceAll('_',' '))}</h3><p>${esc(report.next_action||'Les détails sont conservés dans l’artefact GitHub V4.0.')}</p></article>`).join('');
   }
 }
 
+function renderCampaign(data){
+  const report=(data||{}).report||{};
+  const gate=report.scale_gate||{};
+  const budget=report.budget||{};
+  const labels={not_run:'Non lancée',hold_and_fix_data_quality:'Corriger la qualité',eligible_for_next_stage_review:'Éligible à une revue'};
+  const setText=(selector,value)=>{ const node=$(selector); if(node) node.textContent=value; };
+  setText('#campaignDecision',labels[report.decision]||String(report.decision||'Non lancée').replaceAll('_',' '));
+  setText('#campaignReason',gate.reason||data.required_next_step||'Aucun rapport de campagne publié.');
+  setText('#campaignCompleted',report.completed_stage??0);
+  setText('#campaignNext',report.next_stage??30);
+  setText('#campaignGate',gate.accepted?'Porte qualité franchie ; revue humaine avant le prochain stage.':'La campagne reste bloquée tant que les contrôles qualité ne passent pas.');
+  setText('#campaignBudget',budget.maximum_credits??0);
+  setText('#campaignCredits',`${budget.observed_consumed_credits??0} crédits observés · aucune promotion automatique.`);
+}
+
 async function refreshEvidence(){
-  try{ renderEvidence(await jsonFetch('/api/evidence')); }
+  try{
+    const [evidence,campaign]=await Promise.all([jsonFetch('/api/evidence'),jsonFetch('/api/evidence-campaign')]);
+    renderEvidence(evidence);
+    renderCampaign(campaign);
+  }
   catch(error){ toast(`Rapport de preuve indisponible : ${error.message}`); }
 }
 
@@ -371,6 +390,7 @@ async function init(){
       history:jsonFetch('/api/history/predictions?limit=20'),
       benchmark:jsonFetch('/api/benchmark/summary'),
       evidence:jsonFetch('/api/evidence'),
+      campaign:jsonFetch('/api/evidence-campaign'),
       decision:jsonFetch('/api/model-decision'),
       shadow:jsonFetch('/api/shadow/summary'),
       shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
@@ -389,6 +409,7 @@ async function init(){
     if(loaded.history) renderHistory(loaded.history);
     if(loaded.benchmark) renderBenchmark(loaded.benchmark);
     if(loaded.evidence) renderEvidence(loaded.evidence);
+    if(loaded.campaign) renderCampaign(loaded.campaign);
     if(loaded.decision) renderDecision(loaded.decision);
     if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
     if(loaded.system) renderSystem(loaded.system);

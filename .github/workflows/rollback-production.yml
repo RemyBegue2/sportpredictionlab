@@ -130,7 +130,7 @@ jobs:
           print(p['football_model']['artifact_sha256'] or '')
           PY
           )
-          python -m scripts.post_deploy_verify --base-url "$APP_PUBLIC_URL" --expected-version '3.9.0' --expected-commit '${{ steps.commit.outputs.sha }}' --expected-model-sha256 "$MODEL_SHA" --attempts 30 --delay-seconds 10
+          python -m scripts.post_deploy_verify --base-url "$APP_PUBLIC_URL" --expected-version '4.0.0' --expected-commit '${{ steps.commit.outputs.sha }}' --expected-model-sha256 "$MODEL_SHA" --attempts 30 --delay-seconds 10
 
       - name: Install Chromium smoke-test dependencies
         run: |
@@ -140,7 +140,7 @@ jobs:
       - name: Verify restored private interface
         env:
           APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
-        run: python -m scripts.browser_smoke_test --base-url "$APP_PUBLIC_URL" --expected-version '3.9.0'
+        run: python -m scripts.browser_smoke_test --base-url "$APP_PUBLIC_URL" --expected-version '4.0.0'
 
       - name: Summary
         if: always()

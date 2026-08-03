@@ -13,12 +13,12 @@ DEFAULT_FILES = (
     "START_HERE_NEXT_CHAT.md",
     "NEXT_CHAT_PROMPT.txt",
     "README.md",
-    "UPGRADE_V3_9.md",
-    "AUDIT_MULTI_ROLES_V3_9.md",
-    "RESULTATS_V3_9.md",
+    "UPGRADE_V4_0.md",
+    "AUDIT_MULTI_ROLES_V4_0.md",
+    "RESULTATS_V4_0.md",
     "DECISION_LOG.md",
-    "KNOWN_ISSUES_AND_GATES.md",
-    "OPERATIONS_RUNBOOK.md",
+    "KNOWN_ISSUES_AND_GATES_V4_0.md",
+    "OPERATIONS_RUNBOOK_V4_0.md",
     "handoff/HANDOFF_CURRENT.md",
     "handoff/HANDOFF_CURRENT.json",
     "handoff/LAST_BENCHMARK_SUMMARY.json",
@@ -26,9 +26,9 @@ DEFAULT_FILES = (
     "handoff/NEXT_ACTIONS.md",
     "artifacts/release_manifest.json",
     "artifacts/evidence_report_v3_9.json",
-    "artifacts/integration_status_v3_9.json",
-    "artifacts/security_scan_v3_9.json",
-    "VALIDATION_V3_9.json",
+    "artifacts/evidence_campaign_plan_v4.json",
+    "artifacts/evidence_campaign_v4.json",
+    "VALIDATION_V4_0.json",
 )
 
 
@@ -71,7 +71,7 @@ def build_bundle(destination: Path) -> dict[str, object]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build a secret-free handoff ZIP for GitHub Actions artifacts.")
-    parser.add_argument("--output", default="dist/sports-prediction-handoff-v3.9.zip")
+    parser.add_argument("--output", default="dist/sports-prediction-handoff-v4.0.zip")
     args = parser.parse_args()
     result = build_bundle(ROOT / args.output)
     print(json.dumps(result, ensure_ascii=False, indent=2))

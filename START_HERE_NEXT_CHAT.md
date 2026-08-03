@@ -1,38 +1,27 @@
-# START HERE — Sports Prediction Lab V3.9
+# Sports Prediction Lab — point de reprise V4.0
 
-## État actuel
+## État canonique
 
-- Version cible : **3.9.0 Data Reliability & Coverage Funnel**.
-- Exploitation : GitHub Actions + Railway, aucun Python local.
-- Modèle : inchangé par la V3.9.
-- Dernier lot observé avant recalcul : 111 événements découverts, 10 avec cotes, 63 lignes acceptées, 100 crédits.
-- Problème corrigé : le rapport V3.8 divisait les événements avec cotes par tout le vivier découvert, y compris les événements jamais sélectionnés à cause du budget.
+- Base stable avant upgrade : V3.9.2.
+- Version préparée : V4.0.0 Controlled Evidence Scale-Up.
+- Exploitation : GitHub Actions + Railway uniquement ; aucun Python local.
+- Nouveau workflow : `.github/workflows/run-evidence-campaign.yml`.
+- Stages : 30, 100, 300, 1 000.
+- Baseline par défaut : consensus.
+- Aucune promotion automatique, aucune mise, aucun pari automatique.
 
-## Première action dans une nouvelle conversation
-
-Lire dans cet ordre :
-
-1. `handoff/HANDOFF_CURRENT.md`
-2. `handoff/HANDOFF_CURRENT.json`
-3. `AUDIT_MULTI_ROLES_V3_9.md`
-4. `KNOWN_ISSUES_AND_GATES.md`
-5. le dernier log GitHub en cas d’échec
-
-## Première action opérationnelle
+## Première action après déploiement
 
 ```text
-GitHub
-→ Actions
-→ Recompute latest evidence
-→ Run workflow
+Actions → Run evidence campaign → dry_run → stage 30 → 350 crédits → consensus
 ```
 
-Ce workflow doit consommer zéro crédit fournisseur.
+Le dry-run doit être vert avant toute exécution payante.
 
-## Règles non négociables
+## Fichiers prioritaires à joindre dans une nouvelle conversation
 
-- aucune commande Python locale ;
-- aucune mise conseillée ;
-- aucun pari automatique ;
-- aucune promotion automatique de modèle ;
-- aucune nouvelle collecte payante avant lecture du funnel V3.9 corrigé.
+- `START_HERE_NEXT_CHAT.md`
+- `handoff/HANDOFF_CURRENT.md`
+- `handoff/HANDOFF_CURRENT.json`
+- dernier `evidence_campaign_v4.json`
+- log exact du workflow en cas d’échec
