@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "app_version": "3.8.0",
+  "generated_at": "2026-08-03T10:55:13.353725+00:00",
+  "plan_id": "bd891288074a30b2c01866e596afc4a4a5c355a812ccc6e3dd338d038512b64b",
+  "plan_request_id": "REQ-8D7E4D0D7D916A88FB23446C",
+  "backfill_status": "completed",
+  "consumed_credits": 100,
+  "quality_gate": {
+    "status": "blocked",
+    "reason": "event_coverage_below_95_percent",
+    "accepted": false
+  },
+  "counts": {
+    "planned_events": 111,
+    "events_with_odds": 10,
+    "historical_odds_rows": 63,
+    "accepted_rows": 63,
+    "quarantined_temporal_rows": 0,
+    "duplicate_rows": 0,
+    "bookmakers": 5,
+    "winamax_events": 3
+  },
+  "rates": {
+    "event_coverage": 0.09009009009009009,
+    "winamax_coverage": 0.02702702702702703,
+    "temporal_violation": 0.0,
+    "duplicate": 0.0,
+    "reliable_matching": 0.8738738738738738
+  },
+  "matching": {
+    "exact": 0,
+    "high_confidence": 97,
+    "manual_review": 0,
+    "rejected": 14
+  },
+  "blockers": [
+    "event_coverage_below_95_percent",
+    "reliable_matching_below_95_percent"
+  ],
+  "warnings": [
+    "winamax_coverage_below_70_percent"
+  ],
+  "benchmark": {
+    "evaluated_rows": 3,
+    "verdict": {
+      "status": "not_evaluable",
+      "reason": "no expanding-window fold could be formed; descriptive metrics are not a promotion test"
+    },
+    "comparisons": {
+      "model_vs_winamax": null,
+      "model_vs_consensus": null,
+      "blend_vs_winamax": null
+    },
+    "closing_line_value": null
+  },
+  "responsible_use": {
+    "experimental_analysis": true,
+    "profitability_claim": false,
+    "stake_recommendation": false,
+    "automatic_bet_placement": false
+  }
+}
