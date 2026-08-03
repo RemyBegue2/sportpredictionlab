@@ -33,6 +33,7 @@ def build_historical_plan(
     *,
     horizons_hours: Sequence[float] = (24.0, 6.0, 1.0),
     closing_minutes: int = 10,
+    include_closing: bool = True,
     markets: Sequence[str] = ("h2h",),
     bookmakers: Sequence[str] = (
         "winamax_fr",
@@ -60,14 +61,18 @@ def build_historical_plan(
                 "stage": f"t-{float(horizon):g}h",
                 "snapshot_at": snapshot,
             })
-        close_snapshot = floor_timestamp(commence - timedelta(minutes=int(closing_minutes)), interval_minutes=interval_minutes)
-        target_rows.append({
-            "sport_key": row["sport_key"],
-            "event_id": row["event_id"],
-            "commence_time": commence,
-            "stage": f"close-{closing_minutes}m",
-            "snapshot_at": close_snapshot,
-        })
+        if include_closing:
+            close_snapshot = floor_timestamp(
+                commence - timedelta(minutes=int(closing_minutes)),
+                interval_minutes=interval_minutes,
+            )
+            target_rows.append({
+                "sport_key": row["sport_key"],
+                "event_id": row["event_id"],
+                "commence_time": commence,
+                "stage": f"close-{closing_minutes}m",
+                "snapshot_at": close_snapshot,
+            })
     targets = pd.DataFrame(target_rows).drop_duplicates(["sport_key", "event_id", "stage"])
     requests = targets[["sport_key", "snapshot_at"]].drop_duplicates().sort_values(["sport_key", "snapshot_at"]).reset_index(drop=True)
     requests["request_number"] = np.arange(1, len(requests) + 1)

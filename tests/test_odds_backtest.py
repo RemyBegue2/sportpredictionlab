@@ -38,3 +38,14 @@ def test_market_comparison_metrics_and_clv():
 def test_conservative_gate():
     assert safe_threshold_gate(edge=.05, lower_confidence_edge=.01)
     assert not safe_threshold_gate(edge=.05, lower_confidence_edge=-.01)
+
+
+def test_historical_plan_can_disable_closing_for_budgeted_sample():
+    events = pd.DataFrame([
+        {"sport_key": "soccer_epl", "event_id": "a", "commence_time": "2025-05-10T14:00:00Z"},
+        {"sport_key": "soccer_epl", "event_id": "b", "commence_time": "2025-05-10T16:00:00Z"},
+    ])
+    plan = build_historical_plan(events, horizons_hours=[1], include_closing=False)
+    assert set(plan.targets["stage"]) == {"t-1h"}
+    assert len(plan.requests) == 2
+    assert plan.estimated_credits == 20

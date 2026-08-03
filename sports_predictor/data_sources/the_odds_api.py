@@ -251,12 +251,36 @@ class OddsApiClient:
         quota_payload = {**asdict(quota), "known": any(x is not None for x in asdict(quota).values()), "updated_at": self._now_iso()}
         self._write_json_atomic(self._quota_path(), quota_payload)
 
+        def provider_error_detail() -> str:
+            try:
+                body = response.json()
+            except (TypeError, ValueError):
+                return "no structured provider error was returned"
+            if not isinstance(body, dict):
+                return "no structured provider error was returned"
+            code = str(body.get("error_code") or body.get("code") or "").strip()
+            message = str(body.get("message") or body.get("detail") or body.get("error") or "").strip()
+            parts = []
+            if code:
+                parts.append(code)
+            if message and message != code:
+                parts.append(message)
+            return ": ".join(parts) if parts else "no structured provider error was returned"
+
         if response.status_code in {401, 403}:
-            raise OddsApiError("The Odds API rejected the server credentials or subscription access")
+            raise OddsApiError(
+                "The Odds API rejected credentials or subscription access: "
+                f"{provider_error_detail()}"
+            )
         if response.status_code == 422:
-            raise OddsApiError("The Odds API rejected one or more request parameters")
+            raise OddsApiError(
+                "The Odds API rejected request parameters: "
+                f"{provider_error_detail()}"
+            )
         if response.status_code >= 400:
-            raise OddsApiError(f"The Odds API returned HTTP {response.status_code}")
+            raise OddsApiError(
+                f"The Odds API returned HTTP {response.status_code}: {provider_error_detail()}"
+            )
         try:
             payload = response.json()
         except ValueError as exc:
@@ -356,19 +380,19 @@ class OddsApiClient:
         sport_key: str,
         *,
         snapshot_at: str,
-        commence_time_from: str | None = None,
-        commence_time_to: str | None = None,
         force_refresh: bool = False,
     ) -> OddsApiEnvelope:
+        """Return the provider's historical event list at one snapshot.
+
+        The historical-events endpoint documents only the ``date`` query
+        parameter in addition to the API key. Event commence-time filtering is
+        therefore performed locally by the discovery script rather than sent
+        as unsupported provider parameters.
+        """
         sport = self._validate_tokens((sport_key,), label="sport key")[0]
-        params: dict[str, Any] = {"date": snapshot_at, "dateFormat": "iso"}
-        if commence_time_from:
-            params["commenceTimeFrom"] = commence_time_from
-        if commence_time_to:
-            params["commenceTimeTo"] = commence_time_to
         return self._request(
             f"/v4/historical/sports/{sport}/events",
-            params,
+            {"date": snapshot_at},
             cache_ttl_seconds=None,
             force_refresh=force_refresh,
         )

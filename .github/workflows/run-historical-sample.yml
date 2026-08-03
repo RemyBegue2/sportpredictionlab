@@ -65,16 +65,50 @@ jobs:
           python-version: '3.12'
           cache: pip
       - run: pip install -r requirements.txt
-      - name: Validate secrets and explicit confirmation
+      - name: Validate complete cloud configuration
         shell: bash
         run: |
           set -euo pipefail
-          [ '${{ inputs.confirmation }}' = 'EXECUTE_APPROVED_SAMPLE' ] || { echo 'Confirmation must equal EXECUTE_APPROVED_SAMPLE'; exit 2; }
-          [ -n "${THE_ODDS_API_KEY:-}" ] || { echo 'THE_ODDS_API_KEY secret is missing'; exit 2; }
-          [ -n "${DATABASE_URL:-}" ] || { echo 'DATABASE_URL secret is missing'; exit 2; }
-          [ -n "${RAILWAY_TOKEN:-}" ] || { echo 'RAILWAY_TOKEN secret is missing'; exit 2; }
-          [ -n "${RAILWAY_PROJECT_ID:-}" ] || { echo 'RAILWAY_PROJECT_ID secret is missing'; exit 2; }
-          [ -n "${APP_PUBLIC_URL:-}" ] || { echo 'APP_PUBLIC_URL variable is missing'; exit 2; }
+
+          errors=()
+
+          if [ '${{ inputs.confirmation }}' != 'EXECUTE_APPROVED_SAMPLE' ]; then
+            errors+=("confirmation must equal EXECUTE_APPROVED_SAMPLE")
+          fi
+          [ -n "${THE_ODDS_API_KEY:-}" ] || errors+=("missing repository secret: THE_ODDS_API_KEY")
+          [ -n "${DATABASE_URL:-}" ] || errors+=("missing repository secret: DATABASE_URL (use Railway Postgres DATABASE_PUBLIC_URL)")
+          [ -n "${RAILWAY_TOKEN:-}" ] || errors+=("missing repository secret: RAILWAY_TOKEN")
+          [ -n "${RAILWAY_PROJECT_ID:-}" ] || errors+=("missing repository secret: RAILWAY_PROJECT_ID")
+          [ -n "${APP_PUBLIC_URL:-}" ] || errors+=("missing repository variable: APP_PUBLIC_URL")
+
+          if [ -n "${DATABASE_URL:-}" ]; then
+            case "$DATABASE_URL" in
+              postgres://*|postgresql://*) ;;
+              *) errors+=("DATABASE_URL must start with postgres:// or postgresql://") ;;
+            esac
+            case "$DATABASE_URL" in
+              *railway.internal*) errors+=("DATABASE_URL is private Railway DNS; GitHub Actions needs DATABASE_PUBLIC_URL via the TCP proxy") ;;
+            esac
+          fi
+
+          if [ ${#errors[@]} -gt 0 ]; then
+            {
+              echo '### Historical sample blocked: complete configuration required'
+              echo
+              for error in "${errors[@]}"; do
+                echo "- $error"
+              done
+              echo
+              echo 'Create secrets under: Settings → Secrets and variables → Actions → Secrets.'
+              echo 'Create APP_PUBLIC_URL under the Variables tab.'
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            printf 'Configuration errors:\n'
+            printf ' - %s\n' "${errors[@]}"
+            exit 2
+          fi
+
+          echo 'All required historical-sample configuration is present.' >> "$GITHUB_STEP_SUMMARY"
       - name: Rebuild and verify the zero-credit request plan
         shell: bash
         run: |
@@ -87,21 +121,35 @@ jobs:
             --max-odds-credits '${{ inputs.max_odds_credits }}'
           ACTUAL=$(python -c "import json; print(json.load(open('artifacts/historical_sample_request.json'))['plan_request_id'])")
           [ "$ACTUAL" = '${{ inputs.plan_request_id }}' ] || { echo "Plan request mismatch: expected $ACTUAL"; exit 3; }
-      - name: Discover provider events within the hard cap
+      - name: Discover provider events within the global credit cap
+        id: discovery
+        shell: bash
         run: |
+          set -euo pipefail
           python -m scripts.discover_historical_events \
             --sport-key soccer_epl \
             --start '${{ inputs.start_date }}' \
             --end '${{ inputs.end_date }}' \
             --max-calls '${{ inputs.max_discovery_calls }}' \
+            --max-credits '${{ inputs.max_odds_credits }}' \
             --output data/odds_api/historical/events.csv \
             --execute
-      - name: Build immutable provider plan and register checkpoint job
+          USED=$(python -c "import json; print(int(json.load(open('data/odds_api/historical/event_discovery_state.json'))['consumed_credits']))")
+          REMAINING=$(( ${{ inputs.max_odds_credits }} - USED ))
+          if [ "$REMAINING" -lt 1 ]; then
+            echo "Discovery consumed the complete credit cap ($USED/${{ inputs.max_odds_credits }})."
+            exit 4
+          fi
+          echo "consumed_credits=$USED" >> "$GITHUB_OUTPUT"
+          echo "remaining_credits=$REMAINING" >> "$GITHUB_OUTPUT"
+      - name: Build immutable budget-adapted provider plan
         run: |
           python -m scripts.plan_historical_backfill \
             --events-csv data/odds_api/historical/events.csv \
             --horizons 1 \
-            --max-credits '${{ inputs.max_odds_credits }}' \
+            --no-closing \
+            --bookmakers winamax_fr betclic_fr unibet_fr pmu_fr pinnacle \
+            --max-credits '${{ steps.discovery.outputs.remaining_credits }}' \
             --sample-events '${{ inputs.sample_events }}' \
             --plan-request-json artifacts/historical_sample_request.json \
             --output-dir data/odds_api/backfill \
@@ -109,10 +157,11 @@ jobs:
       - name: Execute resumable immutable sample
         shell: bash
         run: |
+          set -euo pipefail
           JOB_ID=$(python -c "import json; print(json.load(open('data/odds_api/backfill/plan.json'))['database_job_id'])")
           python -m scripts.run_historical_backfill \
             --plan-dir data/odds_api/backfill \
-            --max-credits '${{ inputs.max_odds_credits }}' \
+            --max-credits '${{ steps.discovery.outputs.remaining_credits }}' \
             --job-id "$JOB_ID" \
             --execute
       - name: Prepare leakage-safe model and market comparison
@@ -208,6 +257,7 @@ jobs:
             data/benchmark/evaluation_t-1h.csv
             data/benchmark/preparation_report.json
             data/odds_api/historical/event_discovery_plan.json
+            data/odds_api/historical/event_discovery_state.json
             data/odds_api/historical/events.csv
             data/odds_api/backfill/plan.json
             data/odds_api/backfill/state.json
@@ -226,6 +276,8 @@ jobs:
             echo "- Request plan: \`${{ inputs.plan_request_id }}\`"
             echo "- Quality status: \`${{ steps.quality.outputs.status }}\`"
             echo "- Quality accepted: \`${{ steps.quality.outputs.accepted }}\`"
+            echo "- Discovery credits: \`${{ steps.discovery.outputs.consumed_credits }}\`"
+            echo "- Remaining odds cap: \`${{ steps.discovery.outputs.remaining_credits }}\`"
             echo "- Evidence commit: \`${{ steps.evidence_commit.outputs.head_sha }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
           if [ -f artifacts/evidence_report_v3_8.json ]; then

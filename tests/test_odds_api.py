@@ -234,3 +234,31 @@ def test_scores_endpoint_and_payload_do_not_expose_key(tmp_path: Path):
     assert session.calls[0][0].endswith("/v4/sports/soccer_epl/scores")
     assert session.calls[0][1]["params"]["daysFrom"] == 3
     assert "score-secret" not in "\n".join(path.read_text() for path in tmp_path.glob("*.json"))
+
+
+def test_historical_events_sends_only_documented_date_parameter(tmp_path: Path):
+    payload = {"timestamp": "2024-01-01T12:00:00Z", "data": []}
+    session = FakeSession(FakeResponse(payload))
+    client = OddsApiClient(OddsApiConfig(api_key="hidden", cache_dir=tmp_path), session=session)
+
+    client.historical_events("soccer_epl", snapshot_at="2024-01-01T12:00:00Z")
+
+    assert session.calls[0][0].endswith("/v4/historical/sports/soccer_epl/events")
+    params = session.calls[0][1]["params"]
+    assert params == {"date": "2024-01-01T12:00:00Z", "apiKey": "hidden"}
+
+
+def test_provider_parameter_error_preserves_code_without_exposing_key(tmp_path: Path):
+    session = FakeSession(FakeResponse(
+        {"error_code": "INVALID_HISTORICAL_TIMESTAMP", "message": "date must be ISO8601"},
+        status_code=422,
+    ))
+    client = OddsApiClient(OddsApiConfig(api_key="top-secret", cache_dir=tmp_path), session=session)
+
+    with pytest.raises(Exception) as caught:
+        client.historical_events("soccer_epl", snapshot_at="bad-date")
+
+    message = str(caught.value)
+    assert "INVALID_HISTORICAL_TIMESTAMP" in message
+    assert "date must be ISO8601" in message
+    assert "top-secret" not in message

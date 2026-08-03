@@ -188,3 +188,76 @@ def test_v38_workflows_are_browser_operated_and_capped() -> None:
     assert "Enforce quality gate after publishing the diagnostic" in run
     assert "max_odds_credits" in run
     assert "railway up" in run
+
+
+def test_discovery_filters_commence_times_locally() -> None:
+    from scripts.discover_historical_events import event_in_window
+
+    event = {"commence_time": "2024-01-03T20:00:00Z"}
+    assert event_in_window(
+        event,
+        start_at="2024-01-01T00:00:00Z",
+        end_at="2024-01-08T23:59:59Z",
+    )
+    assert not event_in_window(
+        event,
+        start_at="2024-01-04T00:00:00Z",
+        end_at="2024-01-08T23:59:59Z",
+    )
+
+
+def test_budget_capped_sample_reduces_events_instead_of_failing() -> None:
+    from scripts.plan_historical_backfill import build_budget_capped_validation_plan
+
+    events = pd.DataFrame([
+        {
+            "sport_key": "soccer_epl",
+            "event_id": f"e{i}",
+            "commence_time": f"2025-01-{i + 1:02d}T15:00:00Z",
+        }
+        for i in range(20)
+    ])
+    selected, plan = build_budget_capped_validation_plan(
+        events,
+        requested_events=20,
+        max_credits=120,
+        horizons=[1],
+        closing_minutes=10,
+        include_closing=False,
+        markets=["h2h"],
+        bookmakers=["winamax_fr", "pinnacle"],
+    )
+    assert len(selected) == 12
+    assert plan.estimated_credits == 120
+    assert set(plan.targets["stage"]) == {"t-1h"}
+
+
+def test_zero_credit_plan_reports_real_requested_cost_and_budget_adaptation() -> None:
+    plan = build_sample_request_plan(
+        sport_key="soccer_epl",
+        start_date="2023-01-01",
+        end_date="2026-08-01",
+        sample_events=30,
+        horizons_hours=[1],
+        max_discovery_calls=14,
+        max_odds_credits=120,
+    )
+    assert plan.credit_cost_per_snapshot == 10
+    assert plan.estimated_snapshot_requests_upper_bound == 30
+    assert plan.estimated_credits_upper_bound == 300
+    assert plan.budget_limited_max_unique_snapshots == 12
+    assert plan.budget_adaptive_sampling is True
+
+
+def test_v383_workflow_uses_supported_historical_events_contract_and_global_cap() -> None:
+    root = Path(__file__).resolve().parents[1]
+    workflow = (root / ".github" / "workflows" / "run-historical-sample.yml").read_text(encoding="utf-8")
+    client = (root / "sports_predictor" / "data_sources" / "the_odds_api.py").read_text(encoding="utf-8")
+    assert "--no-closing" in workflow
+    assert "steps.discovery.outputs.remaining_credits" in workflow
+    assert "event_discovery_state.json" in workflow
+    historical_method = client.split("def historical_events", 1)[1].split("def scores", 1)[0]
+    assert '"date": snapshot_at' in historical_method
+    assert "commenceTimeFrom" not in historical_method
+    assert "commenceTimeTo" not in historical_method
+    assert "dateFormat" not in historical_method

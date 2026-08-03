@@ -91,6 +91,9 @@ class SampleRequestPlan:
     estimated_discovery_calls: int
     estimated_snapshot_requests_upper_bound: int
     estimated_credits_upper_bound: int
+    credit_cost_per_snapshot: int
+    budget_limited_max_unique_snapshots: int
+    budget_adaptive_sampling: bool
     plan_request_id: str
     consumes_credits: bool = False
 
@@ -125,8 +128,8 @@ def build_sample_request_plan(
         raise ValueError(f"sample_events must be between 1 and {MAX_SAMPLE_EVENTS}")
     if not 1 <= int(max_discovery_calls) <= MAX_DISCOVERY_CALLS:
         raise ValueError(f"max_discovery_calls must be between 1 and {MAX_DISCOVERY_CALLS}")
-    if not 1 <= int(max_odds_credits) <= MAX_ODDS_CREDITS:
-        raise ValueError(f"max_odds_credits must be between 1 and {MAX_ODDS_CREDITS}")
+    if not 10 <= int(max_odds_credits) <= MAX_ODDS_CREDITS:
+        raise ValueError(f"max_odds_credits must be between 10 and {MAX_ODDS_CREDITS}")
 
     normalized_horizons = tuple(sorted({float(value) for value in horizons_hours}))
     if not normalized_horizons or any(value <= 0 or value > 72 for value in normalized_horizons):
@@ -141,10 +144,22 @@ def build_sample_request_plan(
     discovery_schedule = select_discovery_dates(start, end, int(max_discovery_calls))
     discovery_dates = tuple(value.isoformat() for value in discovery_schedule)
 
-    # One request per event and horizon, plus one closing snapshot per event.
-    snapshot_upper = int(sample_events) * (len(normalized_horizons) + 1)
+    # The controlled V3.8 sample evaluates only the requested pre-match
+    # horizons. Closing-line collection is deliberately excluded from the
+    # first run so the immutable credit cap can be respected. The provider
+    # charges historical featured-market snapshots per market and per group of
+    # up to ten bookmakers.
+    snapshot_upper = int(sample_events) * len(normalized_horizons)
+    bookmaker_groups = max(1, (len(normalized_bookmakers) + 9) // 10)
+    credit_cost_per_snapshot = 10 * len(normalized_markets) * bookmaker_groups
+    requested_credit_upper = snapshot_upper * credit_cost_per_snapshot
+    max_unique_snapshots = int(max_odds_credits) // credit_cost_per_snapshot
+    if max_unique_snapshots < 1:
+        raise ValueError(
+            f"max_odds_credits must be at least {credit_cost_per_snapshot} for one historical snapshot"
+        )
     identity = {
-        "schema_version": "1.1",
+        "schema_version": "1.2",
         "sport_key": sport_key,
         "start_date": start.isoformat(),
         "end_date": end.isoformat(),
@@ -159,7 +174,10 @@ def build_sample_request_plan(
         "discovery_dates": list(discovery_dates),
         "estimated_discovery_calls": len(discovery_dates),
         "estimated_snapshot_requests_upper_bound": snapshot_upper,
-        "estimated_credits_upper_bound": int(max_odds_credits),
+        "estimated_credits_upper_bound": requested_credit_upper,
+        "credit_cost_per_snapshot": credit_cost_per_snapshot,
+        "budget_limited_max_unique_snapshots": max_unique_snapshots,
+        "budget_adaptive_sampling": True,
     }
     plan_request_id = "REQ-" + hashlib.sha256(_canonical_json(identity).encode("utf-8")).hexdigest()[:24].upper()
     return SampleRequestPlan(
@@ -179,6 +197,9 @@ def build_sample_request_plan(
         estimated_discovery_calls=identity["estimated_discovery_calls"],
         estimated_snapshot_requests_upper_bound=identity["estimated_snapshot_requests_upper_bound"],
         estimated_credits_upper_bound=identity["estimated_credits_upper_bound"],
+        credit_cost_per_snapshot=identity["credit_cost_per_snapshot"],
+        budget_limited_max_unique_snapshots=identity["budget_limited_max_unique_snapshots"],
+        budget_adaptive_sampling=identity["budget_adaptive_sampling"],
         plan_request_id=plan_request_id,
     )
 
