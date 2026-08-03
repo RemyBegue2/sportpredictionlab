@@ -83,15 +83,30 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          # GitHub CLI refuses to extract over files already present in the
+          # checked-out repository. Always download into a fresh temporary
+          # directory, then copy the artifact contents over the checkout.
+          download_dir="$RUNNER_TEMP/historical-evidence-${GITHUB_RUN_ID}"
+          rm -rf "$download_dir"
+          mkdir -p "$download_dir"
+
           gh run download '${{ steps.latest.outputs.run_id }}' \
             --name '${{ steps.latest.outputs.artifact_name }}' \
-            --dir .
+            --dir "$download_dir"
+
+          rsync -a "$download_dir/" ./
+
           test -s data/odds_api/backfill/plan.json
           test -s data/odds_api/backfill/state.json
           test -s data/odds_api/backfill/historical_odds_long.csv
           test -s data/odds_api/historical/events.csv
-          echo 'Latest historical artifact: `${{ steps.latest.outputs.artifact_name }}` (ID `${{ steps.latest.outputs.artifact_id }}`)' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Provider API calls executed: **0**' >> "$GITHUB_STEP_SUMMARY"
+          test -s data/benchmark/event_mapping.csv
+
+          {
+            echo "Latest historical artifact: \`${{ steps.latest.outputs.artifact_name }}\` (ID \`${{ steps.latest.outputs.artifact_id }}\`)"
+            echo 'Provider API calls executed: **0**'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Recompute V3.9 denominators and gates
         run: |
@@ -167,16 +182,23 @@ jobs:
         shell: bash
         run: |
           if [ -f artifacts/evidence_report_v3_9.json ]; then
+            discovered=$(jq -r '.funnel.discovered_events // 0' artifacts/evidence_report_v3_9.json)
+            selected=$(jq -r '.funnel.selected_events // 0' artifacts/evidence_report_v3_9.json)
+            completed=$(jq -r '.funnel.completed_event_snapshots // 0' artifacts/evidence_report_v3_9.json)
+            returned=$(jq -r '.funnel.provider_returned_event_snapshots // 0' artifacts/evidence_report_v3_9.json)
+            provider=$(jq -r '((.rates.provider_return_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)
+            consensus=$(jq -r '((.rates.consensus_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)
+            winamax=$(jq -r '((.rates.winamax_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)
             {
               echo '### V3.9 zero-credit evidence recompute'
               echo
-              echo "- Discovered events: \`$(jq -r '.funnel.discovered_events // 0' artifacts/evidence_report_v3_9.json)\`"
-              echo "- Selected events: \`$(jq -r '.funnel.selected_events // 0' artifacts/evidence_report_v3_9.json)\`"
-              echo "- Completed targets: \`$(jq -r '.funnel.completed_event_snapshots // 0' artifacts/evidence_report_v3_9.json)\`"
-              echo "- Provider-returned targets: \`$(jq -r '.funnel.provider_returned_event_snapshots // 0' artifacts/evidence_report_v3_9.json)\`"
-              echo "- Provider coverage: \`$(jq -r '((.rates.provider_return_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`"
-              echo "- Consensus coverage: \`$(jq -r '((.rates.consensus_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`"
-              echo "- Winamax coverage: \`$(jq -r '((.rates.winamax_coverage // 0) * 100 | tostring) + "%"' artifacts/evidence_report_v3_9.json)\`"
-              echo "- Provider credits consumed by this workflow: \`0\`"
+              echo "- Discovered events: \`$discovered\`"
+              echo "- Selected events: \`$selected\`"
+              echo "- Completed targets: \`$completed\`"
+              echo "- Provider-returned targets: \`$returned\`"
+              echo "- Provider coverage: \`$provider\`"
+              echo "- Consensus coverage: \`$consensus\`"
+              echo "- Winamax coverage: \`$winamax\`"
+              echo '- Provider credits consumed by this workflow: `0`'
             } >> "$GITHUB_STEP_SUMMARY"
           fi
