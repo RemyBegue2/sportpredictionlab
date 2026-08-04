@@ -1,0 +1,53 @@
+name: Run sport challenger factory
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type RUN_CHALLENGER_FACTORY
+        required: true
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sport-challenger-factory
+  cancel-in-progress: false
+
+jobs:
+  challenger-factory:
+    if: ${{ inputs.confirmation == 'RUN_CHALLENGER_FACTORY' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      APP_VERSION: '4.9.0'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Run zero-credit challenger factory
+        run: python -m scripts.run_challenger_factory --output artifacts/challenger_factory_v4_9.json | tee artifacts/challenger_factory_console_v4_9.txt
+      - name: Verify zero provider credits
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('artifacts/challenger_factory_v4_9.json').read_text())
+          assert report['limits']['provider_credits_consumed'] == 0
+          assert report['limits']['automatic_promotion'] is False
+          print(report['status'])
+          PY
+      - name: Upload evaluation
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: challenger-factory-v4-7
+          path: |
+            artifacts/challenger_factory_v4_9.json
+            artifacts/challenger_factory_console_v4_9.txt
+          retention-days: 90

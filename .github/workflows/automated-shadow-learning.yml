@@ -108,7 +108,7 @@ jobs:
           PY
 
       - name: Upload bounded capture evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: automated-shadow-capture
           path: ${{ runner.temp }}/capture.json
@@ -179,7 +179,7 @@ jobs:
           PY
 
       - name: Upload settlement evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: automated-shadow-settlement
           path: ${{ runner.temp }}/settle.json
@@ -232,7 +232,7 @@ jobs:
           PYBODY
 
       - name: Upload challenger evaluation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: automated-shadow-challenger
           path: ${{ runner.temp }}/optimise.json

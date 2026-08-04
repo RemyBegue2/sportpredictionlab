@@ -211,7 +211,12 @@ def test_model_diagnostics_endpoint_is_explicit():
 
 
 def test_daily_slate_generates_model_only_predictions_without_odds(monkeypatch):
-    frame = FootballFixtureSource.normalize_csv(_fixture_csv())
+    # Keep the fixture safely in the future relative to the fixed 2026 audit date.
+    frame = FootballFixtureSource.normalize_csv((
+        "Div,Date,Time,HomeTeam,AwayTeam\n"
+        "E0,18/08/2026,20:00,Arsenal,Chelsea\n"
+        "E0,20/08/2026,19:45,Liverpool,Man City\n"
+    ).encode("utf-8"))
 
     class FakeSnapshot:
         fixtures = frame
@@ -225,7 +230,7 @@ def test_daily_slate_generates_model_only_predictions_without_odds(monkeypatch):
             return FakeSnapshot()
 
     monkeypatch.setattr(webapp, "fixture_source", lambda: FakeSource())
-    response = client.get("/api/daily/slate?date=2026-08-03&horizon_days=2&refresh=true")
+    response = client.get("/api/daily/slate?date=2026-08-18&horizon_days=2&refresh=true")
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["summary"]["credits_consumed"] == 0
@@ -378,9 +383,9 @@ vm.runInContext(`renderDaily({
   summary: {fixtures_today: 1, model_predictions: 1, research_candidates: 0, upcoming_predictions: 1, credits_consumed: 0},
   credit_firewall: {daily_odds_enabled: false, daily_odds_max_credits: 0},
   no_shortlist_reasons: ['cotes payantes désactivées'],
-  model_diagnostics: {status: 'operational_research', model_version: '4.5.0', metrics: {n_test: 380, log_loss: 1.06}, freshness: {age_days: 70}},
-  events: [{sport: 'football', competition: 'E0', event: 'Arsenal — Chelsea', date: '2026-08-03', decision: 'probabilités seulement', model_version: '4.5.0', probabilities: {home: 0.47, draw: 0.27, away: 0.26}, probability_diagnostics: {valid: true}, reasons: ['cotes non demandées'], winamax_odds: false}],
-  upcoming_events: [{sport: 'football', competition: 'E0', event: 'Liverpool — Man City', date: '2026-08-05', decision: 'probabilités seulement', model_version: '4.5.0', probabilities: {home: 0.40, draw: 0.28, away: 0.32}, probability_diagnostics: {valid: true}, reasons: [], winamax_odds: false}]
+  model_diagnostics: {status: 'operational_research', model_version: '4.9.0', metrics: {n_test: 380, log_loss: 1.06}, freshness: {age_days: 70}},
+  events: [{sport: 'football', competition: 'E0', event: 'Arsenal — Chelsea', date: '2026-08-03', decision: 'probabilités seulement', model_version: '4.9.0', probabilities: {home: 0.47, draw: 0.27, away: 0.26}, probability_diagnostics: {valid: true}, reasons: ['cotes non demandées'], winamax_odds: false}],
+  upcoming_events: [{sport: 'football', competition: 'E0', event: 'Liverpool — Man City', date: '2026-08-05', decision: 'probabilités seulement', model_version: '4.9.0', probabilities: {home: 0.40, draw: 0.28, away: 0.32}, probability_diagnostics: {valid: true}, reasons: [], winamax_odds: false}]
 })`, context);
 if (elements.get('#dailyPredictionCount').textContent !== 1) process.exit(2);
 if (!elements.get('#dailySlate').innerHTML.includes('47.0 %')) process.exit(3);

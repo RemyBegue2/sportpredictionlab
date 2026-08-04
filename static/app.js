@@ -28,6 +28,17 @@ const pct = (value) => Number.isFinite(Number(value)) ? `${(100 * Number(value))
 let RESEARCH_SIGNALS = [];
 let RESEARCH_SIGNAL_FILTER = 'all';
 let EXPERT_DATA_LOADED = false;
+let EXPERT_DATA_PROMISE = null;
+let FEATURE_LAB_DATA = null;
+let CHALLENGER_FACTORY_DATA = null;
+let EVIDENCE_ACCELERATION_DATA = null;
+const INFLIGHT_GETS = new Map();
+const ACTIVE_REQUESTS = new Set();
+let TOAST_TIMER = null;
+let SESSION_REQUESTS = 0;
+let SESSION_ERRORS = 0;
+const MAX_VISIBLE_CARDS = 8;
+const REQUEST_TIMEOUT_MS = 12000;
 
 function currentInterfaceMode(){
   try{ return localStorage.getItem('sports-lab-interface-mode')==='expert'?'expert':'simple'; }catch{ return 'simple'; }
@@ -44,19 +55,81 @@ function applyInterfaceMode(mode,{load=true}={}){
   if(expert&&load) loadExpertData();
 }
 
+function currentSimplePanel(){
+  try{
+    const value=localStorage.getItem('sports-lab-simple-panel');
+    return ['today','signals','learning'].includes(value)?value:'today';
+  }catch{ return 'today'; }
+}
 
-function toast(message){ const el=$('#toast'); el.textContent=message; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),4200); }
+function applySimplePanel(panel,{scroll=false}={}){
+  const selected=['today','signals','learning'].includes(panel)?panel:'today';
+  (document.querySelectorAll?.('[data-simple-panel]')||[]).forEach(section=>section.classList.toggle('is-active',section.dataset.simplePanel===selected));
+  (document.querySelectorAll?.('[data-simple-target]')||[]).forEach(link=>link.classList.toggle('active',link.dataset.simpleTarget===selected));
+  try{ localStorage.setItem('sports-lab-simple-panel',selected); }catch{}
+  if(scroll&&currentInterfaceMode()==='simple'){
+    const target=document.querySelector?.(`[data-simple-panel="${selected}"]`);
+    target?.scrollIntoView?.({behavior:'smooth',block:'start'});
+  }
+}
+
+
+function updateSessionStatus(){
+  const el=$('#sessionStatus');
+  if(!el || !el.classList) return;
+  el.textContent=SESSION_ERRORS?`${SESSION_ERRORS} erreur(s) récupérée(s) · ${SESSION_REQUESTS} requête(s)`:`Stable · ${SESSION_REQUESTS} requête(s)`;
+  el.className=`session-status ${SESSION_ERRORS?'attention':'ok'}`;
+}
+function toast(message){
+  const el=$('#toast');
+  el.textContent=message;
+  el.classList.add('show');
+  if(TOAST_TIMER && typeof clearTimeout==='function') clearTimeout(TOAST_TIMER);
+  TOAST_TIMER=setTimeout(()=>el.classList.remove('show'),4200);
+}
+
 function loading(target){ target.className='result-panel'; target.innerHTML='<div class="loader">Calcul en cours</div>'; }
 function probRow(label,p){ return `<div class="prob-row"><div class="prob-label" title="${esc(label)}">${esc(label)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,Math.min(100,p*100))}%"></div></div><div class="prob-value">${fmt(p)}</div></div>`; }
 async function jsonFetch(url, options={}){
   const headers=new Headers(options.headers||{});
   const method=(options.method||'GET').toUpperCase();
+  const dedupeKey=method==='GET'&&!options.noDedupe?`${method}:${url}`:null;
+  if(dedupeKey&&INFLIGHT_GETS.has(dedupeKey)) return INFLIGHT_GETS.get(dedupeKey);
   if(CSRF_TOKEN && ['POST','PUT','PATCH','DELETE'].includes(method) && url!=='/api/auth/login') headers.set('X-CSRF-Token',CSRF_TOKEN);
-  const r=await fetch(url,{...options,headers,credentials:'same-origin'});
-  let body={}; try{body=await r.json()}catch{}
-  if(r.status===401 && url!=='/api/auth/login'){ window.location.assign('/login'); throw new Error('Authentification requise'); }
-  if(!r.ok) throw new Error(Array.isArray(body.detail)?body.detail.map(x=>x.msg).join(', '):(body.detail || `Erreur HTTP ${r.status}`));
-  return body;
+  const controller=typeof AbortController!=='undefined'?new AbortController():null;
+  const timeoutMs=Number(options.timeoutMs||REQUEST_TIMEOUT_MS);
+  const timer=controller?setTimeout(()=>controller.abort(),timeoutMs):null;
+  if(controller) ACTIVE_REQUESTS.add(controller);
+  const request=(async()=>{
+    SESSION_REQUESTS+=1; updateSessionStatus();
+    try{
+      const r=await fetch(url,{...options,headers,credentials:'same-origin',signal:controller?.signal||options.signal});
+      let body={}; try{body=await r.json()}catch{}
+      if(r.status===401 && url!=='/api/auth/login'){ window.location.assign('/login'); throw new Error('Authentification requise'); }
+      if(!r.ok) throw new Error(Array.isArray(body.detail)?body.detail.map(x=>x.msg).join(', '):(body.detail || `Erreur HTTP ${r.status}`));
+      return body;
+    }catch(error){
+      SESSION_ERRORS+=1; updateSessionStatus();
+      if(error?.name==='AbortError') throw new Error(`Délai dépassé pour ${url}`);
+      throw error;
+    }finally{
+      if(timer&&typeof clearTimeout==='function') clearTimeout(timer);
+      if(controller) ACTIVE_REQUESTS.delete(controller);
+      if(dedupeKey) INFLIGHT_GETS.delete(dedupeKey);
+    }
+  })();
+  if(dedupeKey) INFLIGHT_GETS.set(dedupeKey,request);
+  return request;
+}
+
+async function withBusy(selector, task){
+  const button=$(selector);
+  if(button.disabled) return null;
+  const previous=button.textContent;
+  button.disabled=true;
+  button.setAttribute?.('aria-busy','true');
+  try{ return await task(); }
+  finally{ button.disabled=false; button.textContent=previous; button.setAttribute?.('aria-busy','false'); }
 }
 function fill(selector, values, preferred){ const el=$(selector); el.innerHTML=values.map(v=>`<option ${v===preferred?'selected':''}>${esc(v)}</option>`).join(''); }
 function syncDifferent(a,b){ $(a).addEventListener('change',()=>{ if($(a).value===$(b).value){ const alt=[...$(b).options].find(o=>o.value!==$(a).value); if(alt) $(b).value=alt.value; }}); }
@@ -365,6 +438,16 @@ async function refreshShadow(){
 }
 
 function renderLiveOdds(data){
+  const todayAction=$('#todayAction');
+  const todayCount=Number(summary.fixtures_today??summary.events_reviewed??0);
+  const insufficient=Number(summary.cold_start_predictions??0);
+  if(todayCount>0){
+    todayAction.className=`action-card ${insufficient?'attention':''}`.trim();
+    todayAction.innerHTML=`<small>À RETENIR</small><h3>${todayCount} match(s) analysé(s)</h3><p>${insufficient?`${insufficient} rencontre(s) avec données limitées. Les probabilités restent exploratoires.`:'Les données disponibles permettent une lecture modèle complète.'}</p>`;
+  }else{
+    todayAction.className='action-card attention';
+    todayAction.innerHTML=`<small>À RETENIR</small><h3>Aucun match couvert aujourd’hui</h3><p>${Number(summary.upcoming_predictions??0)} prochain(s) match(s) restent disponibles dans le calendrier replié.</p>`;
+  }
   const events=data.events||[];
   const cards=events.map(event=>{
     const winamax=event.winamax;
@@ -421,9 +504,17 @@ function renderDaily(data){
   const noShortlist=data.no_shortlist_reasons||[];
   $('#dailyNoShortlist').innerHTML=`<b>Pourquoi aucune shortlist :</b> ${noShortlist.length?noShortlist.map(esc).join(' · '):'Une shortlist éventuelle reste expérimentale et soumise aux cotes fraîches.'}`;
   const events=data.events||[];
-  $('#dailySlate').innerHTML=events.map(event=>dailyCard(event)).join('') || `<div class="slate-card"><h3>Aucun match couvert aujourd’hui</h3><p>${esc(data.warning||'Le calendrier ne contient aucun match couvert à cette date.')}</p></div>`;
+  const visibleEvents=events.slice(0,MAX_VISIBLE_CARDS);
+  $('#dailySlate').innerHTML=visibleEvents.map(event=>dailyCard(event)).join('') || `<div class="slate-card"><h3>Aucun match couvert aujourd’hui</h3><p>${esc(data.warning||'Le calendrier ne contient aucun match couvert à cette date.')}</p></div>`;
+  const dailyHidden=Math.max(0,events.length-visibleEvents.length);
+  $('#dailyOverflow').hidden=dailyHidden===0;
+  $('#dailyOverflow').textContent=dailyHidden?`${dailyHidden} match(s) supplémentaire(s) masqué(s) pour éviter une page trop lourde.`:'';
   const upcoming=data.upcoming_events||[];
-  $('#upcomingSlate').innerHTML=upcoming.map(event=>dailyCard(event,{upcoming:true})).join('') || '<div class="slate-card"><h3>Aucun prochain match couvert</h3><p>Le calendrier gratuit peut être hors saison, indisponible ou contenir des équipes encore inconnues du modèle.</p></div>';
+  const visibleUpcoming=upcoming.slice(0,MAX_VISIBLE_CARDS);
+  $('#upcomingSlate').innerHTML=visibleUpcoming.map(event=>dailyCard(event,{upcoming:true})).join('') || '<div class="slate-card"><h3>Aucun prochain match couvert</h3><p>Le calendrier gratuit peut être hors saison, indisponible ou contenir des équipes encore inconnues du modèle.</p></div>';
+  const upcomingHidden=Math.max(0,upcoming.length-visibleUpcoming.length);
+  $('#upcomingOverflow').hidden=upcomingHidden===0;
+  $('#upcomingOverflow').textContent=upcomingHidden?`${upcomingHidden} prochain(s) match(s) masqué(s).`:'';
   if(data.model_diagnostics) renderModelDiagnostics(data.model_diagnostics);
 }
 
@@ -440,7 +531,103 @@ function researchSignalCard(signal){
 
 function renderFilteredResearchSignals(){
   const filtered=RESEARCH_SIGNAL_FILTER==='all'?RESEARCH_SIGNALS:RESEARCH_SIGNALS.filter(signal=>signal.sport===RESEARCH_SIGNAL_FILTER);
-  $('#researchSignals').innerHTML=filtered.map(researchSignalCard).join('')||'<div class="slate-card"><h3>Aucun signal dans ce filtre</h3><p>L’abstention est conservée lorsque le marché, le modèle ou l’échantillon ne passent pas les portes.</p></div>';
+  const visible=filtered.slice(0,MAX_VISIBLE_CARDS);
+  $('#researchSignals').innerHTML=visible.map(researchSignalCard).join('')||'<div class="slate-card"><h3>Aucun signal dans ce filtre</h3><p>L’abstention est conservée lorsque le marché, le modèle ou l’échantillon ne passent pas les portes.</p></div>';
+  const overflow=$('#signalOverflow');
+  const hidden=Math.max(0,filtered.length-visible.length);
+  overflow.hidden=hidden===0;
+  overflow.textContent=hidden?`${hidden} signal(s) supplémentaire(s) masqué(s) pour garder la vue stable. Passe au mode expert pour le détail.`:'';
+}
+
+function reliabilityLabel(value){
+  const labels={HIGH_CONFIDENCE_RESEARCH:'élevée',MEDIUM_CONFIDENCE_RESEARCH:'moyenne',LOW_CONFIDENCE_RESEARCH:'faible',INSUFFICIENT_EVIDENCE:'données insuffisantes'};
+  return labels[value]||'collecte';
+}
+
+function renderFeatureLab(data={}){
+  FEATURE_LAB_DATA=data;
+  const sports=data.sports||{};
+  const football=sports.football||{};
+  const tennis=sports.tennis||{};
+  const strip=$('#featureReliability');
+  const fLabel=reliabilityLabel(football.reliability);
+  const tLabel=reliabilityLabel(tennis.reliability);
+  strip.innerHTML=`<b>Fiabilité des probabilités</b><span>Football : ${esc(fLabel)} · Tennis : ${esc(tLabel)}</span>`;
+  strip.className=`confidence-strip ${data.overall_reliability==='high'?'reliability-high':data.overall_reliability==='medium'?'reliability-medium':'reliability-low'}`;
+  const rows=[['Football',football],['Tennis',tennis]];
+  $('#featureLabDetails').innerHTML=rows.map(([label,row])=>`<article class="gate-card ${row.status==='candidate'?'passed':'blocked'}"><small>${esc(row.status||'collecting')}</small><h3>${esc(label)} · ${esc(reliabilityLabel(row.reliability))}</h3><p>${row.events??0} événement(s) réglé(s) · calibrateur ${esc(row.selected_calibrator||'identity')}<br>${row.holdout?`log-loss ${Number(row.holdout.log_loss).toFixed(3)} · ECE ${Number(row.holdout.ece).toFixed(3)}`:esc(row.reason||'collecte en cours')}</p></article>`).join('');
+}
+
+function simpleModelState(row={}){
+  const labels={candidate:'Amélioration possible',development_candidate:'Amélioration possible',development_review:'Revue de développement',hold:'Le nouveau modèle est moins bon',hold_explained:'Le nouveau modèle est moins bon',collecting:'Pas assez de données',not_run:'Non exécuté',review_required:'Prêt pour revue humaine'};
+  return labels[row.status]||row.status||'Collecte';
+}
+
+function renderChallengerFactory(data={}){
+  CHALLENGER_FACTORY_DATA=data;
+  const sports=data.sports||{};
+  const football=sports.football||{};
+  const tennis=sports.tennis||{};
+  $('#learningFootballState').textContent=simpleModelState(football);
+  $('#learningFootballDetail').textContent=football.challenger_id?`${football.challenger_id} · holdout ${football.partitions?.holdout??'—'}`:(football.reason||'Challenger non évalué.');
+  $('#learningTennisState').textContent=simpleModelState(tennis);
+  $('#learningTennisDetail').textContent=tennis.challenger_id?`${tennis.challenger_id} · surfaces ${Object.keys(tennis.surface_holdout||{}).length}`:(tennis.reason||'Historique multi-surface requis.');
+  const rows=[['Football',football],['Tennis',tennis]];
+  $('#challengerFactoryDetails').innerHTML=rows.map(([label,row])=>`<article class="gate-card ${row.status==='candidate'?'passed':'blocked'}"><small>${esc(row.status||'not_run')}</small><h3>${esc(label)} · ${esc(row.model_type||'aucun challenger')}</h3><p>${row.dataset?`${row.dataset.rows??0} lignes · ${row.dataset.distinct_dates??0} dates · ${esc(String(row.dataset.dataset_sha256||'').slice(0,12))}`:esc(row.reason||'non exécuté')}<br>${row.challenger?.holdout?`log-loss ${Number(row.challenger.holdout.log_loss).toFixed(3)} · ECE ${Number(row.challenger.holdout.ece).toFixed(3)}`:esc(row.reason||'collecte')}</p></article>`).join('');
+}
+
+function renderEvidenceAcceleration(data={}){
+  EVIDENCE_ACCELERATION_DATA=data;
+  const football=data.football||{};
+  const tennis=data.tennis||{};
+  const catalog=tennis.catalog||{};
+  const readiness=catalog.readiness||{};
+  const fDelta=Number(football.overall?.delta_log_loss);
+  if(football.status){
+    $('#learningFootballState').textContent=football.status==='hold_explained'?'Champion conservé':simpleModelState(football);
+    $('#learningFootballDetail').textContent=Number.isFinite(fDelta)?`Hold expliqué · écart log-loss ${fDelta>=0?'+':''}${fDelta.toFixed(3)}`:(football.reason||'Analyse football en cours.');
+  }
+  if(catalog.dataset_id||readiness.status){
+    $('#learningTennisState').textContent=readiness.status==='challenger_ready'?'Prêt challenger':readiness.status==='exploratory_ready'?'Prêt exploration':'Données insuffisantes';
+    $('#learningTennisDetail').textContent=`${catalog.rows??readiness.rows??0} matchs · ${catalog.distinct_dates??readiness.distinct_dates??0} dates · ${readiness.status||'collecting'}`;
+  }
+  const breakdowns=football.breakdowns||{};
+  const weak=[];
+  for(const [group,rows] of Object.entries(breakdowns)){
+    for(const [name,row] of Object.entries(rows||{})) if(Number(row.delta_log_loss)>0.02) weak.push(`${group}: ${name}`);
+  }
+  const holdout=tennis.holdout_generation||{};
+  $('#evidenceAccelerationDetails').innerHTML=`<article class="gate-card ${football.status==='hold_explained'?'blocked':'passed'}"><small>FOOTBALL</small><h3>${esc(football.status||'not_run')}</h3><p>${esc(football.reason||'Analyse non exécutée')}<br>${weak.length?`Faiblesses principales : ${esc(weak.slice(0,4).join(' · '))}`:'Aucun sous-groupe critique publié.'}</p></article><article class="gate-card ${readiness.challenger_ready?'passed':'blocked'}"><small>TENNIS</small><h3>${esc(readiness.status||'collecting')}</h3><p>${catalog.rows??0} lignes · ${catalog.distinct_dates??0} dates · holdout ${esc(holdout.status||'ouvert')}<br>Lineage ${readiness.lineage_complete?'complète':'encore partielle'}</p></article>`;
+  const learningAction=$('#learningAction');
+  if(readiness.status==='collecting'&&learningAction){
+    learningAction.className='action-card attention';
+    learningAction.innerHTML='<small>PROCHAINE ÉTAPE</small><h3>Continuer la collecte tennis</h3><p>Le football est diagnostiqué. Le blocage prioritaire reste le volume tennis réel, multi-date et multi-surface.</p>';
+  }
+}
+
+function renderControlledDecision(data={}){
+  const football=data.football||{};
+  const tennis=data.tennis||{};
+  const progress=tennis.progress||{};
+  const production=data.production_validation||{};
+  const challengers=football.challengers||[];
+  const passed=challengers.filter(row=>row.status==='development_candidate').length;
+  $('#learningFootballState').textContent=passed?`${passed} amélioration(s) possible(s)`:'Champion conservé';
+  $('#learningFootballDetail').textContent=`${challengers.length} challenger(s) borné(s) · holdout futur ${football.promotion_holdout_generation?.status||'à collecter'}`;
+  const actualRows=Number(progress.exploratory_rows?.actual||0);
+  const requiredRows=Number(progress.exploratory_rows?.required||500);
+  $('#learningTennisState').textContent=`${actualRows} / ${requiredRows} matchs`;
+  $('#learningTennisDetail').textContent=tennis.training_status==='exploratory_allowed'?'Exploration autorisée, promotion toujours bloquée.':'Pas assez de données multi-date et multi-surface.';
+  $('#learningProofState').textContent=production.status==='passed'?'Validée':'Non prouvée';
+  $('#learningProofDetail').textContent=production.status==='passed'?'Sessions simple et expert réussies.':'Exécuter les deux scénarios publics de 30 minutes.';
+  const productionSimple=production.simple?.status||'not_run';
+  const productionExpert=production.expert?.status||'not_run';
+  $('#controlledDecisionDetails').innerHTML=`<article class="gate-card ${football.status==='development_review'?'passed':'blocked'}"><small>FOOTBALL</small><h3>${esc(simpleModelState(football))}</h3><p>${challengers.length} challenger(s) testés · promotion ${football.promotion_ready?'possible':'bloquée'}<br>${esc(football.reason||'Aucune décision')}</p></article><article class="gate-card ${tennis.training_status==='exploratory_allowed'?'passed':'blocked'}"><small>TENNIS</small><h3>${actualRows} / ${requiredRows}</h3><p>${esc(tennis.training_status||'collecting')} · ${progress.exploratory_dates?.actual??0} / ${progress.exploratory_dates?.required??50} dates</p></article><article class="gate-card ${production.status==='passed'?'passed':'blocked'}"><small>PRODUCTION</small><h3>${esc(production.status||'not_proven')}</h3><p>Simple : ${esc(productionSimple)} · Expert : ${esc(productionExpert)}</p></article>`;
+  const action=$('#learningAction');
+  if(action){
+    action.className=`action-card ${production.status==='passed'?'attention':'blocked'}`;
+    action.innerHTML=`<small>PROCHAINE ÉTAPE</small><h3>${production.status==='passed'?'Continuer la collecte future':'Valider les sessions longues publiques'}</h3><p>${esc(data.next_action||'Aucune action publiée.')}</p>`;
+  }
 }
 
 function renderLearning(learning={},automation={}){
@@ -450,6 +637,10 @@ function renderLearning(learning={},automation={}){
   const events=Number(candidate.settled_events||0);
   const required=Number(learning.gates?.minimum_total_events?.required||100);
   const progress=required>0?Math.min(100,100*events/required):0;
+  $('#learningProofState').textContent=`${events} / ${required}`;
+  $('#learningProofDetail').textContent=learning.status==='review_required'?'Revue humaine requise.':learning.status==='hold'?'Le champion reste actif.':'Continuer la collecte shadow.';
+  $('#learningCostState').textContent=`${automation.credits_consumed??0} crédit(s)`;
+  $('#learningCostDetail').textContent=`Plafond ${automation.daily_credit_cap??0} · entraînement challenger 0 crédit.`;
   $('#learningEvents').textContent=events;
   $('#learningSports').textContent=`Football ${sports.football??0} · Tennis ${sports.tennis??0}`;
   $('#learningChampion').textContent=champion.id||'Aucun';
@@ -509,57 +700,68 @@ function renderResearchLab(data){
 }
 
 async function refreshResearchLab(){
-  try{ renderResearchLab(await jsonFetch('/api/research-lab')); }
-  catch(error){ toast(`Laboratoire ROI indisponible : ${error.message}`); }
+  return withBusy('#refreshResearchLab',async()=>{
+    try{
+      const [research,challenger,evidenceAcceleration,controlled]=await Promise.all([jsonFetch('/api/research-lab',{noDedupe:true}),jsonFetch('/api/challenger-factory',{noDedupe:true}),jsonFetch('/api/evidence-acceleration',{noDedupe:true}),jsonFetch('/api/controlled-model-decision',{noDedupe:true})]);
+      renderResearchLab(research); renderChallengerFactory(challenger); renderEvidenceAcceleration(evidenceAcceleration); renderControlledDecision(controlled);
+    }catch(error){ toast(`Laboratoire indisponible : ${error.message}`); }
+  });
 }
 
 async function loadExpertData(){
   if(EXPERT_DATA_LOADED) return;
-  EXPERT_DATA_LOADED=true;
-  const controlTask=refreshControl();
-  const requests={
-    audit:jsonFetch('/api/metrics'),
-    provider:jsonFetch('/api/odds/status'),
-    history:jsonFetch('/api/history/predictions?limit=20'),
-    benchmark:jsonFetch('/api/benchmark/summary'),
-    evidence:jsonFetch('/api/evidence'),
-    preflight:jsonFetch('/api/coverage-preflight'),
-    campaign:jsonFetch('/api/evidence-campaign'),
-    decision:jsonFetch('/api/model-decision'),
-    shadow:jsonFetch('/api/shadow/summary'),
-    shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
-    system:jsonFetch('/api/system/status'),
-  };
-  const keys=Object.keys(requests);
-  const settled=await Promise.allSettled(Object.values(requests));
-  const loaded={};
-  settled.forEach((result,index)=>{
-    if(result.status==='fulfilled') loaded[keys[index]]=result.value;
-    else toast(`${keys[index]} : ${result.reason?.message||'chargement impossible'}`);
-  });
-  if(loaded.audit) $('#metrics').textContent=JSON.stringify(loaded.audit,null,2);
-  if(loaded.provider) renderProviderStatus(loaded.provider);
-  if(loaded.history) renderHistory(loaded.history);
-  if(loaded.benchmark) renderBenchmark(loaded.benchmark);
-  if(loaded.evidence) renderEvidence(loaded.evidence);
-  if(loaded.preflight) renderPreflight(loaded.preflight);
-  if(loaded.campaign) renderCampaign(loaded.campaign);
-  if(loaded.decision) renderDecision(loaded.decision);
-  if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
-  if(loaded.system) renderSystem(loaded.system);
-  await controlTask;
-  const paidOddsAvailable=Boolean(loaded.provider?.configured&&loaded.provider?.paid_calls_enabled);
-  $('#loadLiveOdds').disabled=!paidOddsAvailable;
-  $('#loadTennisOdds').disabled=!paidOddsAvailable;
-  if(!paidOddsAvailable){
-    $('#liveOddsResult').innerHTML='<div class="slate-card"><h3>Cotes payantes suspendues</h3><p>Le produit quotidien modèle seul reste disponible sans consommer de crédit.</p></div>';
-  }else{
-    try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch(e){ toast(e.message); }
-  }
+  if(EXPERT_DATA_PROMISE) return EXPERT_DATA_PROMISE;
+  EXPERT_DATA_PROMISE=(async()=>{
+    const controlTask=refreshControl();
+    const requests={
+      audit:jsonFetch('/api/metrics'),
+      provider:jsonFetch('/api/odds/status'),
+      history:jsonFetch('/api/history/predictions?limit=20'),
+      benchmark:jsonFetch('/api/benchmark/summary'),
+      evidence:jsonFetch('/api/evidence'),
+      preflight:jsonFetch('/api/coverage-preflight'),
+      campaign:jsonFetch('/api/evidence-campaign'),
+      decision:jsonFetch('/api/model-decision'),
+      shadow:jsonFetch('/api/shadow/summary'),
+      shadowHistory:jsonFetch('/api/shadow/predictions?limit=20'),
+      system:jsonFetch('/api/system/status'),
+    };
+    const keys=Object.keys(requests);
+    const settled=await Promise.allSettled(Object.values(requests));
+    const loaded={}; const failed=[];
+    settled.forEach((result,index)=>{
+      if(result.status==='fulfilled') loaded[keys[index]]=result.value;
+      else failed.push(keys[index]);
+    });
+    if(loaded.audit) $('#metrics').textContent=JSON.stringify(loaded.audit,null,2);
+    if(loaded.provider) renderProviderStatus(loaded.provider);
+    if(loaded.history) renderHistory(loaded.history);
+    if(loaded.benchmark) renderBenchmark(loaded.benchmark);
+    if(loaded.evidence) renderEvidence(loaded.evidence);
+    if(loaded.preflight) renderPreflight(loaded.preflight);
+    if(loaded.campaign) renderCampaign(loaded.campaign);
+    if(loaded.decision) renderDecision(loaded.decision);
+    if(loaded.shadow&&loaded.shadowHistory) renderShadow(loaded.shadow,loaded.shadowHistory);
+    if(loaded.system) renderSystem(loaded.system);
+    await controlTask;
+    const paidOddsAvailable=Boolean(loaded.provider?.configured&&loaded.provider?.paid_calls_enabled);
+    $('#loadLiveOdds').disabled=!paidOddsAvailable;
+    $('#loadTennisOdds').disabled=!paidOddsAvailable;
+    if(!paidOddsAvailable){
+      $('#liveOddsResult').innerHTML='<div class="slate-card"><h3>Cotes payantes suspendues</h3><p>Le produit quotidien modèle seul reste disponible sans consommer de crédit.</p></div>';
+    }else{
+      try{ const tennis=await jsonFetch('/api/odds/sports?group=Tennis'); const active=tennis.sports.filter(x=>x.active); $('#oddsTennisSport').innerHTML=active.map(x=>`<option value="${esc(x.key)}">${esc(x.title)} · ${esc(x.key)}</option>`).join('') || '<option value="">Aucun tournoi actif</option>'; }catch{ failed.push('tennisSports'); }
+    }
+    if(failed.length) toast(`Mode expert partiel : ${failed.length} bloc(s) indisponible(s). Un nouvel essai sera possible.`);
+    EXPERT_DATA_LOADED=failed.length===0;
+  })();
+  try{ await EXPERT_DATA_PROMISE; }
+  finally{ EXPERT_DATA_PROMISE=null; }
 }
 
 async function init(){
   applyInterfaceMode(currentInterfaceMode(),{load:false});
+  applySimplePanel(currentSimplePanel());
   try{
     const health=await jsonFetch('/api/health');
     $('#health').textContent=`API ${health.status} · v${health.version}`;
@@ -586,10 +788,18 @@ async function init(){
       jsonFetch('/api/daily/slate'),
       jsonFetch('/api/research-lab'),
       jsonFetch('/api/model-diagnostics'),
+      jsonFetch('/api/feature-lab'),
+      jsonFetch('/api/challenger-factory'),
+      jsonFetch('/api/evidence-acceleration'),
+      jsonFetch('/api/controlled-model-decision'),
     ]);
     if(primary[0].status==='fulfilled') renderDaily(primary[0].value); else toast(`daily : ${primary[0].reason?.message||'chargement impossible'}`);
     if(primary[1].status==='fulfilled') renderResearchLab(primary[1].value); else toast(`research : ${primary[1].reason?.message||'chargement impossible'}`);
     if(primary[2].status==='fulfilled') renderModelDiagnostics(primary[2].value);
+    if(primary[3].status==='fulfilled') renderFeatureLab(primary[3].value);
+    if(primary[4].status==='fulfilled') renderChallengerFactory(primary[4].value);
+    if(primary[5].status==='fulfilled') renderEvidenceAcceleration(primary[5].value);
+    if(primary[6].status==='fulfilled') renderControlledDecision(primary[6].value);
     if(currentInterfaceMode()==='expert') await loadExpertData();
   }catch(e){
     toast(`Interface partiellement chargée : ${e.message}`);
@@ -661,12 +871,15 @@ $('#logoutButton').addEventListener('click',async()=>{
 });
 
 $('#refreshResearchLab').addEventListener('click',refreshResearchLab);
-$('#interfaceMode').addEventListener('click',()=>applyInterfaceMode(currentInterfaceMode()==='expert'?'simple':'expert'));
+$('#interfaceMode').addEventListener('click',()=>{ const next=currentInterfaceMode()==='expert'?'simple':'expert'; applyInterfaceMode(next); if(next==='simple') applySimplePanel(currentSimplePanel()); });
+(document.querySelectorAll?.('[data-simple-target]')||[]).forEach(link=>link.addEventListener('click',event=>{ if(currentInterfaceMode()==='simple'){ event.preventDefault(); applySimplePanel(link.dataset.simpleTarget,{scroll:true}); } }));
 (document.querySelectorAll?.('.signal-filter')||[]).forEach(button=>button.addEventListener('click',()=>{
   RESEARCH_SIGNAL_FILTER=button.dataset.sport||'all';
   (document.querySelectorAll?.('.signal-filter')||[]).forEach(item=>item.classList.toggle('active',item===button));
   renderFilteredResearchSignals();
 }));
+
+window.addEventListener?.('pagehide',()=>{ ACTIVE_REQUESTS.forEach(controller=>controller.abort?.()); ACTIVE_REQUESTS.clear(); INFLIGHT_GETS.clear(); });
 
 init();
 

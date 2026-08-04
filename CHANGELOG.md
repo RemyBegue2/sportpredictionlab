@@ -1,5 +1,49 @@
 # Changelog
 
+## V4.9.0 — Controlled Model Decision & Live Validation
+
+- entraîne exactement deux challengers football bornés : Poisson régularisé et hybride Poisson/Elo ;
+- utilise une zone de développement antérieure au holdout déjà consulté ;
+- conserve le champion lorsque les sous-groupes protégés ou la calibration se dégradent ;
+- ouvre une génération de holdout future nécessitant 30 nouvelles dates avant toute promotion ;
+- ajoute un import tennis incrémental avec déduplication, corrections explicites et version précédente conservée ;
+- ajoute un endpoint et un workflow de décision contrôlée à zéro crédit ;
+- sépare la validation publique longue session en scénarios simple et expert ;
+- conserve exactement trois onglets et traduit les états techniques en décisions lisibles ;
+- maintient zéro crédit d’entraînement, zéro promotion automatique et zéro pari réel.
+
+## V4.8.0 — Evidence Acceleration & Production Hardening
+
+- ajoute un pipeline d’import tennis avec normalisation, déduplication, quarantaine et lineage temporelle ;
+- versionne les datasets et les générations de holdout avec identifiants et SHA-256 déterministes ;
+- explique le `hold` football par outcome, saison, forme de marché, historique d’équipe et repos ;
+- limite explicitement le prochain tour football à deux challengers probabilistes ;
+- ajoute Alembic avec adoption contrôlée du schéma existant et migration des nouvelles tables ;
+- fige les actions GitHub par SHA complets vérifiés ;
+- ajoute un workflow public de stabilité longue session avec contrôle du DOM et des requêtes ;
+- conserve exactement trois onglets simples et ajoute une synthèse d’action par écran ;
+- maintient zéro crédit d’entraînement, zéro promotion automatique et zéro pari réel.
+
+## V4.7.0 — Stable Challenger Cockpit
+
+- ajoute une Challenger Factory football/tennis à zéro crédit avec datasets hashés, splits chronologiques et paramètres portables ;
+- entraîne réellement le challenger football et conserve le champion lorsque le holdout ne passe pas les portes ;
+- refuse d’inventer une preuve tennis lorsque l’archive multi-surface est insuffisante ;
+- déduplique les GET concurrents, ajoute des timeouts, annule les requêtes à la fermeture et rend le mode expert réessayable ;
+- plafonne les listes simples à huit cartes et réduit l’apprentissage à quatre indicateurs ;
+- renforce le smoke navigateur avec une navigation répétée de longue session ;
+- conserve zéro promotion automatique, zéro pari réel et zéro crédit d’entraînement.
+
+## V4.6.0 — Robust Calibration & Compact Cockpit
+
+- calibration football et tennis évaluée sur holdout chronologique ;
+- registre borné d’expériences et audit de lineage temporelle ;
+- Feature Lab à zéro crédit fournisseur ;
+- interface simple transformée en cockpit à trois onglets, un seul écran visible à la fois ;
+- mode expert conservé et chargé à la demande ;
+- promotion automatique toujours interdite.
+
+
 ## V4.5.0 — Automated Shadow Learning & Simple UI
 
 - makes the simple daily view the default and defers expert endpoints until the operator opens expert mode ;

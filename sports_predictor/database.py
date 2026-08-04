@@ -243,6 +243,42 @@ class ShadowCycleDiagnosticRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
+class DatasetCatalogRecord(Base):
+    __tablename__ = "dataset_catalog"
+    __table_args__ = (UniqueConstraint("dataset_id", name="uq_dataset_catalog_dataset_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    dataset_id: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    sport: Mapped[str] = mapped_column(String(40), index=True)
+    source: Mapped[str] = mapped_column(String(200))
+    license_status: Mapped[str] = mapped_column(String(40), index=True)
+    cutoff_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    row_count: Mapped[int] = mapped_column(Integer)
+    distinct_dates: Mapped[int] = mapped_column(Integer)
+    quality_status: Mapped[str] = mapped_column(String(40), index=True)
+    dataset_sha256: Mapped[str] = mapped_column(String(64), index=True)
+    supersedes_dataset_id: Mapped[str | None] = mapped_column(String(120), index=True)
+    catalog: Mapped[dict[str, Any]] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class HoldoutGenerationRecord(Base):
+    __tablename__ = "holdout_generations"
+    __table_args__ = (UniqueConstraint("generation_id", name="uq_holdout_generation_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    generation_id: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    dataset_id: Mapped[str] = mapped_column(String(120), index=True)
+    sport: Mapped[str] = mapped_column(String(40), index=True)
+    generation: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String(40), index=True)
+    train_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    calibration_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    holdout_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    holdout_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    consulted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    generation_manifest: Mapped[dict[str, Any]] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 _ENGINE = None
 _SESSION_FACTORY: sessionmaker[Session] | None = None
 _SETTINGS: CloudSettings | None = None
@@ -286,6 +322,12 @@ def init_database(settings: CloudSettings) -> None:
     configure_database(settings)
     assert _ENGINE is not None
     Base.metadata.create_all(_ENGINE)
+
+
+def database_engine():
+    if _ENGINE is None:
+        raise RuntimeError("Database is not configured")
+    return _ENGINE
 
 
 def dispose_database() -> None:
@@ -760,9 +802,81 @@ def benchmark_source_rows(*, sport_key: str, bookmaker_key: str = "winamax_fr") 
             "odds_observed_at": snapshot.observed_at.isoformat(),
         } for event, result, snapshot in rows]
 
+def register_dataset_catalog(catalog: Mapping[str, Any]) -> int:
+    dataset_id = str(catalog.get("dataset_id") or "")
+    if not dataset_id:
+        raise ValueError("dataset_id is required")
+    with session_scope() as session:
+        existing = session.scalar(select(DatasetCatalogRecord).where(DatasetCatalogRecord.dataset_id == dataset_id))
+        if existing is not None:
+            if existing.dataset_sha256 != str(catalog.get("dataset_sha256") or ""):
+                raise ValueError("dataset_id already exists with a different hash")
+            return int(existing.id)
+        record = DatasetCatalogRecord(
+            dataset_id=dataset_id,
+            sport=str(catalog.get("sport") or "unknown"),
+            source=str(catalog.get("source") or "unknown"),
+            license_status=str(catalog.get("license_status") or "unknown"),
+            cutoff_time=_utc(catalog.get("cutoff_time")) if catalog.get("cutoff_time") else None,
+            row_count=int(catalog.get("rows") or 0),
+            distinct_dates=int(catalog.get("distinct_dates") or 0),
+            quality_status=str(catalog.get("quality_status") or "draft"),
+            dataset_sha256=str(catalog.get("dataset_sha256") or ""),
+            supersedes_dataset_id=str(catalog.get("supersedes_dataset_id")) if catalog.get("supersedes_dataset_id") else None,
+            catalog=_json_safe(dict(catalog)),
+        )
+        session.add(record)
+        session.flush()
+        return int(record.id)
+
+
+def register_holdout_generation(generation: Mapping[str, Any]) -> int:
+    generation_id = str(generation.get("generation_id") or "")
+    if not generation_id:
+        raise ValueError("generation_id is required")
+    with session_scope() as session:
+        existing = session.scalar(select(HoldoutGenerationRecord).where(HoldoutGenerationRecord.generation_id == generation_id))
+        if existing is not None:
+            return int(existing.id)
+        record = HoldoutGenerationRecord(
+            generation_id=generation_id,
+            dataset_id=str(generation.get("dataset_id") or ""),
+            sport=str(generation.get("sport") or "unknown"),
+            generation=int(generation.get("generation") or 1),
+            status=str(generation.get("status") or "open_collecting"),
+            train_end=_utc(generation.get("train_end")) if generation.get("train_end") else None,
+            calibration_end=_utc(generation.get("calibration_end")) if generation.get("calibration_end") else None,
+            holdout_start=_utc(generation.get("holdout_start")) if generation.get("holdout_start") else None,
+            holdout_end=_utc(generation.get("holdout_end")) if generation.get("holdout_end") else None,
+            consulted_at=_utc(generation.get("consulted_at")) if generation.get("consulted_at") else None,
+            generation_manifest=_json_safe(dict(generation)),
+        )
+        session.add(record)
+        session.flush()
+        return int(record.id)
+
+
+def latest_dataset_catalog(sport: str | None = None) -> dict[str, Any] | None:
+    with session_scope() as session:
+        statement = select(DatasetCatalogRecord).order_by(DatasetCatalogRecord.created_at.desc(), DatasetCatalogRecord.id.desc())
+        if sport:
+            statement = statement.where(DatasetCatalogRecord.sport == sport)
+        row = session.scalar(statement.limit(1))
+        return None if row is None else dict(row.catalog)
+
+
+def latest_holdout_generation(sport: str | None = None) -> dict[str, Any] | None:
+    with session_scope() as session:
+        statement = select(HoldoutGenerationRecord).order_by(HoldoutGenerationRecord.created_at.desc(), HoldoutGenerationRecord.id.desc())
+        if sport:
+            statement = statement.where(HoldoutGenerationRecord.sport == sport)
+        row = session.scalar(statement.limit(1))
+        return None if row is None else dict(row.generation_manifest)
+
+
 def database_summary() -> dict[str, Any]:
     if not ping_database():
-        return {"connected": False, "events": 0, "odds_snapshots": 0, "predictions": 0, "shadow_predictions": 0, "settled_shadow_predictions": 0, "event_results": 0, "benchmark_runs": 0, "model_decisions": 0, "open_data_quality_issues": 0, "last_snapshot_at": None, "last_sync_at": None, "last_shadow_prediction_at": None}
+        return {"connected": False, "events": 0, "odds_snapshots": 0, "predictions": 0, "shadow_predictions": 0, "settled_shadow_predictions": 0, "event_results": 0, "benchmark_runs": 0, "model_decisions": 0, "dataset_catalogs": 0, "holdout_generations": 0, "open_data_quality_issues": 0, "last_snapshot_at": None, "last_sync_at": None, "last_shadow_prediction_at": None}
     with session_scope() as session:
         event_count = int(session.scalar(select(func.count(EventRecord.id))) or 0)
         snapshot_count = int(session.scalar(select(func.count(OddsSnapshotRecord.id))) or 0)
@@ -772,6 +886,8 @@ def database_summary() -> dict[str, Any]:
         settled_shadow_count = int(session.scalar(select(func.count(ShadowPredictionRecord.id)).where(ShadowPredictionRecord.status == "settled")) or 0)
         benchmark_count = int(session.scalar(select(func.count(BenchmarkRunRecord.id))) or 0)
         model_decision_count = int(session.scalar(select(func.count(ModelDecisionRecord.id))) or 0)
+        dataset_catalog_count = int(session.scalar(select(func.count(DatasetCatalogRecord.id))) or 0)
+        holdout_generation_count = int(session.scalar(select(func.count(HoldoutGenerationRecord.id))) or 0)
         open_quality_issues = int(session.scalar(select(func.count(DataQualityIssueRecord.id)).where(DataQualityIssueRecord.status == "open")) or 0)
         last_snapshot = session.scalar(select(func.max(OddsSnapshotRecord.observed_at)))
         last_sync = session.scalar(select(func.max(SyncRunRecord.finished_at)))
@@ -786,6 +902,8 @@ def database_summary() -> dict[str, Any]:
             "event_results": result_count,
             "benchmark_runs": benchmark_count,
             "model_decisions": model_decision_count,
+            "dataset_catalogs": dataset_catalog_count,
+            "holdout_generations": holdout_generation_count,
             "open_data_quality_issues": open_quality_issues,
             "last_snapshot_at": last_snapshot.isoformat() if last_snapshot else None,
             "last_sync_at": last_sync.isoformat() if last_sync else None,

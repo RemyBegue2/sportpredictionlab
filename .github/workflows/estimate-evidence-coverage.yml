@@ -58,7 +58,7 @@ permissions:
   contents: write
 
 env:
-  EXPECTED_VERSION: '4.5.0'
+  EXPECTED_VERSION: '4.9.0'
   THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
   INPUT_START_DATE: ${{ inputs.start_date }}
   INPUT_END_DATE: ${{ inputs.end_date }}
@@ -82,10 +82,10 @@ jobs:
     timeout-minutes: 45
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.12'
           cache: pip
@@ -102,8 +102,8 @@ jobs:
           [ -n "${THE_ODDS_API_KEY:-}" ] || { echo 'missing repository secret: THE_ODDS_API_KEY'; exit 2; }
           python - <<'PY'
           from sports_predictor.version import APP_VERSION
-          if APP_VERSION != '4.5.0':
-              raise SystemExit(f'expected 4.5.0, found {APP_VERSION}')
+          if APP_VERSION != '4.9.0':
+              raise SystemExit(f'expected 4.9.0, found {APP_VERSION}')
           PY
       - name: Run V4.2 regression tests
         run: pytest -q tests/test_v42_coverage_preflight.py
@@ -166,7 +166,7 @@ jobs:
           fi
       - name: Upload preflight evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: evidence-coverage-preflight-${{ github.run_id }}
           path: |

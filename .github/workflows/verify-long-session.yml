@@ -1,0 +1,59 @@
+name: Verify public long session
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Public application URL
+        required: true
+        type: string
+      duration_seconds:
+        description: Duration per scenario, 1800 recommended
+        required: false
+        default: '1800'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-long-session
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [simple, expert]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install browser dependencies
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Run bounded long-session verification
+        env:
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+        run: |
+          mkdir -p artifacts
+          python -m scripts.browser_smoke_test \
+            --base-url "${{ inputs.base_url }}" \
+            --expected-version 4.9.0 \
+            --long-session-seconds "${{ inputs.duration_seconds }}" \
+            --long-session-scenario "${{ matrix.scenario }}" \
+            --navigation-interval-ms 5000 \
+            --report-path "artifacts/public_long_session_v4_9_${{ matrix.scenario }}.json"
+      - name: Upload report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: public-long-session-v4-9-${{ matrix.scenario }}
+          path: artifacts/public_long_session_v4_9_${{ matrix.scenario }}.json
+          if-no-files-found: error
+          retention-days: 30

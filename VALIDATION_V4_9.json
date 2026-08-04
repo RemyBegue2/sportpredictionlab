@@ -1,0 +1,83 @@
+{
+  "release": {
+    "app_version": "4.9.0",
+    "package_version": "0.4.9.0",
+    "frontend_asset": "app.js?v=4.9.0"
+  },
+  "tests": {
+    "collected": 266,
+    "passed": 266,
+    "failed": 0,
+    "batches": [39, 46, 50, 46, 60, 25],
+    "monolithic_note": "The monolithic pytest process exceeded the environment time limit; every test file belongs to exactly one successful batch."
+  },
+  "coverage": {
+    "target": "sports_predictor/controlled_decision.py",
+    "combined_branch_instruction_percent": 89,
+    "instrumented_tests_passed": 5
+  },
+  "football": {
+    "dataset_rows": 1900,
+    "distinct_dates": 583,
+    "train_rows": 1028,
+    "calibration_rows": 250,
+    "development_validation_rows": 229,
+    "consulted_holdout_rows": 393,
+    "baseline": {
+      "log_loss": 0.9945171355805206,
+      "brier": 0.5971749142196022,
+      "ece": 0.046499909645697245
+    },
+    "challengers": [
+      {
+        "model_type": "regularized_poisson_attack_defence",
+        "status": "hold",
+        "log_loss": 0.9850382531796863,
+        "brier": 0.5904303411172852,
+        "ece": 0.05251403417790171,
+        "vetoes": ["outcome:draw", "rest_context:rest_imbalance"]
+      },
+      {
+        "model_type": "hybrid_poisson_elo",
+        "status": "hold",
+        "log_loss": 0.9867885679342256,
+        "brier": 0.592287209983112,
+        "ece": 0.07499937140598228,
+        "vetoes": ["outcome:draw", "rest_context:rest_imbalance"]
+      }
+    ],
+    "promotion_holdout": {
+      "status": "open_collecting",
+      "start_after": "2026-05-24T00:00:00+00:00",
+      "required_new_distinct_dates": 30,
+      "current_new_distinct_dates": 0
+    },
+    "promotion_ready": false
+  },
+  "tennis": {
+    "rows": 32,
+    "distinct_dates": 2,
+    "exploratory_rows_required": 500,
+    "exploratory_dates_required": 50,
+    "challenger_rows_required": 1500,
+    "challenger_dates_required": 150,
+    "training_status": "blocked_below_readiness_gates",
+    "incremental_import_tested": true
+  },
+  "production_validation": {
+    "simple": "not_run",
+    "expert": "not_run",
+    "consolidated": "not_proven"
+  },
+  "technical": {
+    "python_files_compiled": 89,
+    "javascript_syntax": "passed",
+    "github_workflows_validated": 23,
+    "github_action_uses_pinned": 53,
+    "provider_calls": 0,
+    "provider_credits_consumed": 0,
+    "automatic_promotion": false,
+    "automatic_bet_placement": false,
+    "railway_deployment_performed": false
+  }
+}

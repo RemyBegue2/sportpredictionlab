@@ -33,7 +33,7 @@ jobs:
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
@@ -51,7 +51,7 @@ jobs:
           [ -n "${APP_PASSWORD:-}" ] || { echo 'APP_PASSWORD is missing; the post-rollback browser test is mandatory'; exit 2; }
           git rev-parse --verify '${{ inputs.source_commit }}^{commit}' >/dev/null
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.12'
           cache: pip
@@ -131,7 +131,7 @@ jobs:
           print(p['football_model']['artifact_sha256'] or '')
           PY
           )
-          python -m scripts.post_deploy_verify --base-url "$APP_PUBLIC_URL" --expected-version '4.5.0' --expected-commit '${{ steps.commit.outputs.sha }}' --expected-model-sha256 "$MODEL_SHA" --attempts 30 --delay-seconds 10
+          python -m scripts.post_deploy_verify --base-url "$APP_PUBLIC_URL" --expected-version '4.9.0' --expected-commit '${{ steps.commit.outputs.sha }}' --expected-model-sha256 "$MODEL_SHA" --attempts 30 --delay-seconds 10
 
       - name: Install Chromium smoke-test dependencies
         run: |
@@ -141,7 +141,7 @@ jobs:
       - name: Verify restored private interface
         env:
           APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
-        run: python -m scripts.browser_smoke_test --base-url "$APP_PUBLIC_URL" --expected-version '4.5.0'
+        run: python -m scripts.browser_smoke_test --base-url "$APP_PUBLIC_URL" --expected-version '4.9.0'
 
       - name: Summary
         if: always()

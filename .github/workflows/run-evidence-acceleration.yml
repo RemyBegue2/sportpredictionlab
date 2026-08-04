@@ -1,0 +1,54 @@
+name: Run evidence acceleration
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type RUN_EVIDENCE_ACCELERATION
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidence-acceleration-v4-9
+  cancel-in-progress: false
+
+jobs:
+  accelerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: sqlite:///./evidence-acceleration.db
+      APP_VERSION: '4.9.0'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Validate confirmation
+        run: test "${{ inputs.confirmation }}" = "RUN_EVIDENCE_ACCELERATION"
+      - name: Install
+        run: pip install -r requirements-web.txt
+      - name: Run zero-credit evidence acceleration
+        run: python -m scripts.run_evidence_acceleration --output artifacts/evidence_acceleration_v4_9.json | tee artifacts/evidence_acceleration_console_v4_9.txt
+      - name: Enforce zero provider credits
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('artifacts/evidence_acceleration_v4_9.json').read_text())
+          assert report['limits']['provider_credits_consumed'] == 0
+          assert report['limits']['automatic_promotion'] is False
+          PY
+      - name: Upload evidence report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: evidence-acceleration-v4-9
+          path: |
+            artifacts/evidence_acceleration_v4_9.json
+            artifacts/evidence_acceleration_console_v4_9.txt
+          if-no-files-found: error
+          retention-days: 30

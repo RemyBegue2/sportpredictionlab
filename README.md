@@ -1,78 +1,76 @@
-# Sports Prediction Lab V4.5 — Automated Shadow Learning
+# Sports Prediction Lab V4.9 — Controlled Model Decision & Live Validation
 
-Application privée de recherche football et tennis. La vue principale montre seulement les matchs, les probabilités, les signaux shadow et la prochaine action. Les panneaux techniques sont chargés uniquement après activation du **mode expert**.
+Application privée de recherche football et tennis. La vue simple conserve exactement trois écrans : **Aujourd’hui**, **Signaux** et **Apprentissage**. Les métriques avancées, datasets, holdouts et artefacts restent dans le mode expert.
 
-## Parcours quotidien
+## Ce que fait la V4.9
 
 ```text
-Calendrier gratuit → probabilités modèle → capture marché plafonnée
-→ signal shadow ou abstention → règlement → bankroll fictive
-→ challenger hebdomadaire → revue humaine du champion
+Matchs du jour → probabilités → signal shadow ou abstention
+→ données réglées → challengers bornés → décision hold/revue
+→ nouveau holdout futur → promotion humaine uniquement
 ```
 
-## Vue simple
+- entraîne exactement deux challengers football : Poisson régularisé et hybride Poisson/Elo ;
+- sélectionne les hyperparamètres avant une validation de développement chronologique ;
+- interdit de réutiliser le holdout déjà consulté comme preuve de promotion ;
+- ouvre une génération de holdout future nécessitant 30 nouvelles dates ;
+- ajoute un import tennis incrémental qui conserve les anciennes versions ;
+- distingue ajouts, doublons inchangés et corrections de résultat ;
+- exige deux preuves publiques longue session séparées : simple et expert ;
+- consomme zéro crédit fournisseur pour l’import, l’entraînement et la validation navigateur.
 
-La page d’accueil est organisée autour de trois sections :
-
-1. **Aujourd’hui** — matchs et probabilités ;
-2. **Signaux** — écarts modèle–marché expérimentaux et simulations repliées ;
-3. **Apprentissage** — progression, champion, challenger, budget et prochaine action.
-
-Le mode expert conserve le centre de contrôle, la qualité des données, les campagnes historiques, les modèles manuels et l’audit.
-
-## Garde-fous par défaut
+## État réel livré
 
 ```text
-DAILY_ODDS_ENABLED=false
-DAILY_ODDS_MAX_CREDITS=0
-SHADOW_MODE_ENABLED=false
-AUTOMATED_SHADOW_ENABLED=false
-HISTORICAL_EVIDENCE_ENABLED=false
+Football : 1 900 matchs
+Développement : 1 028 train · 250 calibration · 229 validation
+Holdout déjà consulté : 393 matchs, diagnostic uniquement
+Poisson régularisé : hold — veto nul et repos déséquilibré
+Hybride Poisson/Elo : hold — ECE dégradée et mêmes vetos
+Nouveau holdout de promotion : collecte future, 30 dates requises
+Tennis : 32 matchs / 2 dates — 500 / 50 requis pour exploration
+Production longue session : non prouvée tant que les deux workflows publics ne passent pas
 ```
 
-L’ouverture du dashboard ne déclenche aucun appel fournisseur. L’automatisation exige simultanément le marché live, le mode shadow, un plafond quotidien et la variable GitHub correspondante.
+## Interface
 
-## Endpoints principaux
+- **Aujourd’hui** — matchs et probabilités, huit cartes maximum ;
+- **Signaux** — signaux expérimentaux ou abstentions ;
+- **Apprentissage** — football, tennis, production et coût ;
+- **Mode expert** — challengers, datasets, holdouts et diagnostics complets.
+
+## Endpoints V4.9
 
 ```text
+/api/controlled-model-decision
+/api/controlled-model-decision/run
+/api/evidence-acceleration
+/api/challenger-factory
+/api/feature-lab
 /api/daily/slate
 /api/research-lab
-/api/research-lab/learning
-/api/research-lab/refresh
-/api/research-lab/settle
-/api/research-lab/optimise
-/api/research-lab/champion/promote
-/api/model-diagnostics
-/api/credit-firewall
 /api/release
 /api/ready
 ```
 
-## Workflows V4.5
+## Workflows V4.9
 
 ```text
-Automated shadow learning cycle
-Promote approved research champion
+Run controlled model decision
+Verify public long session — scénario simple
+Verify public long session — scénario expert
+Run evidence acceleration
+Run sport challenger factory
 Deploy production
 Verify production
-Refresh daily product
 ```
 
-La capture et le règlement partagent le même plafond journalier. L’entraînement hebdomadaire ne consomme aucun crédit. La promotion est exclusivement manuelle et ne déclenche ni pari ni mise.
+## Garde-fous
 
-## Validation
-
-- 235 tests collectés et réussis par lots disjoints ;
-- couverture globale combinée avec branches : 78,3 % (83,0 % des instructions) ;
-- syntaxe Python, JavaScript et YAML validée ;
-- aucun appel réel à The Odds API pendant la préparation ;
-- aucune affirmation de rentabilité.
-
-## Documents V4.5
-
-- `UPGRADE_V4_5.md`
-- `AUDIT_MULTI_ROLES_V4_5.md`
-- `RESULTATS_V4_5.md`
-- `KNOWN_ISSUES_AND_GATES_V4_5.md`
-- `OPERATIONS_RUNBOOK_V4_5.md`
-- `VALIDATION_V4_5.json`
+- aucun pari réel ou personnalisé ;
+- aucune connexion bookmaker ;
+- aucune martingale ;
+- aucun entraînement direct sur le ROI passé ;
+- aucune promotion automatique ;
+- aucun challenger sous les seuils tennis ;
+- aucune affirmation de rentabilité future.

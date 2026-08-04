@@ -116,7 +116,7 @@ def test_simple_interface_is_default_and_expert_data_is_lazy():
     assert 'id="interfaceMode"' in html
     assert 'id="learning"' in html
     assert 'data-view="expert"' in html
-    assert 'app.js?v=4.5.0' in html
+    assert 'app.js?v=4.9.0' in html
     assert "jsonFetch('/api/daily/slate')" in js
     assert "async function loadExpertData" in js
     assert "if(currentInterfaceMode()==='expert') await loadExpertData()" in js

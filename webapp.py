@@ -54,6 +54,8 @@ from sports_predictor.database import (
     record_benchmark_run,
     record_data_quality_issue,
     research_credits_consumed_on,
+    register_dataset_catalog,
+    register_holdout_generation,
     settle_shadow_predictions,
     register_model,
     register_release,
@@ -82,6 +84,10 @@ from sports_predictor.roi_lab import (
     build_roi_lab_report,
     score_roi_meta_model,
 )
+from sports_predictor.feature_lab import build_feature_lab_report
+from sports_predictor.challenger_factory import build_challenger_factory_report
+from sports_predictor.evidence_acceleration import build_evidence_acceleration_report
+from sports_predictor.controlled_decision import build_controlled_model_decision_report
 from sports_predictor.daily_product import (
     DailyFixtureError,
     DailyFixtureSource,
@@ -194,9 +200,9 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Sports Prediction Lab V4.5 Automated Shadow Learning",
+    title="Sports Prediction Lab V4.6 Robust Calibration & Feature Lab",
     version=APP_VERSION,
-    description="Dual-sport daily research product with football and tennis predictions, controlled market snapshots, shadow signals and simulated bankroll evaluation.",
+    description="Dual-sport daily research product with compact interface, bounded calibration experiments, shadow signals and simulated bankroll evaluation.",
     lifespan=lifespan,
 )
 app.add_middleware(AuthenticationGateMiddleware, settings=SETTINGS)
@@ -361,6 +367,24 @@ class ResearchChampionPromotionRequest(BaseModel):
     candidate_id: str = Field(pattern=r"^RCH-[A-F0-9]{20}$")
     confirmation: str = Field(min_length=1, max_length=64)
     note: str = Field(default="manual review", min_length=3, max_length=500)
+
+
+class FeatureLabRunRequest(BaseModel):
+    confirmation: str = Field(min_length=1, max_length=64)
+
+
+class ChallengerFactoryRunRequest(BaseModel):
+    confirmation: str = Field(min_length=1, max_length=64)
+
+
+class EvidenceAccelerationRunRequest(BaseModel):
+    confirmation: str = Field(min_length=1, max_length=64)
+    source: str = Field(default="local_tennis_archive", min_length=1, max_length=200)
+    license_status: str = Field(default="research_only", pattern=r"^(unknown|research_only|approved)$")
+
+
+class ControlledModelDecisionRunRequest(BaseModel):
+    confirmation: str = Field(min_length=1, max_length=64)
 
 
 @lru_cache(maxsize=1)
@@ -2132,6 +2156,238 @@ def daily_slate(
 
 
 
+def _challenger_factory_artifact() -> dict[str, Any]:
+    latest = latest_benchmark_run("sport_challenger_factory")
+    if latest and isinstance(latest.get("report"), dict):
+        return {**latest["report"], "run": {"id": latest.get("id"), "status": latest.get("status")}}
+    path = ROOT / "artifacts" / "challenger_factory_v4_9.json"
+    if not path.exists():
+        return {
+            "schema_version": "1.0",
+            "status": "not_run",
+            "sports": {
+                "football": {"status": "not_run", "reason": "run_challenger_factory"},
+                "tennis": {"status": "not_run", "reason": "run_challenger_factory"},
+            },
+            "limits": {"provider_credits_consumed": 0, "automatic_promotion": False},
+            "next_action": "Run the zero-credit challenger factory from the protected workflow.",
+        }
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {
+            "schema_version": "1.0", "status": "invalid_artifact",
+            "sports": {},
+            "limits": {"provider_credits_consumed": 0, "automatic_promotion": False},
+            "next_action": "Regenerate the challenger factory artifact.",
+        }
+    return payload
+
+
+def _evidence_acceleration_artifact() -> dict[str, Any]:
+    latest = latest_benchmark_run("dual_sport_evidence_acceleration")
+    if latest and isinstance(latest.get("report"), dict):
+        return {**latest["report"], "run": {"id": latest.get("id"), "status": latest.get("status")}}
+    path = ROOT / "artifacts" / "evidence_acceleration_v4_9.json"
+    if path.exists():
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+    return {
+        "schema_version": "1.0",
+        "status": "not_run",
+        "football": {"status": "not_run", "reason": "run_evidence_acceleration"},
+        "tennis": {
+            "catalog": {"readiness": {"status": "collecting"}, "rows": 0, "distinct_dates": 0},
+            "holdout_generation": {"status": "open_collecting"},
+        },
+        "limits": {"provider_credits_consumed": 0, "automatic_promotion": False},
+        "next_action": "Run the zero-credit evidence acceleration workflow.",
+    }
+
+
+def _controlled_model_decision_artifact() -> dict[str, Any]:
+    latest = latest_benchmark_run("controlled_model_decision")
+    if latest and isinstance(latest.get("report"), dict):
+        return {**latest["report"], "run": {"id": latest.get("id"), "status": latest.get("status")}}
+    path = ROOT / "artifacts" / "controlled_model_decision_v4_9.json"
+    if path.exists():
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+    return {
+        "schema_version": "1.0",
+        "status": "not_run",
+        "football": {"status": "not_run", "challengers": [], "promotion_ready": False},
+        "tennis": {
+            "training_status": "blocked_below_readiness_gates",
+            "progress": {
+                "exploratory_rows": {"actual": 0, "required": 500},
+                "exploratory_dates": {"actual": 0, "required": 50},
+            },
+        },
+        "production_validation": {"status": "not_proven"},
+        "limits": {"provider_credits_consumed": 0, "automatic_promotion": False},
+        "next_action": "Run the protected controlled model decision workflow.",
+    }
+
+
+@app.get("/api/evidence-acceleration")
+def evidence_acceleration() -> dict[str, Any]:
+    return _evidence_acceleration_artifact()
+
+
+@app.post("/api/evidence-acceleration/run")
+def run_evidence_acceleration(req: EvidenceAccelerationRunRequest) -> dict[str, Any]:
+    if req.confirmation != "RUN_EVIDENCE_ACCELERATION":
+        raise HTTPException(status_code=409, detail="confirmation must equal RUN_EVIDENCE_ACCELERATION")
+    report = build_evidence_acceleration_report(root=ROOT, source=req.source, license_status=req.license_status)
+    report = json.loads(json.dumps(report, default=str))
+    output = ROOT / "artifacts" / "evidence_acceleration_v4_9.json"
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    catalog = report["tennis"]["catalog"]
+    generation = report["tennis"]["holdout_generation"]
+    catalog_id = register_dataset_catalog(catalog)
+    generation_id = register_holdout_generation(generation)
+    status = str(report.get("status") or "collecting")
+    run_id = record_benchmark_run(
+        sport_key="dual_sport_evidence_acceleration",
+        model_version=APP_VERSION,
+        status=status,
+        config={
+            "mode": "zero_credit_evidence_acceleration",
+            "provider_calls": 0,
+            "maximum_new_football_challengers": 2,
+            "holdout_generations": True,
+        },
+        report=report,
+        summary={
+            "football_status": report["football"]["status"],
+            "tennis_status": catalog["readiness"]["status"],
+            "dataset_id": catalog["dataset_id"],
+            "provider_credits_consumed": 0,
+            "automatic_promotion": False,
+        },
+    )
+    return {**report, "run": {"id": run_id, "status": status}, "registry": {"dataset_catalog_record_id": catalog_id, "holdout_generation_record_id": generation_id}}
+
+
+@app.get("/api/controlled-model-decision")
+def controlled_model_decision() -> dict[str, Any]:
+    return _controlled_model_decision_artifact()
+
+
+@app.post("/api/controlled-model-decision/run")
+def run_controlled_model_decision(req: ControlledModelDecisionRunRequest) -> dict[str, Any]:
+    if req.confirmation != "RUN_CONTROLLED_MODEL_DECISION":
+        raise HTTPException(status_code=409, detail="confirmation must equal RUN_CONTROLLED_MODEL_DECISION")
+    report = build_controlled_model_decision_report(root=ROOT, app_version=APP_VERSION)
+    report = json.loads(json.dumps(report, default=str))
+    output = ROOT / "artifacts" / "controlled_model_decision_v4_9.json"
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    consulted_id = register_holdout_generation(report["football"]["consulted_holdout_generation"])
+    promotion_id = register_holdout_generation(report["football"]["promotion_holdout_generation"])
+    status = str(report.get("status") or "collecting")
+    run_id = record_benchmark_run(
+        sport_key="controlled_model_decision",
+        model_version=APP_VERSION,
+        status=status,
+        config={
+            "mode": "bounded_controlled_model_decision",
+            "provider_calls": 0,
+            "maximum_football_challengers": 2,
+            "promotion_holdout_required": True,
+        },
+        report=report,
+        summary={
+            "football_status": report["football"]["status"],
+            "tennis_status": report["tennis"]["training_status"],
+            "production_validation": report["production_validation"]["status"],
+            "provider_credits_consumed": 0,
+            "automatic_promotion": False,
+        },
+    )
+    return {
+        **report,
+        "run": {"id": run_id, "status": status},
+        "registry": {
+            "consulted_holdout_record_id": consulted_id,
+            "promotion_holdout_record_id": promotion_id,
+        },
+    }
+
+
+@app.get("/api/challenger-factory")
+def challenger_factory() -> dict[str, Any]:
+    """Read the last zero-credit sport challenger evaluation artifact."""
+    return _challenger_factory_artifact()
+
+
+@app.post("/api/challenger-factory/run")
+def run_challenger_factory(req: ChallengerFactoryRunRequest) -> dict[str, Any]:
+    if req.confirmation != "RUN_CHALLENGER_FACTORY":
+        raise HTTPException(status_code=409, detail="confirmation must equal RUN_CHALLENGER_FACTORY")
+    report = build_challenger_factory_report(root=ROOT)
+    output = ROOT / "artifacts" / "challenger_factory_v4_9.json"
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    status = str(report.get("status") or "collecting")
+    run_id = record_benchmark_run(
+        sport_key="sport_challenger_factory",
+        model_version=APP_VERSION,
+        status=status,
+        config={
+            "mode": "bounded_sport_challenger_factory",
+            "provider_calls": 0,
+            "maximum_models_per_sport": ((report.get("limits") or {}).get("maximum_models_per_sport")),
+        },
+        report=report,
+        summary={
+            "football_status": ((report.get("sports") or {}).get("football") or {}).get("status"),
+            "tennis_status": ((report.get("sports") or {}).get("tennis") or {}).get("status"),
+            "provider_credits_consumed": 0,
+            "automatic_promotion": False,
+        },
+    )
+    return {**report, "run": {"id": run_id, "status": status}}
+
+
+@app.get("/api/feature-lab")
+def feature_lab() -> dict[str, Any]:
+    """Evaluate bounded per-sport calibration with no provider calls."""
+    rows = recent_shadow_predictions(10000, status="settled")
+    return build_feature_lab_report(rows)
+
+
+@app.post("/api/feature-lab/run")
+def run_feature_lab(req: FeatureLabRunRequest) -> dict[str, Any]:
+    if req.confirmation != "RUN_FEATURE_LAB":
+        raise HTTPException(status_code=409, detail="confirmation must equal RUN_FEATURE_LAB")
+    rows = recent_shadow_predictions(10000, status="settled")
+    report = build_feature_lab_report(rows)
+    status = "completed" if report.get("status") == "ready" else "collecting"
+    run_id = record_benchmark_run(
+        sport_key="dual_sport_feature_lab",
+        model_version=APP_VERSION,
+        status=status,
+        config={
+            "mode": "bounded_calibration_feature_lab",
+            "provider_calls": 0,
+            "maximum_experiments_per_sport": 12,
+            "maximum_calibrators_per_sport": 4,
+        },
+        report=report,
+        summary={
+            "overall_reliability": report.get("overall_reliability"),
+            "football_status": ((report.get("sports") or {}).get("football") or {}).get("status"),
+            "tennis_status": ((report.get("sports") or {}).get("tennis") or {}).get("status"),
+            "provider_credits_consumed": 0,
+        },
+    )
+    return {**report, "run": {"id": run_id, "status": status}}
+
+
 @app.get("/api/research-lab")
 def research_lab() -> dict[str, Any]:
     """Return the latest persisted dual-sport market research report.
@@ -2182,6 +2438,8 @@ def research_learning() -> dict[str, Any]:
         "automation": payload.get("automation"),
         "summary": payload.get("summary"),
         "constraints": payload.get("constraints"),
+        "challenger_factory": _challenger_factory_artifact(),
+        "evidence_acceleration": _evidence_acceleration_artifact(),
     }
 
 

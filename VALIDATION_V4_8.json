@@ -1,0 +1,67 @@
+{
+  "version": {
+    "app_version": "4.8.0",
+    "package_version": "0.4.8.0",
+    "frontend_asset": "app.js?v=4.8.0"
+  },
+  "tests": {
+    "collected": 261,
+    "passed": 261,
+    "failed": 0,
+    "execution": "six_disjoint_batches",
+    "batches": [
+      54,
+      31,
+      50,
+      46,
+      60,
+      20
+    ]
+  },
+  "coverage": {
+    "targeted_branch_coverage": {
+      "sports_predictor/evidence_acceleration.py": 94,
+      "sports_predictor/challenger_factory.py": 90
+    },
+    "instrumented_tests_passed": 20
+  },
+  "technical_validation": {
+    "python_files_compiled": 86,
+    "javascript_syntax": "passed",
+    "github_workflows_yaml": 22,
+    "render_yaml": "passed",
+    "toml_files_validated": 4,
+    "alembic_upgrade_downgrade": "passed",
+    "github_actions_full_sha_check": "passed",
+    "git_diff_check": "passed",
+    "patch_apply_check": "passed",
+    "brand_new_database_migration": "passed",
+    "archive_extraction_check": "passed",
+    "archive_critical_tests": 16
+  },
+  "real_artifacts": {
+    "football_status": "hold_explained",
+    "football_delta_log_loss_vs_baseline": 0.030653134946895255,
+    "football_largest_regressions": [
+      "outcome:draw",
+      "rest_context:rest_imbalance",
+      "outcome:away"
+    ],
+    "tennis_rows": 32,
+    "tennis_distinct_dates": 2,
+    "tennis_status": "collecting",
+    "provider_credits_consumed": 0,
+    "automatic_promotion": false
+  },
+  "security_hardening": {
+    "alembic_added": true,
+    "github_actions_pinned": true,
+    "arbitrary_deserialization_added": false,
+    "provider_secret_in_training_workflows": false
+  },
+  "limitations": [
+    "The 30-minute public long-session workflow was not executed against the user's deployed application from the preparation environment.",
+    "The delivered tennis archive remains too small for exploratory or challenger readiness.",
+    "No real provider call, credit consumption or Railway deployment was performed."
+  ]
+}

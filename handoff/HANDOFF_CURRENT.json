@@ -22,6 +22,203 @@
     "trust_note": "Integrity check only. Load artifacts only from a trusted distribution channel."
   },
   "candidate_campaign_plan": null,
+  "challenger_factory": {
+    "generated_at": "2026-08-04T12:45:36.025647+00:00",
+    "limits": {
+      "automatic_promotion": false,
+      "calibration_fraction": 0.2,
+      "ece_tolerance": 0.015,
+      "holdout_fraction": 0.2,
+      "log_loss_improvement_required": 0.002,
+      "maximum_configurations_per_model": 20,
+      "maximum_folds": 5,
+      "maximum_models_per_sport": 4,
+      "minimum_distinct_dates": 12,
+      "minimum_rows": 120,
+      "optimise_on_in_sample_roi": false,
+      "provider_credits_consumed": 0
+    },
+    "next_action": "Collect a broader multi-surface tennis archive before training the tennis challenger.",
+    "schema_version": "1.0",
+    "sports": {
+      "football": {
+        "automatic_promotion": false,
+        "baseline": {
+          "holdout": {
+            "accuracy": 0.48091603053435117,
+            "brier": 0.6137905982172118,
+            "ece": 0.03608334691894218,
+            "log_loss": 1.0215205586377298
+          },
+          "name": "elo_three_way_baseline"
+        },
+        "challenger": {
+          "artifact_sha256": "3d6aa61af67e1e63e490a7aeae14465502976504b34d2345e2fc81322ca68387",
+          "holdout": {
+            "accuracy": 0.4681933842239186,
+            "brier": 0.6347422531449236,
+            "ece": 0.07821999285938369,
+            "log_loss": 1.052173693584625
+          },
+          "portable_parameters": {
+            "classes": [
+              0,
+              1,
+              2
+            ],
+            "coef": [
+              [
+                -0.023808077459728245,
+                -0.4466898821916205,
+                -0.08482970103095862,
+                -0.0383297493405176,
+                -0.03694200817659413,
+                -0.06468462985896901,
+                0.013309313670899884,
+                -0.024167791484363613,
+                0.0960683533251632,
+                -0.0597147662589468,
+                -0.17537213862661644,
+                0.11441604655190575
+              ],
+              [
+                -0.08352524274648122,
+                0.18699673165925335,
+                -0.025640922166664717,
+                0.10835187969039034,
+                0.1055540199555005,
+                0.013781027133749067,
+                0.022785019186503955,
+                0.06689102239765735,
+                -0.08667220679503158,
+                0.09588425957528984,
+                -0.0008532677504711291,
+                -0.01301753350324991
+              ],
+              [
+                0.10733332020620469,
+                0.2596931505323647,
+                0.1104706231976205,
+                -0.07002213034987041,
+                -0.06861201177890272,
+                0.0509036027252164,
+                -0.036094332857406146,
+                -0.042723230913294816,
+                -0.009396146530129284,
+                -0.03616949331634331,
+                0.17622540637708506,
+                -0.1013985130486549
+              ]
+            ],
+            "features": [
+              "elo_diff",
+              "elo_home_prob",
+              "home_attack_form",
+              "home_defence_form",
+              "away_attack_form",
+              "away_defence_form",
+              "league_home_goal_rate",
+              "league_away_goal_rate",
+              "home_rest_days",
+              "away_rest_days",
+              "home_matches_seen",
+              "away_matches_seen"
+            ],
+            "format": "portable_logistic_v1",
+            "intercept": [
+              -0.10265515330783274,
+              -0.2539337145863543,
+              0.35658886789418043
+            ],
+            "scaler_mean": [
+              65.49079297552625,
+              0.5825316368256604,
+              1.463805648841815,
+              1.4750871867734434,
+              1.4787275036596916,
+              1.455853353999828,
+              1.5696665323488432,
+              1.2565447739780418,
+              8.615732368896927,
+              8.693490054249548,
+              48.06871609403255,
+              47.99819168173599
+            ],
+            "scaler_scale": [
+              134.61947498724857,
+              0.16666658296873835,
+              0.648217205127085,
+              0.5877853257805523,
+              0.6460634030254211,
+              0.5896417344807905,
+              0.0900414650931502,
+              0.11609804108546387,
+              8.34017305994204,
+              8.500244285841388,
+              30.82695060957277,
+              30.7572893252895
+            ],
+            "temperature": 1.3190357015301815
+          }
+        },
+        "challenger_id": "SCH-FOOTBALL-3D6AA61AF67E1E63",
+        "dataset": {
+          "cutoff_time": "2026-05-24T00:00:00+00:00",
+          "dataset_id": "DS-FOOTBALL-AE48BA7DC4715936F889",
+          "dataset_sha256": "ae48ba7dc4715936f8891177f054c5a4799c681c0b65fc4bd7aea8031478eac7",
+          "distinct_dates": 583,
+          "rows": 1900,
+          "source": "local_football_archive",
+          "sport": "football"
+        },
+        "features": [
+          "elo_diff",
+          "elo_home_prob",
+          "home_attack_form",
+          "home_defence_form",
+          "away_attack_form",
+          "away_defence_form",
+          "league_home_goal_rate",
+          "league_away_goal_rate",
+          "home_rest_days",
+          "away_rest_days",
+          "home_matches_seen",
+          "away_matches_seen"
+        ],
+        "model_type": "regularized_multinomial_logistic",
+        "partitions": {
+          "calibration": 401,
+          "holdout": 393,
+          "train": 1106
+        },
+        "provider_credits_consumed": 0,
+        "reason": "challenger_did_not_pass_non_degradation_gates",
+        "sport": "football",
+        "status": "hold"
+      },
+      "tennis": {
+        "dataset": {
+          "cutoff_time": "2024-12-30T00:00:00+00:00",
+          "dataset_id": "DS-TENNIS-DBFCCA8AEF6A49922790",
+          "dataset_sha256": "dbfcca8aef6a49922790cf31a258f800a3816492ee6617b84a9e57b0d0c57de1",
+          "distinct_dates": 2,
+          "rows": 32,
+          "source": "local_tennis_archive",
+          "sport": "tennis"
+        },
+        "minimum_distinct_dates": 12,
+        "minimum_rows": 120,
+        "provider_credits_consumed": 0,
+        "reason": "insufficient_surface_aware_history",
+        "sport": "tennis",
+        "status": "collecting",
+        "surface_counts": {
+          "hard": 32
+        }
+      }
+    },
+    "status": "collecting"
+  },
   "champion_challenger": {
     "benchmark": null,
     "credits_consumed": 0,
@@ -39,13 +236,463 @@
     "synthetic_metrics_published_as_real": false,
     "version": "3.6.0"
   },
+  "controlled_model_decision": {
+    "decision_id": "CMD-43A44BEB86217FD2EAAE",
+    "football": {
+      "automatic_promotion": false,
+      "baseline": {
+        "development_validation": {
+          "accuracy": 0.537117903930131,
+          "brier": 0.5971749142196022,
+          "ece": 0.046499909645697245,
+          "log_loss": 0.9945171355805206
+        },
+        "name": "elo_three_way_baseline"
+      },
+      "best_development_challenger": "EXP-FOOTBALL-B83AB1FF47E1CD4AFE8D",
+      "challengers": [
+        {
+          "artifact_sha256": "b83ab1ff47e1cd4afe8df2ec87003f4dca5008bf60f039e3880ce823f4263fbf",
+          "baseline_validation": {
+            "accuracy": 0.537117903930131,
+            "brier": 0.5971749142196022,
+            "ece": 0.046499909645697245,
+            "log_loss": 0.9945171355805206
+          },
+          "decision_reasons": [
+            "protected_subgroup_veto"
+          ],
+          "development_validation": {
+            "accuracy": 0.5109170305676856,
+            "brier": 0.5904303411172852,
+            "ece": 0.05251403417790171,
+            "log_loss": 0.9850382531796863
+          },
+          "experiment_id": "EXP-FOOTBALL-B83AB1FF47E1CD4AFE8D",
+          "model_type": "regularized_poisson_attack_defence",
+          "portable_parameters": {
+            "away": {
+              "alpha": 0.05,
+              "coef": [
+                -0.03329026204177195,
+                0.022777240243548682,
+                0.06464723833265702,
+                -0.00830580144936955,
+                -0.03800553892334477,
+                -0.04069030519292366,
+                0.0477584606550664,
+                -0.029524116755329007,
+                -0.051210566208026546,
+                0.10278368337537801,
+                -0.18399021091189022
+              ],
+              "intercept": 0.23782481571541575,
+              "scaler_mean": [
+                1.445495182508801,
+                1.4569031406336852,
+                1.460090096349824,
+                1.434386001482305,
+                1.5650891093710715,
+                1.2515795356690629,
+                8.730544747081712,
+                8.804474708171206,
+                44.728599221789885,
+                44.985408560311285,
+                64.8483401887264
+              ],
+              "scaler_scale": [
+                0.6442758281306985,
+                0.5835606939398685,
+                0.6425116296169389,
+                0.5776533872724338,
+                0.09177393878293053,
+                0.11895866363553875,
+                8.544024289824913,
+                8.70493952850254,
+                28.664184718677415,
+                28.81908517559795,
+                132.52848256548006
+              ]
+            },
+            "features": [
+              "home_attack_form",
+              "home_defence_form",
+              "away_attack_form",
+              "away_defence_form",
+              "league_home_goal_rate",
+              "league_away_goal_rate",
+              "home_rest_days",
+              "away_rest_days",
+              "home_matches_seen",
+              "away_matches_seen",
+              "elo_diff"
+            ],
+            "format": "portable_regularized_poisson_v1",
+            "home": {
+              "alpha": 0.05,
+              "coef": [
+                0.09495056568754633,
+                -0.017096648370925293,
+                0.004906157253268911,
+                0.056880308308924515,
+                -0.013534197524020195,
+                -0.03694412098114933,
+                0.020289015658274023,
+                -0.015470256575459487,
+                0.054749106452266695,
+                -0.01451889095769634,
+                0.2090595335197809
+              ],
+              "intercept": 0.4334817845230812,
+              "scaler_mean": [
+                1.445495182508801,
+                1.4569031406336852,
+                1.460090096349824,
+                1.434386001482305,
+                1.5650891093710715,
+                1.2515795356690629,
+                8.730544747081712,
+                8.804474708171206,
+                44.728599221789885,
+                44.985408560311285,
+                64.8483401887264
+              ],
+              "scaler_scale": [
+                0.6442758281306985,
+                0.5835606939398685,
+                0.6425116296169389,
+                0.5776533872724338,
+                0.09177393878293053,
+                0.11895866363553875,
+                8.544024289824913,
+                8.70493952850254,
+                28.664184718677415,
+                28.81908517559795,
+                132.52848256548006
+              ]
+            },
+            "rho": -0.10999999999999999,
+            "temperature": 1.0750608566603217
+          },
+          "status": "hold",
+          "subgroup_gates": {
+            "groups": {
+              "outcome": {
+                "away": {
+                  "delta_log_loss": -0.07634395993909804,
+                  "passed": true,
+                  "rows": 85,
+                  "status": "evaluated"
+                },
+                "draw": {
+                  "delta_log_loss": 0.18132742274169877,
+                  "passed": false,
+                  "rows": 54,
+                  "status": "evaluated"
+                },
+                "home": {
+                  "delta_log_loss": -0.06081231447799362,
+                  "passed": true,
+                  "rows": 90,
+                  "status": "evaluated"
+                }
+              },
+              "rest_context": {
+                "rest_imbalance": {
+                  "delta_log_loss": 0.03502135133355244,
+                  "passed": false,
+                  "rows": 16,
+                  "status": "evaluated"
+                },
+                "similar_rest": {
+                  "delta_log_loss": -0.012821622963042012,
+                  "passed": true,
+                  "rows": 213,
+                  "status": "evaluated"
+                }
+              }
+            },
+            "passed": false,
+            "vetoes": [
+              "outcome:draw",
+              "rest_context:rest_imbalance"
+            ]
+          }
+        },
+        {
+          "artifact_sha256": "d22529420fdf13632c5e4aed84c11375f5f2d69cfe9424132489bd7a0202337f",
+          "baseline_validation": {
+            "accuracy": 0.537117903930131,
+            "brier": 0.5971749142196022,
+            "ece": 0.046499909645697245,
+            "log_loss": 0.9945171355805206
+          },
+          "decision_reasons": [
+            "development_ece_gate_failed",
+            "protected_subgroup_veto"
+          ],
+          "development_validation": {
+            "accuracy": 0.5283842794759825,
+            "brier": 0.592287209983112,
+            "ece": 0.07499937140598228,
+            "log_loss": 0.9867885679342256
+          },
+          "experiment_id": "EXP-FOOTBALL-D22529420FDF13632C5E",
+          "model_type": "hybrid_poisson_elo",
+          "portable_parameters": {
+            "elo_weight": 0.25,
+            "format": "portable_poisson_elo_hybrid_v1",
+            "poisson_artifact_sha256": "b83ab1ff47e1cd4afe8df2ec87003f4dca5008bf60f039e3880ce823f4263fbf",
+            "poisson_weight": 0.75,
+            "temperature": 0.9657635705585091
+          },
+          "status": "hold",
+          "subgroup_gates": {
+            "groups": {
+              "outcome": {
+                "away": {
+                  "delta_log_loss": -0.06006903922010132,
+                  "passed": true,
+                  "rows": 85,
+                  "status": "evaluated"
+                },
+                "draw": {
+                  "delta_log_loss": 0.17833637871896313,
+                  "passed": false,
+                  "rows": 54,
+                  "status": "evaluated"
+                },
+                "home": {
+                  "delta_log_loss": -0.06993486786796632,
+                  "passed": true,
+                  "rows": 90,
+                  "status": "evaluated"
+                }
+              },
+              "rest_context": {
+                "rest_imbalance": {
+                  "delta_log_loss": 0.036289129046906066,
+                  "passed": false,
+                  "rows": 16,
+                  "status": "evaluated"
+                },
+                "similar_rest": {
+                  "delta_log_loss": -0.011035061294610626,
+                  "passed": true,
+                  "rows": 213,
+                  "status": "evaluated"
+                }
+              }
+            },
+            "passed": false,
+            "vetoes": [
+              "outcome:draw",
+              "rest_context:rest_imbalance"
+            ]
+          }
+        }
+      ],
+      "consulted_holdout_generation": {
+        "calibration_end": "2024-12-04T00:00:00+00:00",
+        "consulted": true,
+        "consulted_holdout_end": "2026-05-24T00:00:00+00:00",
+        "consulted_holdout_start": "2025-05-19T00:00:00+00:00",
+        "dataset_id": "DS-FOOTBALL-AE48BA7DC4715936F889",
+        "development_validation_end": "2025-05-18T00:00:00+00:00",
+        "generation": 1,
+        "generation_id": "HG-FOOTBALL-9BFA7AC69724C38857DF",
+        "retuning_after_consultation_allowed": false,
+        "sport": "football",
+        "status": "consulted_diagnostic_only",
+        "train_end": "2024-03-04T00:00:00+00:00"
+      },
+      "dataset": {
+        "cutoff_time": "2026-05-24T00:00:00+00:00",
+        "dataset_id": "DS-FOOTBALL-AE48BA7DC4715936F889",
+        "dataset_sha256": "ae48ba7dc4715936f8891177f054c5a4799c681c0b65fc4bd7aea8031478eac7",
+        "distinct_dates": 583,
+        "rows": 1900,
+        "source": "local_football_archive",
+        "sport": "football"
+      },
+      "partitions": {
+        "calibration": 250,
+        "consulted_holdout": 393,
+        "train": 1028,
+        "validation": 229
+      },
+      "promotion_holdout_generation": {
+        "consulted": false,
+        "current_new_distinct_dates": 0,
+        "dataset_id": "DS-FOOTBALL-AE48BA7DC4715936F889",
+        "generation": 2,
+        "generation_id": "HG-FOOTBALL-C0E965B840A180121E9F",
+        "required_new_distinct_dates": 30,
+        "retuning_after_consultation_allowed": false,
+        "sport": "football",
+        "start_after": "2026-05-24T00:00:00+00:00",
+        "status": "open_collecting"
+      },
+      "promotion_ready": false,
+      "provider_credits_consumed": 0,
+      "reason": "no_development_challenger_passed",
+      "status": "hold"
+    },
+    "generated_at": "2026-08-04T12:45:40.937516+00:00",
+    "limits": {
+      "automatic_promotion": false,
+      "consulted_holdout_fraction": 0.2,
+      "development_calibration_fraction": 0.15,
+      "development_validation_fraction": 0.15,
+      "ece_tolerance": 0.015,
+      "hybrid_weights": [
+        0.25,
+        0.5,
+        0.75
+      ],
+      "log_loss_improvement_required": 0.002,
+      "maximum_football_challengers": 2,
+      "minimum_new_holdout_dates": 30,
+      "minimum_subgroup_rows": 10,
+      "new_simple_ui_tabs": 0,
+      "optimise_on_in_sample_roi": false,
+      "poisson_alphas": [
+        0.05,
+        0.2,
+        1.0
+      ],
+      "provider_credits_consumed": 0,
+      "subgroup_log_loss_tolerance": 0.02
+    },
+    "next_action": "Run both public long-session scenarios and continue collecting future football and tennis evidence.",
+    "production_validation": {
+      "expert": {
+        "passed": false,
+        "path": "artifacts/public_long_session_v4_9_expert.json",
+        "status": "not_run"
+      },
+      "simple": {
+        "passed": false,
+        "path": "artifacts/public_long_session_v4_9_simple.json",
+        "status": "not_run"
+      },
+      "status": "not_proven"
+    },
+    "schema_version": "1.0",
+    "status": "hold",
+    "tennis": {
+      "catalog": {
+        "competitions": [
+          "Brisbane",
+          "United Cup"
+        ],
+        "cutoff_time": "2024-12-30T00:00:00+00:00",
+        "dataset_id": "DS-TENNIS-9E0F198010881E9790CB",
+        "dataset_sha256": "9e0f198010881e9790cbc4c83e94ff2b867325602d9b2cbad5102034c8819feb",
+        "distinct_dates": 2,
+        "license_status": "research_only",
+        "players": 27,
+        "provider_credits_consumed": 0,
+        "quality": {
+          "accepted_rows": 32,
+          "duplicates": 0,
+          "future_rankings": 0,
+          "invalid_dates": 0,
+          "issue_counts": {},
+          "legacy_unverified_rows": 32,
+          "lineage_verified_rows": 0,
+          "quarantine_fraction": 0.0,
+          "quarantined_rows": 0,
+          "raw_rows": 32,
+          "unknown_surfaces": 0
+        },
+        "quality_status": "validated",
+        "readiness": {
+          "challenger_ready": false,
+          "distinct_dates": 2,
+          "exploratory_ready": false,
+          "gates": {
+            "challenger_dates": {
+              "actual": 2,
+              "passed": false,
+              "required": 150
+            },
+            "challenger_rows": {
+              "actual": 32,
+              "passed": false,
+              "required": 1500
+            },
+            "exploratory_dates": {
+              "actual": 2,
+              "passed": false,
+              "required": 50
+            },
+            "exploratory_rows": {
+              "actual": 32,
+              "passed": false,
+              "required": 500
+            },
+            "lineage_complete": {
+              "actual": false,
+              "passed": false,
+              "required": true
+            }
+          },
+          "lineage_complete": false,
+          "rows": 32,
+          "status": "collecting",
+          "surface_counts": {
+            "hard": 32
+          }
+        },
+        "rows": 32,
+        "source": "local_tennis_archive",
+        "sport": "tennis",
+        "supersedes_dataset_id": null,
+        "surfaces": {
+          "hard": 32
+        },
+        "tours": [
+          "ATP"
+        ]
+      },
+      "holdout_generation": {
+        "consulted": false,
+        "dataset_id": "DS-TENNIS-9E0F198010881E9790CB",
+        "generation": 1,
+        "generation_id": "HG-TENNIS-0B00A1A487872735DBDE",
+        "reason": "insufficient_distinct_dates",
+        "sport": "tennis",
+        "status": "open_collecting"
+      },
+      "progress": {
+        "challenger_dates": {
+          "actual": 2,
+          "required": 150
+        },
+        "challenger_rows": {
+          "actual": 32,
+          "required": 1500
+        },
+        "exploratory_dates": {
+          "actual": 2,
+          "required": 50
+        },
+        "exploratory_rows": {
+          "actual": 32,
+          "required": 500
+        }
+      },
+      "training_status": "blocked_below_readiness_gates"
+    }
+  },
   "coverage_preflight": null,
-  "current_version": "4.5.0",
+  "current_version": "4.9.0",
   "deployment": {
     "cloud_jobs": [
       "GitHub Actions daily product refresh",
       "bounded automated shadow capture and settlement",
-      "weekly zero-credit challenger training"
+      "weekly zero-credit calibration and sport challenger training"
     ],
     "platform": "Railway",
     "public_url": "not_exported",
@@ -55,6 +702,410 @@
       "Postgres"
     ],
     "verification_endpoint": "/api/release"
+  },
+  "evidence_acceleration": {
+    "football": {
+      "automatic_promotion": false,
+      "bounded_next_round": {
+        "candidates": [
+          "regularized_poisson_attack_defence",
+          "hybrid_linear_attack_defence_elo"
+        ],
+        "maximum_new_challengers": 2,
+        "selection_metric": "probabilistic_holdout_quality_not_roi",
+        "status": "planned_not_trained"
+      },
+      "breakdowns": {
+        "market_shape": {
+          "balanced": {
+            "baseline": {
+              "accuracy": 0.38064516129032255,
+              "brier": 0.6619223504534392,
+              "ece": 0.03840453955532877,
+              "log_loss": 1.0912676439332307
+            },
+            "challenger": {
+              "accuracy": 0.36774193548387096,
+              "brier": 0.6778345560903908,
+              "ece": 0.09310827537546938,
+              "log_loss": 1.1148314842901912
+            },
+            "delta_ece": 0.05470373582014061,
+            "delta_log_loss": 0.023563840356960464,
+            "rows": 155,
+            "status": "evaluated"
+          },
+          "moderate_favourite": {
+            "baseline": {
+              "accuracy": 0.4915254237288136,
+              "brier": 0.6245318721026237,
+              "ece": 0.027616837609925195,
+              "log_loss": 1.0354946192558148
+            },
+            "challenger": {
+              "accuracy": 0.4745762711864407,
+              "brier": 0.6575251600936868,
+              "ece": 0.09199371017272147,
+              "log_loss": 1.0833642159605903
+            },
+            "delta_ece": 0.06437687256279627,
+            "delta_log_loss": 0.04786959670477553,
+            "rows": 177,
+            "status": "evaluated"
+          },
+          "strong_favourite": {
+            "baseline": {
+              "accuracy": 0.7049180327868853,
+              "brier": 0.4603213019166686,
+              "ece": 0.05475199100182909,
+              "log_loss": 0.8037466742081611
+            },
+            "challenger": {
+              "accuracy": 0.7049180327868853,
+              "brier": 0.4591376386124888,
+              "ece": 0.06536846264556624,
+              "log_loss": 0.8024576276844849
+            },
+            "delta_ece": 0.01061647164373715,
+            "delta_log_loss": -0.0012890465236762294,
+            "rows": 61,
+            "status": "evaluated"
+          }
+        },
+        "outcome": {
+          "away": {
+            "baseline": {
+              "accuracy": 0.5,
+              "brier": 0.6511864869791119,
+              "ece": 0.09244400995209105,
+              "log_loss": 1.0976394026650147
+            },
+            "challenger": {
+              "accuracy": 0.4,
+              "brier": 0.7111274633892494,
+              "ece": 0.1240930302560769,
+              "log_loss": 1.1983414745385161
+            },
+            "delta_ece": 0.03164902030398585,
+            "delta_log_loss": 0.10070207187350144,
+            "rows": 120,
+            "status": "evaluated"
+          },
+          "draw": {
+            "baseline": {
+              "accuracy": 0.0,
+              "brier": 0.8245362265513781,
+              "ece": 0.4868757384875119,
+              "log_loss": 1.2810902421439632
+            },
+            "challenger": {
+              "accuracy": 0.0,
+              "brier": 0.9491219636390211,
+              "ece": 0.5493003506872478,
+              "log_loss": 1.4481804400267557
+            },
+            "delta_ece": 0.062424612199735885,
+            "delta_log_loss": 0.16709019788279256,
+            "rows": 106,
+            "status": "evaluated"
+          },
+          "home": {
+            "baseline": {
+              "accuracy": 0.7724550898203593,
+              "brier": 0.4531526146552382,
+              "ece": 0.2699262673784318,
+              "log_loss": 0.8020675781890174
+            },
+            "challenger": {
+              "accuracy": 0.8143712574850299,
+              "brier": 0.38030827385334615,
+              "ece": 0.25585376248362635,
+              "log_loss": 0.695785377193411
+            },
+            "delta_ece": -0.014072504894805438,
+            "delta_log_loss": -0.10628220099560637,
+            "rows": 167,
+            "status": "evaluated"
+          }
+        },
+        "rest_context": {
+          "rest_imbalance": {
+            "baseline": {
+              "accuracy": 0.5454545454545454,
+              "brier": 0.6453466595891771,
+              "ece": 0.17353999339447218,
+              "log_loss": 1.093817246168072
+            },
+            "challenger": {
+              "accuracy": 0.45454545454545453,
+              "brier": 0.7181364464118278,
+              "ece": 0.1798463117110113,
+              "log_loss": 1.21808327341777
+            },
+            "delta_ece": 0.006306318316539106,
+            "delta_log_loss": 0.12426602724969804,
+            "rows": 11,
+            "status": "evaluated"
+          },
+          "similar_rest": {
+            "baseline": {
+              "accuracy": 0.4790575916230366,
+              "brier": 0.612881915821684,
+              "ece": 0.04071304548530791,
+              "log_loss": 1.0194387168502068
+            },
+            "challenger": {
+              "accuracy": 0.468586387434555,
+              "brier": 0.6323408496738872,
+              "ece": 0.07845108799630578,
+              "log_loss": 1.0473961925946655
+            },
+            "delta_ece": 0.03773804251099787,
+            "delta_log_loss": 0.027957475744458726,
+            "rows": 382,
+            "status": "evaluated"
+          }
+        },
+        "season": {
+          "2025": {
+            "baseline": {
+              "accuracy": 0.5577889447236181,
+              "brier": 0.5830457476893011,
+              "ece": 0.06823134153889447,
+              "log_loss": 0.9808144068939632
+            },
+            "challenger": {
+              "accuracy": 0.5175879396984925,
+              "brier": 0.5969553854529132,
+              "ece": 0.043316971636237094,
+              "log_loss": 0.9994349332900834
+            },
+            "delta_ece": -0.024914369902657378,
+            "delta_log_loss": 0.01862052639612022,
+            "rows": 199,
+            "status": "evaluated"
+          },
+          "2026": {
+            "baseline": {
+              "accuracy": 0.4020618556701031,
+              "brier": 0.6453278417999657,
+              "ece": 0.08608610927019728,
+              "log_loss": 1.0632758380037581
+            },
+            "challenger": {
+              "accuracy": 0.4175257731958763,
+              "brier": 0.6735030091795116,
+              "ece": 0.13647155455120813,
+              "log_loss": 1.106271700278511
+            },
+            "delta_ece": 0.050385445281010854,
+            "delta_log_loss": 0.04299586227475283,
+            "rows": 194,
+            "status": "evaluated"
+          }
+        },
+        "team_history": {
+          "cold_start": {
+            "rows": 5,
+            "status": "not_evaluable"
+          },
+          "established": {
+            "baseline": {
+              "accuracy": 0.4845360824742268,
+              "brier": 0.6125998840490608,
+              "ece": 0.037293293449049816,
+              "log_loss": 1.0199106490008056
+            },
+            "challenger": {
+              "accuracy": 0.4742268041237113,
+              "brier": 0.6303410138757634,
+              "ece": 0.0723528534783908,
+              "log_loss": 1.0461289150714237
+            },
+            "delta_ece": 0.03505956002934098,
+            "delta_log_loss": 0.026218266070618057,
+            "rows": 388,
+            "status": "evaluated"
+          }
+        }
+      },
+      "dataset": {
+        "cutoff_time": "2026-05-24T00:00:00+00:00",
+        "dataset_id": "DS-FOOTBALL-AE48BA7DC4715936F889",
+        "dataset_sha256": "ae48ba7dc4715936f8891177f054c5a4799c681c0b65fc4bd7aea8031478eac7",
+        "distinct_dates": 583,
+        "rows": 1900,
+        "source": "local_football_archive",
+        "sport": "football"
+      },
+      "largest_improvements": [
+        {
+          "delta_log_loss": -0.10628220099560637,
+          "dimension": "outcome",
+          "group": "home",
+          "rows": 167
+        },
+        {
+          "delta_log_loss": -0.0012890465236762294,
+          "dimension": "market_shape",
+          "group": "strong_favourite",
+          "rows": 61
+        }
+      ],
+      "largest_regressions": [
+        {
+          "delta_log_loss": 0.16709019788279256,
+          "dimension": "outcome",
+          "group": "draw",
+          "rows": 106
+        },
+        {
+          "delta_log_loss": 0.12426602724969804,
+          "dimension": "rest_context",
+          "group": "rest_imbalance",
+          "rows": 11
+        },
+        {
+          "delta_log_loss": 0.10070207187350144,
+          "dimension": "outcome",
+          "group": "away",
+          "rows": 120
+        },
+        {
+          "delta_log_loss": 0.04786959670477553,
+          "dimension": "market_shape",
+          "group": "moderate_favourite",
+          "rows": 177
+        },
+        {
+          "delta_log_loss": 0.04299586227475283,
+          "dimension": "season",
+          "group": "2026",
+          "rows": 194
+        }
+      ],
+      "overall": {
+        "baseline": {
+          "accuracy": 0.48091603053435117,
+          "brier": 0.6137905982172118,
+          "ece": 0.03608334691894218,
+          "log_loss": 1.0215205586377298
+        },
+        "challenger": {
+          "accuracy": 0.4681933842239186,
+          "brier": 0.6347422531449236,
+          "ece": 0.07821999285938369,
+          "log_loss": 1.052173693584625
+        },
+        "delta_ece": 0.04213664594044151,
+        "delta_log_loss": 0.030653134946895255
+      },
+      "partitions": {
+        "calibration": 401,
+        "holdout": 393,
+        "train": 1106
+      },
+      "provider_credits_consumed": 0,
+      "reason": "challenger_not_consistently_better_across_holdout_subgroups",
+      "status": "hold_explained"
+    },
+    "generated_at": "2026-08-04T12:45:36.459740+00:00",
+    "limits": {
+      "automatic_promotion": false,
+      "maximum_new_football_challengers": 2,
+      "new_simple_ui_tabs": 0,
+      "provider_credits_consumed": 0
+    },
+    "next_action": "Import a larger, time-audited, multi-surface tennis archive.",
+    "schema_version": "1.0",
+    "status": "collecting",
+    "tennis": {
+      "catalog": {
+        "competitions": [
+          "Brisbane",
+          "United Cup"
+        ],
+        "cutoff_time": "2024-12-30T00:00:00+00:00",
+        "dataset_id": "DS-TENNIS-9E0F198010881E9790CB",
+        "dataset_sha256": "9e0f198010881e9790cbc4c83e94ff2b867325602d9b2cbad5102034c8819feb",
+        "distinct_dates": 2,
+        "license_status": "research_only",
+        "players": 27,
+        "provider_credits_consumed": 0,
+        "quality": {
+          "accepted_rows": 32,
+          "duplicates": 0,
+          "future_rankings": 0,
+          "invalid_dates": 0,
+          "issue_counts": {},
+          "legacy_unverified_rows": 32,
+          "lineage_verified_rows": 0,
+          "quarantine_fraction": 0.0,
+          "quarantined_rows": 0,
+          "raw_rows": 32,
+          "unknown_surfaces": 0
+        },
+        "quality_status": "validated",
+        "readiness": {
+          "challenger_ready": false,
+          "distinct_dates": 2,
+          "exploratory_ready": false,
+          "gates": {
+            "challenger_dates": {
+              "actual": 2,
+              "passed": false,
+              "required": 150
+            },
+            "challenger_rows": {
+              "actual": 32,
+              "passed": false,
+              "required": 1500
+            },
+            "exploratory_dates": {
+              "actual": 2,
+              "passed": false,
+              "required": 50
+            },
+            "exploratory_rows": {
+              "actual": 32,
+              "passed": false,
+              "required": 500
+            },
+            "lineage_complete": {
+              "actual": false,
+              "passed": false,
+              "required": true
+            }
+          },
+          "lineage_complete": false,
+          "rows": 32,
+          "status": "collecting",
+          "surface_counts": {
+            "hard": 32
+          }
+        },
+        "rows": 32,
+        "source": "local_tennis_archive",
+        "sport": "tennis",
+        "supersedes_dataset_id": null,
+        "surfaces": {
+          "hard": 32
+        },
+        "tours": [
+          "ATP"
+        ]
+      },
+      "holdout_generation": {
+        "consulted": false,
+        "dataset_id": "DS-TENNIS-9E0F198010881E9790CB",
+        "generation": 1,
+        "generation_id": "HG-TENNIS-0B00A1A487872735DBDE",
+        "reason": "insufficient_distinct_dates",
+        "sport": "tennis",
+        "status": "open_collecting"
+      },
+      "quarantined_preview": []
+    }
   },
   "evidence_campaign": null,
   "evidence_campaign_plan": null,
@@ -106,11 +1157,11 @@
     },
     "version": "3.4.0"
   },
-  "generated_at_utc": "2026-08-03T21:59:08.690551+00:00",
+  "generated_at_utc": "2026-08-04T12:52:13.844260+00:00",
   "git": {
-    "branch": "master",
-    "commit": "ca5488e23ca250aeb0a7c4a8d5d41e3cc6c34f3c",
-    "commit_short": "ca5488e23ca2"
+    "branch": "unknown",
+    "commit": "unknown",
+    "commit_short": "unknown"
   },
   "historical_evidence": {
     "app_version": "3.9.0",
@@ -1164,78 +2215,108 @@
   },
   "integration_status": {
     "required_user_actions": [
-      "Deploy production version 4.5.0",
-      "Verify the dual-sport ROI lab renders in Chromium",
+      "Deploy production version 4.9.0",
+      "Verify the stable cockpit, session status and sport challenger states in Chromium",
       "Keep paid capture disabled until a small shadow experiment is explicitly approved"
     ],
     "status": "ready_for_controlled_deploy",
     "validation": {
       "coverage": {
-        "branches_percent": 57.08762886597938,
-        "combined_statements_branches_percent": 78.2937280872614,
-        "note": "The instrumented V4.4 batch completed assertions but did not exit before the environment timeout; it was validated separately without instrumentation.",
-        "source": "artifacts/coverage_v4_5.json",
-        "statements_percent": 82.99229085371657
+        "combined_branch_instruction_percent": 89,
+        "instrumented_tests_passed": 5,
+        "target": "sports_predictor/controlled_decision.py"
       },
-      "external_execution": {
-        "live_automated_cycles": 0,
-        "provider_credits_consumed": 0,
-        "railway_deployments": 0,
-        "the_odds_api_calls": 0
+      "football": {
+        "baseline": {
+          "brier": 0.5971749142196022,
+          "ece": 0.046499909645697245,
+          "log_loss": 0.9945171355805206
+        },
+        "calibration_rows": 250,
+        "challengers": [
+          {
+            "brier": 0.5904303411172852,
+            "ece": 0.05251403417790171,
+            "log_loss": 0.9850382531796863,
+            "model_type": "regularized_poisson_attack_defence",
+            "status": "hold",
+            "vetoes": [
+              "outcome:draw",
+              "rest_context:rest_imbalance"
+            ]
+          },
+          {
+            "brier": 0.592287209983112,
+            "ece": 0.07499937140598228,
+            "log_loss": 0.9867885679342256,
+            "model_type": "hybrid_poisson_elo",
+            "status": "hold",
+            "vetoes": [
+              "outcome:draw",
+              "rest_context:rest_imbalance"
+            ]
+          }
+        ],
+        "consulted_holdout_rows": 393,
+        "dataset_rows": 1900,
+        "development_validation_rows": 229,
+        "distinct_dates": 583,
+        "promotion_holdout": {
+          "current_new_distinct_dates": 0,
+          "required_new_distinct_dates": 30,
+          "start_after": "2026-05-24T00:00:00+00:00",
+          "status": "open_collecting"
+        },
+        "promotion_ready": false,
+        "train_rows": 1028
       },
-      "features": {
+      "production_validation": {
+        "consolidated": "not_proven",
+        "expert": "not_run",
+        "simple": "not_run"
+      },
+      "release": {
+        "app_version": "4.9.0",
+        "frontend_asset": "app.js?v=4.9.0",
+        "package_version": "0.4.9.0"
+      },
+      "technical": {
         "automatic_bet_placement": false,
-        "duplicate_champion_promotion_blocked": true,
-        "empty_football_day_paid_call_skipped": true,
-        "expert_data_lazy_loaded": true,
-        "manual_champion_promotion_only": true,
-        "paper_bankroll_paths": true,
-        "real_money_stake_recommendation": false,
-        "shared_daily_credit_ledger": true,
-        "simple_mode_default": true,
-        "weekly_zero_credit_challenger_training": true,
-        "zero_credit_noop_settlement": true
+        "automatic_promotion": false,
+        "github_action_uses_pinned": 53,
+        "github_workflows_validated": 23,
+        "javascript_syntax": "passed",
+        "provider_calls": 0,
+        "provider_credits_consumed": 0,
+        "python_files_compiled": 89,
+        "railway_deployment_performed": false
       },
-      "generated_at_utc": "2026-08-03T21:57:14.524856+00:00",
-      "limitations": [
-        "No real automated shadow cycle was executed from the preparation environment.",
-        "No challenger currently has enough live settled evidence for promotion.",
-        "The tennis base model remains an uncalibrated Elo baseline until sport-specific evidence is sufficient.",
-        "GitHub Actions are still mainly referenced by major tags rather than immutable SHAs.",
-        "Alembic remains required before a future complex schema migration; V4.5 reused existing append-only tables.",
-        "Simulated ROI is not evidence of future profitability."
-      ],
-      "schema_version": "1.0",
-      "static_validation": {
-        "git_diff_check": true,
-        "github_workflows": 18,
-        "javascript_node_check": true,
-        "python_compileall": true,
-        "yaml_files": 19
+      "tennis": {
+        "challenger_dates_required": 150,
+        "challenger_rows_required": 1500,
+        "distinct_dates": 2,
+        "exploratory_dates_required": 50,
+        "exploratory_rows_required": 500,
+        "incremental_import_tested": true,
+        "rows": 32,
+        "training_status": "blocked_below_readiness_gates"
       },
       "tests": {
         "batches": [
-          32,
-          22,
-          31,
+          39,
+          46,
           50,
-          29,
-          37,
-          14,
-          20
+          46,
+          60,
+          25
         ],
-        "collected": 235,
-        "execution": "eight disjoint batches",
+        "collected": 266,
         "failed": 0,
-        "monolithic_suite": "not claimed; disjoint batches cover all collected tests",
-        "passed": 235
-      },
-      "version": {
-        "app_version": "4.5.0",
-        "package_version": "0.4.5.0"
+        "monolithic_note": "The monolithic pytest process exceeded the environment time limit; every test file belongs to exactly one successful batch.",
+        "passed": 266
       }
     },
-    "version": "4.5.0"
+    "version": "4.9.0"
   },
   "known_gates": [
     "No profitability claim before a sufficiently large temporally valid sample.",
@@ -1259,7 +2340,7 @@
     "reason": "No real historical champion–challenger benchmark was executed in the delivered package.",
     "status": "not_evaluable"
   },
-  "next_priority": "Deploy V4.5, verify the simple daily view and keep automated shadow learning disabled until its bounded schedule is approved.",
+  "next_priority": "Deploy V4.9, run the controlled model decision at zero credits, and execute both public long-session scenarios before any model promotion review.",
   "project": "Sports Prediction Lab",
   "release": {
     "app": {
@@ -1267,9 +2348,9 @@
       "environment": "development",
       "name": "sports-prediction-lab",
       "service_id": null,
-      "source_commit": "ca5488e23ca250aeb0a7c4a8d5d41e3cc6c34f3c",
-      "source_commit_short": "ca5488e23ca2",
-      "version": "4.5.0"
+      "source_commit": "unverified",
+      "source_commit_short": "unverified",
+      "version": "4.9.0"
     },
     "football_model": {
       "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
@@ -1292,7 +2373,7 @@
       },
       "trained_until": "2026-05-24T00:00:00+00:00"
     },
-    "generated_at_utc": "2026-08-03T21:59:08.689916+00:00",
+    "generated_at_utc": "2026-08-04T12:52:13.843555+00:00",
     "integrity": {
       "artifact_integrity_ok": true,
       "artifact_manifest_present": true,
@@ -1321,60 +2402,92 @@
       },
       "code_files": {
         ".github/workflows/automated-shadow-learning.yml": {
-          "bytes": 10421,
-          "sha256": "7b06185b60a2cb1b6c792cb3d3a038adf90e1b99325cd3570724087b2a9e5451"
+          "bytes": 10562,
+          "sha256": "f3989479d51ac033f577779951f0d938d6ed05d7a397ebf030e42c116fd005d0"
         },
         ".github/workflows/capture-daily-research.yml": {
-          "bytes": 5797,
-          "sha256": "658a11cd754060ad1f65d5a42df189287bedfae43e9e64d5805a475186274b29"
+          "bytes": 5844,
+          "sha256": "22fa67154bd45ec15e27ed3b7287262eb49f9acf32f010d3e21023f352930869"
         },
         ".github/workflows/deploy-production.yml": {
-          "bytes": 5365,
-          "sha256": "db3a8c63bd0a5b552600d084ca0b46326f3e096aca292f8a88b86333d46466dd"
+          "bytes": 5459,
+          "sha256": "cab54f7060b817a078787d9aca5a7c082a56f1942f8ba62d6fe87992f620b933"
         },
         ".github/workflows/estimate-evidence-coverage.yml": {
-          "bytes": 8173,
-          "sha256": "58031086d7dcab70cbf45af6bbf73efb23b59834c2a08d45674f934bc4290f92"
+          "bytes": 8314,
+          "sha256": "3891d0210fc0b33daef14c3ce1c28501f107e6d65304f99441726810d1c02af9"
         },
         ".github/workflows/estimate-historical-sample.yml": {
-          "bytes": 3864,
-          "sha256": "33c143f53b24922c42efde2e68b6f67a0417ce5331df3beb6d40d0793487305c"
+          "bytes": 4005,
+          "sha256": "7938c29ff96dabd5ae4ed4a451c4f1a21335f32e86bb8cfb57aa04da53f0dcf0"
         },
         ".github/workflows/generate-handoff.yml": {
-          "bytes": 1279,
-          "sha256": "c9790d74ecc6313dd27d52a9d64fab23e4ea17d29bff5299781491718260d90b"
+          "bytes": 1420,
+          "sha256": "8447f8eb8852e2005671361b56bc2cf3f3d4813b09f3f618ae0413d3e35f79ae"
         },
         ".github/workflows/optimise-roi-policy.yml": {
-          "bytes": 2872,
-          "sha256": "31859b4741d2ad0eca8b299b3e963ad578d93aa2e1ba71720f2ba097f28a946c"
+          "bytes": 2919,
+          "sha256": "b3af7ef2fdd435d8518d4b432d2918dfdfd5e0b35c9bde87e3daf5b466814200"
         },
         ".github/workflows/promote-research-champion.yml": {
-          "bytes": 3039,
-          "sha256": "edf48c753606ff2ce25c1da037ec90582838b624b904c283eeb79953d8ef0e11"
+          "bytes": 3086,
+          "sha256": "958d8cbf277fc0b61eb6863f80f20c2968a6beb2253813e116d8d73fd000a6df"
         },
         ".github/workflows/rebuild-fresh-football.yml": {
-          "bytes": 5985,
-          "sha256": "fd5e779dea27d9a7ea00e043427fb50d880fbaa9f6ed91fb9ee6e57b0ca7c3f2"
+          "bytes": 6126,
+          "sha256": "c099705d43fb09af2ce57e8abcd88bbb1c58563ec5aa0cb5b52f0910f9829d84"
+        },
+        ".github/workflows/run-challenger-factory.yml": {
+          "bytes": 1766,
+          "sha256": "19de9f02c30b148e3d1729992c3f95a5451ba10e202e9fd791d427397d5baa5a"
+        },
+        ".github/workflows/run-controlled-model-decision.yml": {
+          "bytes": 1912,
+          "sha256": "4fffd966b3180e2b51ea67e4d52f4170be9bd4704dce609c5bad76f25759340e"
+        },
+        ".github/workflows/run-evidence-acceleration.yml": {
+          "bytes": 1863,
+          "sha256": "40bf07d9056db4168fff23f872251d3b67738a5196a88271c7f21a469ff14783"
         },
         ".github/workflows/run-evidence-campaign.yml": {
-          "bytes": 26102,
-          "sha256": "2bba202eb4878377002f10dc43ec6a2cc836de927c2d3f9cb033455077e7dec3"
+          "bytes": 26290,
+          "sha256": "9e66ad8645f17095d273e7346114b80f5c35e45553067a9e19191f07eec42f4a"
         },
         ".github/workflows/run-historical-sample.yml": {
-          "bytes": 15665,
-          "sha256": "e5cb37a0b9c7d990f100225429316520280673bda7b7c42ed2d9aaa45b2d5e86"
+          "bytes": 15806,
+          "sha256": "4e03fec424157c17eac41318ed0a86f52309325f5693d35b515160cb8d69394f"
         },
         ".github/workflows/settle-daily-research.yml": {
-          "bytes": 4060,
-          "sha256": "4b07123dcb4ee0b77223cd4f9e0505b1249fd6d79e1e66048cba3e7ebac93347"
+          "bytes": 4107,
+          "sha256": "4ebcdf348c8ad4c94c0ed5596706b34e8d1a604ae2474996c89e28b8d042beec"
+        },
+        ".github/workflows/verify-long-session.yml": {
+          "bytes": 1885,
+          "sha256": "59a2d2be012c5503313818b56c7942f3055eedf4c9f43a324aa1292a4fef75b4"
         },
         ".github/workflows/verify-production.yml": {
-          "bytes": 3214,
-          "sha256": "41083c1a14faf6d9436e8c09e0c88d1910f042ce8b870b7b796301b17e279aa2"
+          "bytes": 3308,
+          "sha256": "63d2a4c34c6d5a758e5a9a5c52c04f0e26059297a4c46978415eaaab8c574d08"
         },
         "Dockerfile": {
           "bytes": 1117,
           "sha256": "699a22b7c94633ba93d863e17d339abf79235c59824c5edfa80c582244f86b27"
+        },
+        "alembic.ini": {
+          "bytes": 616,
+          "sha256": "631631579bc07cdcbfbdbde759a27ca3577985eb107e653a74b748b5c0270e73"
+        },
+        "alembic/env.py": {
+          "bytes": 1541,
+          "sha256": "0e843348a1e04e3c49649bdf11248edf47bee3e86586d9c824c9d352be9dcf20"
+        },
+        "alembic/versions/20260804_0001_existing_schema_baseline.py": {
+          "bytes": 523,
+          "sha256": "9fbcb420975bfcf6ed7105681e0397dd2ca196751e7970c696ee90d6c1dd56e5"
+        },
+        "alembic/versions/20260804_0002_dataset_catalog_and_holdouts.py": {
+          "bytes": 4119,
+          "sha256": "3af7175b77837e90b554777fe8ce2d53eeb02132393799694d5c0e47aa63f9b1"
         },
         "railway.cron.toml": {
           "bytes": 240,
@@ -1385,28 +2498,48 @@
           "sha256": "c43ca6879fef6ba96a2380a09e0621e5627e222003fcf858fe3f7f0702b4cd16"
         },
         "scripts/browser_smoke_test.py": {
-          "bytes": 8036,
-          "sha256": "67c1c9db62ce541be6cde381a2b90467144ac6b542ee2de7473eb80144a2f967"
+          "bytes": 14441,
+          "sha256": "34d0208752b6c768b07ccd5e21798166a5c722196c954eab2235b3dcd7d88fb4"
+        },
+        "scripts/import_tennis_incremental.py": {
+          "bytes": 2343,
+          "sha256": "cb7c4e59506bd4cb747f509d1fbcd631ac0d7917c1b41867488d4b905ab217bb"
+        },
+        "scripts/run_controlled_model_decision.py": {
+          "bytes": 2771,
+          "sha256": "d6b6f02485ba7ab00286061d33c6bf854ab81fba6a2b329a81d69e652402b22e"
         },
         "scripts/run_coverage_preflight.py": {
           "bytes": 13253,
           "sha256": "f6a96fc56d294a0f60317526d3c3adc8d9a44ab314591125d39cac7400cc380c"
+        },
+        "sports_predictor/challenger_factory.py": {
+          "bytes": 14473,
+          "sha256": "0483157c34bd805dfeb2020640be552d27fde17f4e7727f92de8899efb7fc663"
         },
         "sports_predictor/cloud_config.py": {
           "bytes": 8071,
           "sha256": "72279ab16f99d1b1293b0a285b9733ee49cbe7d286bcee0cb3767bd17a212ed0"
         },
         "sports_predictor/control_center.py": {
-          "bytes": 16986,
-          "sha256": "24f7d95a0ea88151709341437301e26324ad7df252ae7d01920f54efc42e75e5"
+          "bytes": 17786,
+          "sha256": "3122f2cd92d80824c9b5b9974601ee8b23ca9043460ea0c8a05c32008f97537e"
+        },
+        "sports_predictor/controlled_decision.py": {
+          "bytes": 23288,
+          "sha256": "04c922053101bd950fd246744d161e4d86a8040a75c1eff201d52a5ef6184586"
         },
         "sports_predictor/coverage_preflight.py": {
           "bytes": 21242,
           "sha256": "743ed8cf0c6915d1f19d3062ed6893bea9400dc4127ef4eca2f69db8a9969af9"
         },
         "sports_predictor/database.py": {
-          "bytes": 63406,
-          "sha256": "16868f4b80728e109d96f9a121478269723674c9c1be83a22520ac0ef8161ed4"
+          "bytes": 70126,
+          "sha256": "f1588e4ac793b424493f9fe7875f0c6c5f62551f9b6160679f0dca1cf00ed829"
+        },
+        "sports_predictor/evidence_acceleration.py": {
+          "bytes": 22777,
+          "sha256": "af1a5986c94a51350ac06765cba03dce6cea6b07595c121eb0aab188882a47b0"
         },
         "sports_predictor/evidence_campaign.py": {
           "bytes": 17594,
@@ -1421,8 +2554,8 @@
           "sha256": "19e088dfa6ad939ff8f4e2f079bfc14d2f13edbdd7834532ac1d0ba06532c23a"
         },
         "sports_predictor/release_registry.py": {
-          "bytes": 14041,
-          "sha256": "30612f0f4da62c906c1deb31f549f4d69e1fabce720a441eb5172d9189aefa9a"
+          "bytes": 14719,
+          "sha256": "aa6928906ded7c8dbe89093664abb21279d51d25d14f22b8e238df2d6f2536e2"
         },
         "sports_predictor/roi_lab.py": {
           "bytes": 33377,
@@ -1437,20 +2570,20 @@
           "sha256": "a0a8262dfe6614caf66709aeccc2c20e63719b921f002aae150fab69c500ded5"
         },
         "static/app.js": {
-          "bytes": 52842,
-          "sha256": "87e7f221727bdaa4965be0904f79dc0b84ccff7d1bf6a3441def99d588971ad1"
+          "bytes": 68479,
+          "sha256": "a9e6090da962fc97d428b79cab1d8ee5f987dc9b679bd80f306819c1a3852d79"
         },
         "static/index.html": {
-          "bytes": 31796,
-          "sha256": "0516e4aa5cb2b9e159a1f2b7a1beefa04c65af0819b2369684daa0270471b1ec"
+          "bytes": 33815,
+          "sha256": "afe6db198eafd209752140b2f8c86496a1f63c79f274804171d13fdf8986d524"
         },
         "static/styles.css": {
-          "bytes": 22449,
-          "sha256": "73319bec8a9d42b504de8c40b7f867a038dfa82ce34e585fbbab76f03f7099c9"
+          "bytes": 25172,
+          "sha256": "031e46ab2963895b55960b8f5e2bf9c408913c7d32220ed59724915a102ef999"
         },
         "webapp.py": {
-          "bytes": 124096,
-          "sha256": "aafecde87a5de84b56bf03339d87038d863b61510fbae10ceeb540ea58aea105"
+          "bytes": 135476,
+          "sha256": "5611ba50f482a8598dc3615f9d1a01a5da651b4a913c8c81b5723018de22bfed"
         }
       }
     },
@@ -1484,7 +2617,7 @@
         "rps": 0.43954820365378716
       }
     },
-    "release_id": "ea38dccc87fc6c760663",
+    "release_id": "ed9b992f86509a811572",
     "safety": {
       "automatic_bet_placement": false,
       "secrets_exported": false,
@@ -1498,9 +2631,9 @@
       "environment": "development",
       "name": "sports-prediction-lab",
       "service_id": null,
-      "source_commit": "ca5488e23ca250aeb0a7c4a8d5d41e3cc6c34f3c",
-      "source_commit_short": "ca5488e23ca2",
-      "version": "4.5.0"
+      "source_commit": "unverified",
+      "source_commit_short": "unverified",
+      "version": "4.9.0"
     },
     "football_model": {
       "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
@@ -1523,7 +2656,7 @@
       },
       "trained_until": "2026-05-24T00:00:00+00:00"
     },
-    "generated_at_utc": "2026-08-03T21:59:07.174157+00:00",
+    "generated_at_utc": "2026-08-04T12:52:12.392464+00:00",
     "integrity": {
       "artifact_integrity_ok": true,
       "artifact_manifest_present": true,
@@ -1552,60 +2685,92 @@
       },
       "code_files": {
         ".github/workflows/automated-shadow-learning.yml": {
-          "bytes": 10421,
-          "sha256": "7b06185b60a2cb1b6c792cb3d3a038adf90e1b99325cd3570724087b2a9e5451"
+          "bytes": 10562,
+          "sha256": "f3989479d51ac033f577779951f0d938d6ed05d7a397ebf030e42c116fd005d0"
         },
         ".github/workflows/capture-daily-research.yml": {
-          "bytes": 5797,
-          "sha256": "658a11cd754060ad1f65d5a42df189287bedfae43e9e64d5805a475186274b29"
+          "bytes": 5844,
+          "sha256": "22fa67154bd45ec15e27ed3b7287262eb49f9acf32f010d3e21023f352930869"
         },
         ".github/workflows/deploy-production.yml": {
-          "bytes": 5365,
-          "sha256": "db3a8c63bd0a5b552600d084ca0b46326f3e096aca292f8a88b86333d46466dd"
+          "bytes": 5459,
+          "sha256": "cab54f7060b817a078787d9aca5a7c082a56f1942f8ba62d6fe87992f620b933"
         },
         ".github/workflows/estimate-evidence-coverage.yml": {
-          "bytes": 8173,
-          "sha256": "58031086d7dcab70cbf45af6bbf73efb23b59834c2a08d45674f934bc4290f92"
+          "bytes": 8314,
+          "sha256": "3891d0210fc0b33daef14c3ce1c28501f107e6d65304f99441726810d1c02af9"
         },
         ".github/workflows/estimate-historical-sample.yml": {
-          "bytes": 3864,
-          "sha256": "33c143f53b24922c42efde2e68b6f67a0417ce5331df3beb6d40d0793487305c"
+          "bytes": 4005,
+          "sha256": "7938c29ff96dabd5ae4ed4a451c4f1a21335f32e86bb8cfb57aa04da53f0dcf0"
         },
         ".github/workflows/generate-handoff.yml": {
-          "bytes": 1279,
-          "sha256": "c9790d74ecc6313dd27d52a9d64fab23e4ea17d29bff5299781491718260d90b"
+          "bytes": 1420,
+          "sha256": "8447f8eb8852e2005671361b56bc2cf3f3d4813b09f3f618ae0413d3e35f79ae"
         },
         ".github/workflows/optimise-roi-policy.yml": {
-          "bytes": 2872,
-          "sha256": "31859b4741d2ad0eca8b299b3e963ad578d93aa2e1ba71720f2ba097f28a946c"
+          "bytes": 2919,
+          "sha256": "b3af7ef2fdd435d8518d4b432d2918dfdfd5e0b35c9bde87e3daf5b466814200"
         },
         ".github/workflows/promote-research-champion.yml": {
-          "bytes": 3039,
-          "sha256": "edf48c753606ff2ce25c1da037ec90582838b624b904c283eeb79953d8ef0e11"
+          "bytes": 3086,
+          "sha256": "958d8cbf277fc0b61eb6863f80f20c2968a6beb2253813e116d8d73fd000a6df"
         },
         ".github/workflows/rebuild-fresh-football.yml": {
-          "bytes": 5985,
-          "sha256": "fd5e779dea27d9a7ea00e043427fb50d880fbaa9f6ed91fb9ee6e57b0ca7c3f2"
+          "bytes": 6126,
+          "sha256": "c099705d43fb09af2ce57e8abcd88bbb1c58563ec5aa0cb5b52f0910f9829d84"
+        },
+        ".github/workflows/run-challenger-factory.yml": {
+          "bytes": 1766,
+          "sha256": "19de9f02c30b148e3d1729992c3f95a5451ba10e202e9fd791d427397d5baa5a"
+        },
+        ".github/workflows/run-controlled-model-decision.yml": {
+          "bytes": 1912,
+          "sha256": "4fffd966b3180e2b51ea67e4d52f4170be9bd4704dce609c5bad76f25759340e"
+        },
+        ".github/workflows/run-evidence-acceleration.yml": {
+          "bytes": 1863,
+          "sha256": "40bf07d9056db4168fff23f872251d3b67738a5196a88271c7f21a469ff14783"
         },
         ".github/workflows/run-evidence-campaign.yml": {
-          "bytes": 26102,
-          "sha256": "2bba202eb4878377002f10dc43ec6a2cc836de927c2d3f9cb033455077e7dec3"
+          "bytes": 26290,
+          "sha256": "9e66ad8645f17095d273e7346114b80f5c35e45553067a9e19191f07eec42f4a"
         },
         ".github/workflows/run-historical-sample.yml": {
-          "bytes": 15665,
-          "sha256": "e5cb37a0b9c7d990f100225429316520280673bda7b7c42ed2d9aaa45b2d5e86"
+          "bytes": 15806,
+          "sha256": "4e03fec424157c17eac41318ed0a86f52309325f5693d35b515160cb8d69394f"
         },
         ".github/workflows/settle-daily-research.yml": {
-          "bytes": 4060,
-          "sha256": "4b07123dcb4ee0b77223cd4f9e0505b1249fd6d79e1e66048cba3e7ebac93347"
+          "bytes": 4107,
+          "sha256": "4ebcdf348c8ad4c94c0ed5596706b34e8d1a604ae2474996c89e28b8d042beec"
+        },
+        ".github/workflows/verify-long-session.yml": {
+          "bytes": 1885,
+          "sha256": "59a2d2be012c5503313818b56c7942f3055eedf4c9f43a324aa1292a4fef75b4"
         },
         ".github/workflows/verify-production.yml": {
-          "bytes": 3214,
-          "sha256": "41083c1a14faf6d9436e8c09e0c88d1910f042ce8b870b7b796301b17e279aa2"
+          "bytes": 3308,
+          "sha256": "63d2a4c34c6d5a758e5a9a5c52c04f0e26059297a4c46978415eaaab8c574d08"
         },
         "Dockerfile": {
           "bytes": 1117,
           "sha256": "699a22b7c94633ba93d863e17d339abf79235c59824c5edfa80c582244f86b27"
+        },
+        "alembic.ini": {
+          "bytes": 616,
+          "sha256": "631631579bc07cdcbfbdbde759a27ca3577985eb107e653a74b748b5c0270e73"
+        },
+        "alembic/env.py": {
+          "bytes": 1541,
+          "sha256": "0e843348a1e04e3c49649bdf11248edf47bee3e86586d9c824c9d352be9dcf20"
+        },
+        "alembic/versions/20260804_0001_existing_schema_baseline.py": {
+          "bytes": 523,
+          "sha256": "9fbcb420975bfcf6ed7105681e0397dd2ca196751e7970c696ee90d6c1dd56e5"
+        },
+        "alembic/versions/20260804_0002_dataset_catalog_and_holdouts.py": {
+          "bytes": 4119,
+          "sha256": "3af7175b77837e90b554777fe8ce2d53eeb02132393799694d5c0e47aa63f9b1"
         },
         "railway.cron.toml": {
           "bytes": 240,
@@ -1616,28 +2781,48 @@
           "sha256": "c43ca6879fef6ba96a2380a09e0621e5627e222003fcf858fe3f7f0702b4cd16"
         },
         "scripts/browser_smoke_test.py": {
-          "bytes": 8036,
-          "sha256": "67c1c9db62ce541be6cde381a2b90467144ac6b542ee2de7473eb80144a2f967"
+          "bytes": 14441,
+          "sha256": "34d0208752b6c768b07ccd5e21798166a5c722196c954eab2235b3dcd7d88fb4"
+        },
+        "scripts/import_tennis_incremental.py": {
+          "bytes": 2343,
+          "sha256": "cb7c4e59506bd4cb747f509d1fbcd631ac0d7917c1b41867488d4b905ab217bb"
+        },
+        "scripts/run_controlled_model_decision.py": {
+          "bytes": 2771,
+          "sha256": "d6b6f02485ba7ab00286061d33c6bf854ab81fba6a2b329a81d69e652402b22e"
         },
         "scripts/run_coverage_preflight.py": {
           "bytes": 13253,
           "sha256": "f6a96fc56d294a0f60317526d3c3adc8d9a44ab314591125d39cac7400cc380c"
+        },
+        "sports_predictor/challenger_factory.py": {
+          "bytes": 14473,
+          "sha256": "0483157c34bd805dfeb2020640be552d27fde17f4e7727f92de8899efb7fc663"
         },
         "sports_predictor/cloud_config.py": {
           "bytes": 8071,
           "sha256": "72279ab16f99d1b1293b0a285b9733ee49cbe7d286bcee0cb3767bd17a212ed0"
         },
         "sports_predictor/control_center.py": {
-          "bytes": 16986,
-          "sha256": "24f7d95a0ea88151709341437301e26324ad7df252ae7d01920f54efc42e75e5"
+          "bytes": 17786,
+          "sha256": "3122f2cd92d80824c9b5b9974601ee8b23ca9043460ea0c8a05c32008f97537e"
+        },
+        "sports_predictor/controlled_decision.py": {
+          "bytes": 23288,
+          "sha256": "04c922053101bd950fd246744d161e4d86a8040a75c1eff201d52a5ef6184586"
         },
         "sports_predictor/coverage_preflight.py": {
           "bytes": 21242,
           "sha256": "743ed8cf0c6915d1f19d3062ed6893bea9400dc4127ef4eca2f69db8a9969af9"
         },
         "sports_predictor/database.py": {
-          "bytes": 63406,
-          "sha256": "16868f4b80728e109d96f9a121478269723674c9c1be83a22520ac0ef8161ed4"
+          "bytes": 70126,
+          "sha256": "f1588e4ac793b424493f9fe7875f0c6c5f62551f9b6160679f0dca1cf00ed829"
+        },
+        "sports_predictor/evidence_acceleration.py": {
+          "bytes": 22777,
+          "sha256": "af1a5986c94a51350ac06765cba03dce6cea6b07595c121eb0aab188882a47b0"
         },
         "sports_predictor/evidence_campaign.py": {
           "bytes": 17594,
@@ -1652,8 +2837,8 @@
           "sha256": "19e088dfa6ad939ff8f4e2f079bfc14d2f13edbdd7834532ac1d0ba06532c23a"
         },
         "sports_predictor/release_registry.py": {
-          "bytes": 14041,
-          "sha256": "30612f0f4da62c906c1deb31f549f4d69e1fabce720a441eb5172d9189aefa9a"
+          "bytes": 14719,
+          "sha256": "aa6928906ded7c8dbe89093664abb21279d51d25d14f22b8e238df2d6f2536e2"
         },
         "sports_predictor/roi_lab.py": {
           "bytes": 33377,
@@ -1668,20 +2853,20 @@
           "sha256": "a0a8262dfe6614caf66709aeccc2c20e63719b921f002aae150fab69c500ded5"
         },
         "static/app.js": {
-          "bytes": 52842,
-          "sha256": "87e7f221727bdaa4965be0904f79dc0b84ccff7d1bf6a3441def99d588971ad1"
+          "bytes": 68479,
+          "sha256": "a9e6090da962fc97d428b79cab1d8ee5f987dc9b679bd80f306819c1a3852d79"
         },
         "static/index.html": {
-          "bytes": 31796,
-          "sha256": "0516e4aa5cb2b9e159a1f2b7a1beefa04c65af0819b2369684daa0270471b1ec"
+          "bytes": 33815,
+          "sha256": "afe6db198eafd209752140b2f8c86496a1f63c79f274804171d13fdf8986d524"
         },
         "static/styles.css": {
-          "bytes": 22449,
-          "sha256": "73319bec8a9d42b504de8c40b7f867a038dfa82ce34e585fbbab76f03f7099c9"
+          "bytes": 25172,
+          "sha256": "031e46ab2963895b55960b8f5e2bf9c408913c7d32220ed59724915a102ef999"
         },
         "webapp.py": {
-          "bytes": 124096,
-          "sha256": "aafecde87a5de84b56bf03339d87038d863b61510fbae10ceeb540ea58aea105"
+          "bytes": 135476,
+          "sha256": "5611ba50f482a8598dc3615f9d1a01a5da651b4a913c8c81b5723018de22bfed"
         }
       }
     },
@@ -1715,7 +2900,7 @@
         "rps": 0.43954820365378716
       }
     },
-    "release_id": "ea38dccc87fc6c760663",
+    "release_id": "ed9b992f86509a811572",
     "safety": {
       "automatic_bet_placement": false,
       "secrets_exported": false,

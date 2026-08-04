@@ -4,9 +4,9 @@
     "environment": "development",
     "name": "sports-prediction-lab",
     "service_id": null,
-    "source_commit": "ca5488e23ca250aeb0a7c4a8d5d41e3cc6c34f3c",
-    "source_commit_short": "ca5488e23ca2",
-    "version": "4.5.0"
+    "source_commit": "unverified",
+    "source_commit_short": "unverified",
+    "version": "4.9.0"
   },
   "football_model": {
     "artifact_sha256": "04ee949b38f8eebe1f937b15b4e560e7b3f0ddcb06babd3190ea7053fd3e82c4",
@@ -29,7 +29,7 @@
     },
     "trained_until": "2026-05-24T00:00:00+00:00"
   },
-  "generated_at_utc": "2026-08-03T21:59:07.174157+00:00",
+  "generated_at_utc": "2026-08-04T12:52:12.392464+00:00",
   "integrity": {
     "artifact_integrity_ok": true,
     "artifact_manifest_present": true,
@@ -58,60 +58,92 @@
     },
     "code_files": {
       ".github/workflows/automated-shadow-learning.yml": {
-        "bytes": 10421,
-        "sha256": "7b06185b60a2cb1b6c792cb3d3a038adf90e1b99325cd3570724087b2a9e5451"
+        "bytes": 10562,
+        "sha256": "f3989479d51ac033f577779951f0d938d6ed05d7a397ebf030e42c116fd005d0"
       },
       ".github/workflows/capture-daily-research.yml": {
-        "bytes": 5797,
-        "sha256": "658a11cd754060ad1f65d5a42df189287bedfae43e9e64d5805a475186274b29"
+        "bytes": 5844,
+        "sha256": "22fa67154bd45ec15e27ed3b7287262eb49f9acf32f010d3e21023f352930869"
       },
       ".github/workflows/deploy-production.yml": {
-        "bytes": 5365,
-        "sha256": "db3a8c63bd0a5b552600d084ca0b46326f3e096aca292f8a88b86333d46466dd"
+        "bytes": 5459,
+        "sha256": "cab54f7060b817a078787d9aca5a7c082a56f1942f8ba62d6fe87992f620b933"
       },
       ".github/workflows/estimate-evidence-coverage.yml": {
-        "bytes": 8173,
-        "sha256": "58031086d7dcab70cbf45af6bbf73efb23b59834c2a08d45674f934bc4290f92"
+        "bytes": 8314,
+        "sha256": "3891d0210fc0b33daef14c3ce1c28501f107e6d65304f99441726810d1c02af9"
       },
       ".github/workflows/estimate-historical-sample.yml": {
-        "bytes": 3864,
-        "sha256": "33c143f53b24922c42efde2e68b6f67a0417ce5331df3beb6d40d0793487305c"
+        "bytes": 4005,
+        "sha256": "7938c29ff96dabd5ae4ed4a451c4f1a21335f32e86bb8cfb57aa04da53f0dcf0"
       },
       ".github/workflows/generate-handoff.yml": {
-        "bytes": 1279,
-        "sha256": "c9790d74ecc6313dd27d52a9d64fab23e4ea17d29bff5299781491718260d90b"
+        "bytes": 1420,
+        "sha256": "8447f8eb8852e2005671361b56bc2cf3f3d4813b09f3f618ae0413d3e35f79ae"
       },
       ".github/workflows/optimise-roi-policy.yml": {
-        "bytes": 2872,
-        "sha256": "31859b4741d2ad0eca8b299b3e963ad578d93aa2e1ba71720f2ba097f28a946c"
+        "bytes": 2919,
+        "sha256": "b3af7ef2fdd435d8518d4b432d2918dfdfd5e0b35c9bde87e3daf5b466814200"
       },
       ".github/workflows/promote-research-champion.yml": {
-        "bytes": 3039,
-        "sha256": "edf48c753606ff2ce25c1da037ec90582838b624b904c283eeb79953d8ef0e11"
+        "bytes": 3086,
+        "sha256": "958d8cbf277fc0b61eb6863f80f20c2968a6beb2253813e116d8d73fd000a6df"
       },
       ".github/workflows/rebuild-fresh-football.yml": {
-        "bytes": 5985,
-        "sha256": "fd5e779dea27d9a7ea00e043427fb50d880fbaa9f6ed91fb9ee6e57b0ca7c3f2"
+        "bytes": 6126,
+        "sha256": "c099705d43fb09af2ce57e8abcd88bbb1c58563ec5aa0cb5b52f0910f9829d84"
+      },
+      ".github/workflows/run-challenger-factory.yml": {
+        "bytes": 1766,
+        "sha256": "19de9f02c30b148e3d1729992c3f95a5451ba10e202e9fd791d427397d5baa5a"
+      },
+      ".github/workflows/run-controlled-model-decision.yml": {
+        "bytes": 1912,
+        "sha256": "4fffd966b3180e2b51ea67e4d52f4170be9bd4704dce609c5bad76f25759340e"
+      },
+      ".github/workflows/run-evidence-acceleration.yml": {
+        "bytes": 1863,
+        "sha256": "40bf07d9056db4168fff23f872251d3b67738a5196a88271c7f21a469ff14783"
       },
       ".github/workflows/run-evidence-campaign.yml": {
-        "bytes": 26102,
-        "sha256": "2bba202eb4878377002f10dc43ec6a2cc836de927c2d3f9cb033455077e7dec3"
+        "bytes": 26290,
+        "sha256": "9e66ad8645f17095d273e7346114b80f5c35e45553067a9e19191f07eec42f4a"
       },
       ".github/workflows/run-historical-sample.yml": {
-        "bytes": 15665,
-        "sha256": "e5cb37a0b9c7d990f100225429316520280673bda7b7c42ed2d9aaa45b2d5e86"
+        "bytes": 15806,
+        "sha256": "4e03fec424157c17eac41318ed0a86f52309325f5693d35b515160cb8d69394f"
       },
       ".github/workflows/settle-daily-research.yml": {
-        "bytes": 4060,
-        "sha256": "4b07123dcb4ee0b77223cd4f9e0505b1249fd6d79e1e66048cba3e7ebac93347"
+        "bytes": 4107,
+        "sha256": "4ebcdf348c8ad4c94c0ed5596706b34e8d1a604ae2474996c89e28b8d042beec"
+      },
+      ".github/workflows/verify-long-session.yml": {
+        "bytes": 1885,
+        "sha256": "59a2d2be012c5503313818b56c7942f3055eedf4c9f43a324aa1292a4fef75b4"
       },
       ".github/workflows/verify-production.yml": {
-        "bytes": 3214,
-        "sha256": "41083c1a14faf6d9436e8c09e0c88d1910f042ce8b870b7b796301b17e279aa2"
+        "bytes": 3308,
+        "sha256": "63d2a4c34c6d5a758e5a9a5c52c04f0e26059297a4c46978415eaaab8c574d08"
       },
       "Dockerfile": {
         "bytes": 1117,
         "sha256": "699a22b7c94633ba93d863e17d339abf79235c59824c5edfa80c582244f86b27"
+      },
+      "alembic.ini": {
+        "bytes": 616,
+        "sha256": "631631579bc07cdcbfbdbde759a27ca3577985eb107e653a74b748b5c0270e73"
+      },
+      "alembic/env.py": {
+        "bytes": 1541,
+        "sha256": "0e843348a1e04e3c49649bdf11248edf47bee3e86586d9c824c9d352be9dcf20"
+      },
+      "alembic/versions/20260804_0001_existing_schema_baseline.py": {
+        "bytes": 523,
+        "sha256": "9fbcb420975bfcf6ed7105681e0397dd2ca196751e7970c696ee90d6c1dd56e5"
+      },
+      "alembic/versions/20260804_0002_dataset_catalog_and_holdouts.py": {
+        "bytes": 4119,
+        "sha256": "3af7175b77837e90b554777fe8ce2d53eeb02132393799694d5c0e47aa63f9b1"
       },
       "railway.cron.toml": {
         "bytes": 240,
@@ -122,28 +154,48 @@
         "sha256": "c43ca6879fef6ba96a2380a09e0621e5627e222003fcf858fe3f7f0702b4cd16"
       },
       "scripts/browser_smoke_test.py": {
-        "bytes": 8036,
-        "sha256": "67c1c9db62ce541be6cde381a2b90467144ac6b542ee2de7473eb80144a2f967"
+        "bytes": 14441,
+        "sha256": "34d0208752b6c768b07ccd5e21798166a5c722196c954eab2235b3dcd7d88fb4"
+      },
+      "scripts/import_tennis_incremental.py": {
+        "bytes": 2343,
+        "sha256": "cb7c4e59506bd4cb747f509d1fbcd631ac0d7917c1b41867488d4b905ab217bb"
+      },
+      "scripts/run_controlled_model_decision.py": {
+        "bytes": 2771,
+        "sha256": "d6b6f02485ba7ab00286061d33c6bf854ab81fba6a2b329a81d69e652402b22e"
       },
       "scripts/run_coverage_preflight.py": {
         "bytes": 13253,
         "sha256": "f6a96fc56d294a0f60317526d3c3adc8d9a44ab314591125d39cac7400cc380c"
+      },
+      "sports_predictor/challenger_factory.py": {
+        "bytes": 14473,
+        "sha256": "0483157c34bd805dfeb2020640be552d27fde17f4e7727f92de8899efb7fc663"
       },
       "sports_predictor/cloud_config.py": {
         "bytes": 8071,
         "sha256": "72279ab16f99d1b1293b0a285b9733ee49cbe7d286bcee0cb3767bd17a212ed0"
       },
       "sports_predictor/control_center.py": {
-        "bytes": 16986,
-        "sha256": "24f7d95a0ea88151709341437301e26324ad7df252ae7d01920f54efc42e75e5"
+        "bytes": 17786,
+        "sha256": "3122f2cd92d80824c9b5b9974601ee8b23ca9043460ea0c8a05c32008f97537e"
+      },
+      "sports_predictor/controlled_decision.py": {
+        "bytes": 23288,
+        "sha256": "04c922053101bd950fd246744d161e4d86a8040a75c1eff201d52a5ef6184586"
       },
       "sports_predictor/coverage_preflight.py": {
         "bytes": 21242,
         "sha256": "743ed8cf0c6915d1f19d3062ed6893bea9400dc4127ef4eca2f69db8a9969af9"
       },
       "sports_predictor/database.py": {
-        "bytes": 63406,
-        "sha256": "16868f4b80728e109d96f9a121478269723674c9c1be83a22520ac0ef8161ed4"
+        "bytes": 70126,
+        "sha256": "f1588e4ac793b424493f9fe7875f0c6c5f62551f9b6160679f0dca1cf00ed829"
+      },
+      "sports_predictor/evidence_acceleration.py": {
+        "bytes": 22777,
+        "sha256": "af1a5986c94a51350ac06765cba03dce6cea6b07595c121eb0aab188882a47b0"
       },
       "sports_predictor/evidence_campaign.py": {
         "bytes": 17594,
@@ -158,8 +210,8 @@
         "sha256": "19e088dfa6ad939ff8f4e2f079bfc14d2f13edbdd7834532ac1d0ba06532c23a"
       },
       "sports_predictor/release_registry.py": {
-        "bytes": 14041,
-        "sha256": "30612f0f4da62c906c1deb31f549f4d69e1fabce720a441eb5172d9189aefa9a"
+        "bytes": 14719,
+        "sha256": "aa6928906ded7c8dbe89093664abb21279d51d25d14f22b8e238df2d6f2536e2"
       },
       "sports_predictor/roi_lab.py": {
         "bytes": 33377,
@@ -174,20 +226,20 @@
         "sha256": "a0a8262dfe6614caf66709aeccc2c20e63719b921f002aae150fab69c500ded5"
       },
       "static/app.js": {
-        "bytes": 52842,
-        "sha256": "87e7f221727bdaa4965be0904f79dc0b84ccff7d1bf6a3441def99d588971ad1"
+        "bytes": 68479,
+        "sha256": "a9e6090da962fc97d428b79cab1d8ee5f987dc9b679bd80f306819c1a3852d79"
       },
       "static/index.html": {
-        "bytes": 31796,
-        "sha256": "0516e4aa5cb2b9e159a1f2b7a1beefa04c65af0819b2369684daa0270471b1ec"
+        "bytes": 33815,
+        "sha256": "afe6db198eafd209752140b2f8c86496a1f63c79f274804171d13fdf8986d524"
       },
       "static/styles.css": {
-        "bytes": 22449,
-        "sha256": "73319bec8a9d42b504de8c40b7f867a038dfa82ce34e585fbbab76f03f7099c9"
+        "bytes": 25172,
+        "sha256": "031e46ab2963895b55960b8f5e2bf9c408913c7d32220ed59724915a102ef999"
       },
       "webapp.py": {
-        "bytes": 124096,
-        "sha256": "aafecde87a5de84b56bf03339d87038d863b61510fbae10ceeb540ea58aea105"
+        "bytes": 135476,
+        "sha256": "5611ba50f482a8598dc3615f9d1a01a5da651b4a913c8c81b5723018de22bfed"
       }
     }
   },
@@ -221,7 +273,7 @@
       "rps": 0.43954820365378716
     }
   },
-  "release_id": "ea38dccc87fc6c760663",
+  "release_id": "ed9b992f86509a811572",
   "safety": {
     "automatic_bet_placement": false,
     "secrets_exported": false,

@@ -1,0 +1,61 @@
+{
+  "version": {
+    "app_version": "4.7.0",
+    "package_version": "0.4.7.0",
+    "frontend_asset": "app.js?v=4.7.0"
+  },
+  "tests": {
+    "collected": 253,
+    "passed": 253,
+    "failed": 0,
+    "batches": [47, 38, 50, 46, 72]
+  },
+  "coverage": {
+    "targeted_module": "sports_predictor/challenger_factory.py",
+    "branch_and_statement_percent": 90,
+    "instrumented_tests_passed": 38
+  },
+  "challenger_factory": {
+    "provider_credits_consumed": 0,
+    "automatic_promotion": false,
+    "football": {
+      "rows": 1900,
+      "distinct_dates": 583,
+      "train_rows": 1106,
+      "calibration_rows": 401,
+      "holdout_rows": 393,
+      "status": "hold",
+      "holdout_log_loss": 1.052173693584625,
+      "holdout_ece": 0.07821999285938369
+    },
+    "tennis": {
+      "rows": 32,
+      "distinct_dates": 2,
+      "status": "collecting",
+      "reason": "insufficient_surface_aware_history"
+    }
+  },
+  "frontend_stability": {
+    "deduplicated_get_requests": true,
+    "request_timeout_ms": 12000,
+    "pagehide_abort": true,
+    "single_toast_timer": true,
+    "expert_retry_after_partial_failure": true,
+    "maximum_simple_cards_per_list": 8,
+    "repeated_navigation_in_browser_smoke": true
+  },
+  "static_validation": {
+    "python_files_compiled": 83,
+    "javascript_syntax": "passed",
+    "yaml_files_parsed": 21,
+    "workflow_files": 20,
+    "railway_ci_streaming_forbidden": true,
+    "release_manifest_integrity": true
+  },
+  "external_execution": {
+    "real_odds_api_call": false,
+    "credits_consumed": 0,
+    "railway_deployment": false,
+    "public_long_session_browser_smoke": false
+  }
+}

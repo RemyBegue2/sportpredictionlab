@@ -50,7 +50,7 @@ jobs:
       RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT || 'production' }}
       RAILWAY_WEB_SERVICE: ${{ vars.RAILWAY_WEB_SERVICE || 'sportpredictionlab' }}
       APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
-      EXPECTED_VERSION: '4.5.0'
+      EXPECTED_VERSION: '4.9.0'
       INPUT_START_DATE: ${{ inputs.start_date }}
       INPUT_END_DATE: ${{ inputs.end_date }}
       INPUT_SAMPLE_EVENTS: ${{ inputs.sample_events }}
@@ -60,10 +60,10 @@ jobs:
       HISTORICAL_EVIDENCE_ENABLED: ${{ vars.HISTORICAL_EVIDENCE_ENABLED || 'false' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.12'
           cache: pip
@@ -282,7 +282,7 @@ jobs:
             --attempts 30 --delay-seconds 10
       - name: Upload complete sample evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: historical-sample-evidence-${{ github.run_id }}
           path: |

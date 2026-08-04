@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sports Prediction Lab V4.5 Simple Shadow Learning</title>
+  <title>Sports Prediction Lab V4.8 Evidence Acceleration</title>
   <meta name="description" content="Application cloud privée centrée sur les matchs et probabilités du jour, avec mode modèle sans crédit et enrichissement marché facultatif.">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -11,18 +11,18 @@
   <header class="topbar">
     <a class="brand" href="#overview"><span class="logo">SP</span><span>Sports Prediction Lab</span></a>
     <nav aria-label="Navigation principale">
-      <a href="#bets">Aujourd’hui</a><a href="#research-lab">Signaux</a><a href="#learning">Apprentissage</a>
+      <a href="#bets" class="simple-tab active" data-simple-target="today">Aujourd’hui</a><a href="#research-lab" class="simple-tab" data-simple-target="signals">Signaux</a><a href="#learning" class="simple-tab" data-simple-target="learning">Apprentissage</a>
       <span class="expert-nav"><a href="#control">Pilotage</a><a href="#odds-api">Cotes</a><a href="#cloud">Cloud</a><a href="#audit">Audit</a></span>
     </nav>
-    <div class="top-actions"><button id="interfaceMode" class="mode-button" type="button" aria-pressed="false">Mode expert</button><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
+    <div class="top-actions"><span id="sessionStatus" class="session-status ok">Stable</span><button id="interfaceMode" class="mode-button" type="button" aria-pressed="false">Mode expert</button><span id="health" class="pill">Connexion…</span><button id="logoutButton" class="logout-button" type="button" hidden>Déconnexion</button></div>
   </header>
 
   <main>
     <section id="overview" class="hero" data-view="primary">
       <div>
-        <p class="eyebrow">VERSION 4.5 · VUE SIMPLE PAR DÉFAUT</p>
-        <h1>Les matchs, les signaux,<br><span>et la prochaine action.</span></h1>
-        <p class="lede">Football et tennis du jour, prédictions, signaux expérimentaux, bankrolls fictives et apprentissage shadow — les détails techniques restent disponibles en mode expert.</p>
+        <p class="eyebrow">VERSION 4.9 · DÉCISION CONTRÔLÉE</p>
+        <h1>Trois réponses.<br><span>Une action claire.</span></h1>
+        <p class="lede">Matchs, signaux et apprentissage restent séparés. Chaque écran résume ce qui compte et indique la prochaine action.</p>
         <div class="actions"><a class="button primary" href="#bets">Voir aujourd’hui</a><a class="button ghost" href="#learning">Suivre l’apprentissage</a></div>
       </div>
       <aside class="trust-card">
@@ -59,24 +59,25 @@
       <div class="policy-note"><b>Garde-fous :</b> aucune promotion automatique de modèle, aucune mise conseillée et aucun pari transmis à Winamax.</div>
     </section>
 
-    <section id="bets" data-view="primary" class="workbench bets-section">
-      <div class="section-heading"><p class="eyebrow">PRODUIT QUOTIDIEN · MODÈLE D’ABORD</p><h2>Matchs et probabilités du jour</h2><p>Le calendrier et les probabilités du modèle sont affichés sans appeler le fournisseur de cotes. Un signal de marché n’apparaît que si des cotes fraîches ont été explicitement autorisées et qu’un avantage robuste est validé.</p></div>
-      <div class="benchmark-grid">
+    <section id="bets" data-view="primary" data-simple-panel="today" class="workbench bets-section is-active">
+      <div class="section-heading compact-heading"><p class="eyebrow">AUJOURD’HUI</p><h2>Matchs et prédictions</h2><p>Les informations essentielles seulement. Ouvre une carte pour les détails et passe au mode expert pour l’audit complet.</p></div>
+      <div id="todayAction" class="action-card"><small>À RETENIR</small><h3>Chargement…</h3><p>Analyse des matchs en cours.</p></div>
+      <div class="benchmark-grid compact-metrics">
         <article class="benchmark-card"><small>ÉTAT DU MODÈLE</small><h3 id="dailyModelStatus">Chargement…</h3><p id="dailyModelDetail">Diagnostic en cours.</p></article>
         <article class="benchmark-card"><small>PRÉDICTIONS DU JOUR</small><h3 id="dailyPredictionCount">0</h3><p id="dailyPredictionDetail">Aucun calendrier chargé.</p></article>
-        <article class="benchmark-card"><small>SIGNAUX MARCHÉ</small><h3 id="dailyShortlistCount">0</h3><p id="dailyShortlistDetail">Aucun signal forcé.</p></article>
+        <article class="benchmark-card" data-detail="expert"><small>SIGNAUX MARCHÉ</small><h3 id="dailyShortlistCount">0</h3><p id="dailyShortlistDetail">Aucun signal forcé.</p></article>
         <article class="benchmark-card"><small>CRÉDITS AUJOURD’HUI</small><h3 id="dailyCredits">0</h3><p id="dailyCreditDetail">Mode modèle seul.</p></article>
       </div>
       <div id="dailyNoShortlist" class="policy-note"><b>Lecture :</b> chargement des raisons d’absence de signal…</div>
-      <div id="dailySlate" class="daily-grid"><div class="slate-card loading-card">Chargement des matchs du jour…</div></div>
-      <div class="history-panel">
-        <div class="history-heading"><div><small>PROCHAINS MATCHS COUVERTS</small><h3>À venir dans l’horizon quotidien</h3></div></div>
-        <div id="upcomingSlate" class="daily-grid"><div class="slate-card loading-card">Chargement du calendrier à venir…</div></div>
-      </div>
-      <div class="policy-note"><b>Pare-feu de crédits :</b> le calendrier et les probabilités coûtent 0 crédit. Les appels de cotes sont désactivés par défaut, plafonnés et séparés des campagnes historiques. Aucun pari n’est transmis à un bookmaker.</div>
+      <div id="dailySlate" class="daily-grid"><div class="slate-card loading-card">Chargement des matchs du jour…</div></div><p id="dailyOverflow" class="overflow-note" hidden></p>
+      <details class="progressive-details">
+        <summary><span>Prochains matchs couverts</span><small>Afficher le calendrier à venir</small></summary>
+        <div id="upcomingSlate" class="daily-grid"><div class="slate-card loading-card">Chargement du calendrier à venir…</div></div><p id="upcomingOverflow" class="overflow-note" hidden></p>
+      </details>
+      <div class="policy-note" data-detail="expert"><b>Pare-feu de crédits :</b> le calendrier et les probabilités coûtent 0 crédit. Les appels de cotes sont désactivés par défaut, plafonnés et séparés des campagnes historiques. Aucun pari n’est transmis à un bookmaker.</div>
     </section>
 
-    <section id="research-lab" data-view="primary" class="workbench research-lab-section">
+    <section id="research-lab" data-view="primary" data-simple-panel="signals" class="workbench research-lab-section">
       <div class="section-heading"><p class="eyebrow">SIGNAL EXPÉRIMENTAL · SHADOW UNIQUEMENT</p><h2>Ce qui mérite ton attention</h2><p>La vue simple montre seulement les matchs analysés, les signaux retenus et le coût. Les métriques détaillées sont repliées.</p></div>
       <div id="researchAction" class="action-card"><small>ACTION DU JOUR</small><h3>Chargement…</h3><p>Analyse du dernier run en cours.</p></div>
       <div class="simple-summary-grid">
@@ -87,7 +88,7 @@
       <div class="history-panel">
         <div class="history-heading"><div><small>SIGNAUX DU DERNIER RUN</small><h3>Écarts modèle–marché retenus</h3></div><button id="refreshResearchLab" class="button ghost" type="button">Actualiser</button></div>
         <div class="signal-filters" role="group" aria-label="Filtrer les signaux"><button class="signal-filter active" data-sport="all" type="button">Tous</button><button class="signal-filter" data-sport="football" type="button">Football</button><button class="signal-filter" data-sport="tennis" type="button">Tennis</button></div>
-        <div id="researchSignals" class="daily-grid"><div class="slate-card loading-card">Chargement des signaux…</div></div>
+        <div id="researchSignals" class="daily-grid"><div class="slate-card loading-card">Chargement des signaux…</div></div><p id="signalOverflow" class="overflow-note" hidden></p>
       </div>
       <details class="progressive-details">
         <summary><span>Bankrolls simulées</span><small>Voir les stratégies et drawdowns</small></summary>
@@ -101,16 +102,30 @@
     </section>
 
 
-    <section id="learning" class="workbench learning-section" data-view="primary">
+    <section id="learning" class="workbench learning-section" data-view="primary" data-simple-panel="learning">
       <div class="section-heading"><p class="eyebrow">APPRENTISSAGE SHADOW</p><h2>Champion, challenger, prochaine étape</h2><p>Le système collecte, règle et entraîne automatiquement lorsqu’il est explicitement activé. La promotion du champion reste toujours manuelle.</p></div>
       <div id="learningAction" class="action-card"><small>PROCHAINE ÉTAPE</small><h3>Chargement…</h3><p>Évaluation des portes en cours.</p></div>
-      <div class="learning-summary-grid">
+      <div class="learning-compact-grid">
+        <article><small>FOOTBALL</small><h3 id="learningFootballState">Collecte</h3><p id="learningFootballDetail">Challenger non évalué.</p></article>
+        <article><small>TENNIS</small><h3 id="learningTennisState">Collecte</h3><p id="learningTennisDetail">Historique multi-surface requis.</p></article>
+        <article><small>PRODUCTION</small><h3 id="learningProofState">Non prouvée</h3><p id="learningProofDetail">Lancer les sessions longues simple et expert.</p></article>
+        <article><small>COÛT</small><h3 id="learningCostState">0 crédit</h3><p id="learningCostDetail">Entraînement local uniquement.</p></article>
+      </div>
+      <div class="learning-summary-grid" data-detail="expert">
         <article><small>ÉVÉNEMENTS RÉGLÉS</small><h3 id="learningEvents">0</h3><p id="learningSports">Football 0 · Tennis 0</p></article>
         <article><small>CHAMPION</small><h3 id="learningChampion">Aucun</h3><p>Promotion manuelle uniquement.</p></article>
         <article><small>CHALLENGER</small><h3 id="learningChallenger">Collecte</h3><p id="learningCandidate">Candidat non évaluable.</p></article>
         <article><small>BUDGET DU JOUR</small><h3 id="learningBudget">0 / 0</h3><p id="learningAutomation">Automatisation désactivée.</p></article>
       </div>
+      <div id="featureReliability" class="confidence-strip"><b>Fiabilité :</b><span>Football : collecte · Tennis : collecte</span></div>
       <div class="learning-progress" aria-label="Progression vers la revue du challenger"><div><span id="learningProgressBar"></span></div><p id="learningProgressText">0 % de la porte d’échantillon.</p></div>
+      <details class="progressive-details">
+        <summary><span>Calibration et Feature Lab</span><small>Fiabilité, holdout et expériences bornées</small></summary>
+        <div id="featureLabDetails" class="gate-grid"><p>Collecte des résultats réglés en cours.</p></div>
+        <div id="challengerFactoryDetails" class="gate-grid"><p>Challenger Factory non exécutée.</p></div>
+        <div id="evidenceAccelerationDetails" class="gate-grid"><p>Accélération des preuves non exécutée.</p></div>
+        <div id="controlledDecisionDetails" class="gate-grid"><p>Tour de décision contrôlé non exécuté.</p></div>
+      </details>
       <details class="progressive-details">
         <summary><span>Voir toutes les portes</span><small>Échantillon, stabilité, drawdown et holdout</small></summary>
         <div id="learningGates" class="gate-grid"><p>Chargement des portes…</p></div>
@@ -302,15 +317,15 @@
         <article><span>06</span><h3>Conformité</h3><p>Observation automatique autorisée, mais aucune connexion au compte, taille de mise ou exécution de pari.</p></article>
       </div>
       <div class="audit-callout">
-        <div><b>Verdict</b><p>V4.5 = boucle shadow automatisée, champion–challenger contrôlé et interface progressive. Aucun pari réel, aucune promotion automatique.</p></div>
+        <div><b>Verdict</b><p>V4.9 = deux challengers football bornés, imports tennis incrémentaux, nouveau holdout futur et validation publique séparée simple/expert. Aucun pari réel, aucune promotion automatique.</p></div>
         <a class="button ghost" href="/docs" target="_blank" rel="noreferrer">API interactive</a>
       </div>
       <details><summary>Métriques et provenance embarquées</summary><pre id="metrics">Chargement…</pre></details>
     </section>
   </main>
 
-  <footer><span>Sports Prediction Lab V4.5 Automated Shadow Learning</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
+  <footer><span>Sports Prediction Lab V4.9 Controlled Model Decision & Live Validation</span><span>Analyse de recherche · Aucun gain garanti · Aucun pari automatique</span></footer>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/app.js?v=4.5.0"></script>
+  <script src="/static/app.js?v=4.9.0"></script>
 </body>
 </html>

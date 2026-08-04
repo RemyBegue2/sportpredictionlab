@@ -47,14 +47,14 @@ def build_handoff() -> dict[str, Any]:
     report = read_json("artifacts/fresh_rebuild_report.json")
     artifact_manifest = read_json("artifacts/artifact_manifest.json")
     release_manifest = read_json("artifacts/release_manifest.json")
-    validation = read_json("VALIDATION_V4_5.json")
+    validation = read_json("VALIDATION_V4_9.json")
     integration_status = ({
         "status": "ready_for_controlled_deploy",
         "version": APP_VERSION,
         "validation": validation,
         "required_user_actions": [
-            "Deploy production version 4.5.0",
-            "Verify the dual-sport ROI lab renders in Chromium",
+            "Deploy production version 4.9.0",
+            "Verify the stable cockpit, session status and sport challenger states in Chromium",
             "Keep paid capture disabled until a small shadow experiment is explicitly approved",
         ],
     } if validation else None)
@@ -65,6 +65,7 @@ def build_handoff() -> dict[str, Any]:
     evidence_campaign_plan = read_json("artifacts/evidence_campaign_plan_v4.json")
     coverage_preflight = read_json("artifacts/coverage_preflight_v4_2.json")
     candidate_campaign_plan = read_json("artifacts/candidate_campaign_plan_v4_2.json")
+    challenger_factory = read_json("artifacts/challenger_factory_v4_9.json")
     return {
         "schema_version": "1.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -87,6 +88,9 @@ def build_handoff() -> dict[str, Any]:
         "evidence_campaign_plan": evidence_campaign_plan,
         "coverage_preflight": coverage_preflight,
         "candidate_campaign_plan": candidate_campaign_plan,
+        "challenger_factory": challenger_factory,
+        "evidence_acceleration": read_json("artifacts/evidence_acceleration_v4_9.json"),
+        "controlled_model_decision": read_json("artifacts/controlled_model_decision_v4_9.json"),
         "model_decision": (evidence_bundle or {}).get("decision") if evidence_bundle else None,
         "deployment": {
             "platform": "Railway",
@@ -94,12 +98,12 @@ def build_handoff() -> dict[str, Any]:
             "cloud_jobs": [
                 "GitHub Actions daily product refresh",
                 "bounded automated shadow capture and settlement",
-                "weekly zero-credit challenger training",
+                "weekly zero-credit calibration and sport challenger training",
             ],
             "public_url": "not_exported",
             "verification_endpoint": "/api/release",
         },
-        "next_priority": "Deploy V4.5, verify the simple daily view and keep automated shadow learning disabled until its bounded schedule is approved.",
+        "next_priority": "Deploy V4.9, run the controlled model decision at zero credits, and execute both public long-session scenarios before any model promotion review.",
         "known_gates": [
             "No profitability claim before a sufficiently large temporally valid sample.",
             "Tennis remains experimental; a base-model abstention requires at least 30 settled tennis events before meta-model rehabilitation.",
@@ -238,12 +242,12 @@ def active_model_card(payload: dict[str, Any]) -> str:
 
 def next_actions(payload: dict[str, Any]) -> str:
     decision = payload.get("model_decision") or {}
-    action = "Deploy V4.5, verify the simple view and /api/research-lab/learning, then enable bounded shadow automation only after reviewing the daily credit cap."
+    action = "Deploy V4.9, verify the three-tab cockpit and /api/controlled-model-decision, then run both public long-session scenarios before any promotion review."
     return f"""# NEXT ACTIONS
 
 1. {action}
 2. Confirm `/api/credit-firewall` keeps daily odds and historical evidence disabled by default.
-3. Follow `OPERATIONS_RUNBOOK_V4_5.md` to approve the bounded automation schedule or perform a manual recovery run.
+3. Follow `OPERATIONS_RUNBOOK_V4_9.md` to run the controlled model decision and incremental tennis import.
 4. Use GitHub Actions → Generate handoff package, then attach the downloaded ZIP in the next conversation.
 
 No secret is exported.

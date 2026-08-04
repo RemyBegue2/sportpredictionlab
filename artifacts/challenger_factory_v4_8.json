@@ -1,0 +1,16 @@
+{
+  "status": "collecting",
+  "sports": {
+    "football": {
+      "status": "hold"
+    },
+    "tennis": {
+      "status": "collecting"
+    }
+  },
+  "limits": {
+    "maximum_models_per_sport": 4,
+    "provider_credits_consumed": 0,
+    "automatic_promotion": false
+  }
+}

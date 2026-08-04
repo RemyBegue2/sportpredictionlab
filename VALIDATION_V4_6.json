@@ -1,0 +1,51 @@
+{
+  "version": {
+    "app_version": "4.6.0",
+    "package_version": "0.4.6.0"
+  },
+  "tests": {
+    "collected": 245,
+    "passed": 245,
+    "failed": 0,
+    "execution": "seven disjoint batches",
+    "batches": [32, 24, 29, 47, 29, 40, 44],
+    "monolithic_suite": "not claimed; disjoint batches cover all collected tests"
+  },
+  "coverage": {
+    "instrumented_scope": "V4.5, V4.6 and webapp tests",
+    "instrumented_tests_passed": 30,
+    "feature_lab_combined_branches_statements_percent": 79
+  },
+  "checks": {
+    "python_files_compiled": 83,
+    "javascript_node_check": true,
+    "yaml_files_parsed": 20,
+    "git_diff_check": true,
+    "release_manifest_generated": true,
+    "feature_lab_cli_zero_credit": true,
+    "provider_calls_during_audit": 0,
+    "provider_credits_consumed": 0,
+    "railway_deployment_performed": false,
+    "chromium_script_updated": true,
+    "chromium_against_live_deployment_performed": false
+  },
+  "features": {
+    "compact_single_panel_cockpit": true,
+    "football_calibration": true,
+    "tennis_calibration": true,
+    "chronological_holdout": true,
+    "holdout_non_degradation_veto": true,
+    "feature_lineage_audit": true,
+    "bounded_experiment_registry": true,
+    "zero_credit_feature_lab": true,
+    "automatic_promotion": false,
+    "automatic_bet_placement": false
+  },
+  "known_limits": [
+    "No live Railway Feature Lab cycle was executed from the audit environment.",
+    "Reliability remains collecting when fewer than 30 settled events exist for a sport.",
+    "Legacy observations may not contain feature manifests.",
+    "Alembic remains required before a future complex schema migration.",
+    "GitHub actions are not all pinned to immutable verified SHAs."
+  ]
+}

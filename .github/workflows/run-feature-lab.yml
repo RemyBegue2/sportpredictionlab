@@ -1,0 +1,44 @@
+name: Run calibration feature lab
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '25 4 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: calibration-feature-lab
+  cancel-in-progress: false
+
+jobs:
+  feature-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      APP_VERSION: '4.9.0'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements-web.txt
+      - name: Run zero-credit lab
+        run: python -m scripts.run_feature_lab --output artifacts/feature_lab_v4_6.json
+      - name: Verify no provider integration is present
+        run: |
+          python - <<'PY'
+          import json
+          report=json.load(open('artifacts/feature_lab_v4_6.json'))
+          assert report['limits']['provider_credits_consumed'] == 0
+          assert report['limits']['automatic_promotion'] is False
+          print(report['status'], report['overall_reliability'])
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: feature-lab-v4-6
+          path: artifacts/feature_lab_v4_6.json
+          retention-days: 30

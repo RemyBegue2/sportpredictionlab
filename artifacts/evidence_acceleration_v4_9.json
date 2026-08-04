@@ -1,0 +1,404 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-04T12:45:36.459740+00:00",
+  "status": "collecting",
+  "football": {
+    "status": "hold_explained",
+    "reason": "challenger_not_consistently_better_across_holdout_subgroups",
+    "dataset": {
+      "dataset_id": "DS-FOOTBALL-AE48BA7DC4715936F889",
+      "sport": "football",
+      "source": "local_football_archive",
+      "rows": 1900,
+      "distinct_dates": 583,
+      "cutoff_time": "2026-05-24T00:00:00+00:00",
+      "dataset_sha256": "ae48ba7dc4715936f8891177f054c5a4799c681c0b65fc4bd7aea8031478eac7"
+    },
+    "partitions": {
+      "train": 1106,
+      "calibration": 401,
+      "holdout": 393
+    },
+    "overall": {
+      "challenger": {
+        "log_loss": 1.052173693584625,
+        "brier": 0.6347422531449236,
+        "ece": 0.07821999285938369,
+        "accuracy": 0.4681933842239186
+      },
+      "baseline": {
+        "log_loss": 1.0215205586377298,
+        "brier": 0.6137905982172118,
+        "ece": 0.03608334691894218,
+        "accuracy": 0.48091603053435117
+      },
+      "delta_log_loss": 0.030653134946895255,
+      "delta_ece": 0.04213664594044151
+    },
+    "breakdowns": {
+      "outcome": {
+        "away": {
+          "rows": 120,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 1.1983414745385161,
+            "brier": 0.7111274633892494,
+            "ece": 0.1240930302560769,
+            "accuracy": 0.4
+          },
+          "baseline": {
+            "log_loss": 1.0976394026650147,
+            "brier": 0.6511864869791119,
+            "ece": 0.09244400995209105,
+            "accuracy": 0.5
+          },
+          "delta_log_loss": 0.10070207187350144,
+          "delta_ece": 0.03164902030398585
+        },
+        "draw": {
+          "rows": 106,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 1.4481804400267557,
+            "brier": 0.9491219636390211,
+            "ece": 0.5493003506872478,
+            "accuracy": 0.0
+          },
+          "baseline": {
+            "log_loss": 1.2810902421439632,
+            "brier": 0.8245362265513781,
+            "ece": 0.4868757384875119,
+            "accuracy": 0.0
+          },
+          "delta_log_loss": 0.16709019788279256,
+          "delta_ece": 0.062424612199735885
+        },
+        "home": {
+          "rows": 167,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 0.695785377193411,
+            "brier": 0.38030827385334615,
+            "ece": 0.25585376248362635,
+            "accuracy": 0.8143712574850299
+          },
+          "baseline": {
+            "log_loss": 0.8020675781890174,
+            "brier": 0.4531526146552382,
+            "ece": 0.2699262673784318,
+            "accuracy": 0.7724550898203593
+          },
+          "delta_log_loss": -0.10628220099560637,
+          "delta_ece": -0.014072504894805438
+        }
+      },
+      "season": {
+        "2025": {
+          "rows": 199,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 0.9994349332900834,
+            "brier": 0.5969553854529132,
+            "ece": 0.043316971636237094,
+            "accuracy": 0.5175879396984925
+          },
+          "baseline": {
+            "log_loss": 0.9808144068939632,
+            "brier": 0.5830457476893011,
+            "ece": 0.06823134153889447,
+            "accuracy": 0.5577889447236181
+          },
+          "delta_log_loss": 0.01862052639612022,
+          "delta_ece": -0.024914369902657378
+        },
+        "2026": {
+          "rows": 194,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 1.106271700278511,
+            "brier": 0.6735030091795116,
+            "ece": 0.13647155455120813,
+            "accuracy": 0.4175257731958763
+          },
+          "baseline": {
+            "log_loss": 1.0632758380037581,
+            "brier": 0.6453278417999657,
+            "ece": 0.08608610927019728,
+            "accuracy": 0.4020618556701031
+          },
+          "delta_log_loss": 0.04299586227475283,
+          "delta_ece": 0.050385445281010854
+        }
+      },
+      "market_shape": {
+        "balanced": {
+          "rows": 155,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 1.1148314842901912,
+            "brier": 0.6778345560903908,
+            "ece": 0.09310827537546938,
+            "accuracy": 0.36774193548387096
+          },
+          "baseline": {
+            "log_loss": 1.0912676439332307,
+            "brier": 0.6619223504534392,
+            "ece": 0.03840453955532877,
+            "accuracy": 0.38064516129032255
+          },
+          "delta_log_loss": 0.023563840356960464,
+          "delta_ece": 0.05470373582014061
+        },
+        "moderate_favourite": {
+          "rows": 177,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 1.0833642159605903,
+            "brier": 0.6575251600936868,
+            "ece": 0.09199371017272147,
+            "accuracy": 0.4745762711864407
+          },
+          "baseline": {
+            "log_loss": 1.0354946192558148,
+            "brier": 0.6245318721026237,
+            "ece": 0.027616837609925195,
+            "accuracy": 0.4915254237288136
+          },
+          "delta_log_loss": 0.04786959670477553,
+          "delta_ece": 0.06437687256279627
+        },
+        "strong_favourite": {
+          "rows": 61,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 0.8024576276844849,
+            "brier": 0.4591376386124888,
+            "ece": 0.06536846264556624,
+            "accuracy": 0.7049180327868853
+          },
+          "baseline": {
+            "log_loss": 0.8037466742081611,
+            "brier": 0.4603213019166686,
+            "ece": 0.05475199100182909,
+            "accuracy": 0.7049180327868853
+          },
+          "delta_log_loss": -0.0012890465236762294,
+          "delta_ece": 0.01061647164373715
+        }
+      },
+      "team_history": {
+        "cold_start": {
+          "rows": 5,
+          "status": "not_evaluable"
+        },
+        "established": {
+          "rows": 388,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 1.0461289150714237,
+            "brier": 0.6303410138757634,
+            "ece": 0.0723528534783908,
+            "accuracy": 0.4742268041237113
+          },
+          "baseline": {
+            "log_loss": 1.0199106490008056,
+            "brier": 0.6125998840490608,
+            "ece": 0.037293293449049816,
+            "accuracy": 0.4845360824742268
+          },
+          "delta_log_loss": 0.026218266070618057,
+          "delta_ece": 0.03505956002934098
+        }
+      },
+      "rest_context": {
+        "rest_imbalance": {
+          "rows": 11,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 1.21808327341777,
+            "brier": 0.7181364464118278,
+            "ece": 0.1798463117110113,
+            "accuracy": 0.45454545454545453
+          },
+          "baseline": {
+            "log_loss": 1.093817246168072,
+            "brier": 0.6453466595891771,
+            "ece": 0.17353999339447218,
+            "accuracy": 0.5454545454545454
+          },
+          "delta_log_loss": 0.12426602724969804,
+          "delta_ece": 0.006306318316539106
+        },
+        "similar_rest": {
+          "rows": 382,
+          "status": "evaluated",
+          "challenger": {
+            "log_loss": 1.0473961925946655,
+            "brier": 0.6323408496738872,
+            "ece": 0.07845108799630578,
+            "accuracy": 0.468586387434555
+          },
+          "baseline": {
+            "log_loss": 1.0194387168502068,
+            "brier": 0.612881915821684,
+            "ece": 0.04071304548530791,
+            "accuracy": 0.4790575916230366
+          },
+          "delta_log_loss": 0.027957475744458726,
+          "delta_ece": 0.03773804251099787
+        }
+      }
+    },
+    "largest_regressions": [
+      {
+        "dimension": "outcome",
+        "group": "draw",
+        "rows": 106,
+        "delta_log_loss": 0.16709019788279256
+      },
+      {
+        "dimension": "rest_context",
+        "group": "rest_imbalance",
+        "rows": 11,
+        "delta_log_loss": 0.12426602724969804
+      },
+      {
+        "dimension": "outcome",
+        "group": "away",
+        "rows": 120,
+        "delta_log_loss": 0.10070207187350144
+      },
+      {
+        "dimension": "market_shape",
+        "group": "moderate_favourite",
+        "rows": 177,
+        "delta_log_loss": 0.04786959670477553
+      },
+      {
+        "dimension": "season",
+        "group": "2026",
+        "rows": 194,
+        "delta_log_loss": 0.04299586227475283
+      }
+    ],
+    "largest_improvements": [
+      {
+        "dimension": "outcome",
+        "group": "home",
+        "rows": 167,
+        "delta_log_loss": -0.10628220099560637
+      },
+      {
+        "dimension": "market_shape",
+        "group": "strong_favourite",
+        "rows": 61,
+        "delta_log_loss": -0.0012890465236762294
+      }
+    ],
+    "bounded_next_round": {
+      "maximum_new_challengers": 2,
+      "candidates": [
+        "regularized_poisson_attack_defence",
+        "hybrid_linear_attack_defence_elo"
+      ],
+      "status": "planned_not_trained",
+      "selection_metric": "probabilistic_holdout_quality_not_roi"
+    },
+    "provider_credits_consumed": 0,
+    "automatic_promotion": false
+  },
+  "tennis": {
+    "catalog": {
+      "dataset_id": "DS-TENNIS-9E0F198010881E9790CB",
+      "sport": "tennis",
+      "source": "local_tennis_archive",
+      "rows": 32,
+      "distinct_dates": 2,
+      "cutoff_time": "2024-12-30T00:00:00+00:00",
+      "dataset_sha256": "9e0f198010881e9790cbc4c83e94ff2b867325602d9b2cbad5102034c8819feb",
+      "license_status": "research_only",
+      "quality_status": "validated",
+      "supersedes_dataset_id": null,
+      "competitions": [
+        "Brisbane",
+        "United Cup"
+      ],
+      "tours": [
+        "ATP"
+      ],
+      "surfaces": {
+        "hard": 32
+      },
+      "players": 27,
+      "quality": {
+        "raw_rows": 32,
+        "accepted_rows": 32,
+        "quarantined_rows": 0,
+        "quarantine_fraction": 0.0,
+        "duplicates": 0,
+        "future_rankings": 0,
+        "invalid_dates": 0,
+        "unknown_surfaces": 0,
+        "legacy_unverified_rows": 32,
+        "lineage_verified_rows": 0,
+        "issue_counts": {}
+      },
+      "readiness": {
+        "status": "collecting",
+        "rows": 32,
+        "distinct_dates": 2,
+        "surface_counts": {
+          "hard": 32
+        },
+        "exploratory_ready": false,
+        "challenger_ready": false,
+        "lineage_complete": false,
+        "gates": {
+          "exploratory_rows": {
+            "actual": 32,
+            "required": 500,
+            "passed": false
+          },
+          "exploratory_dates": {
+            "actual": 2,
+            "required": 50,
+            "passed": false
+          },
+          "challenger_rows": {
+            "actual": 32,
+            "required": 1500,
+            "passed": false
+          },
+          "challenger_dates": {
+            "actual": 2,
+            "required": 150,
+            "passed": false
+          },
+          "lineage_complete": {
+            "actual": false,
+            "required": true,
+            "passed": false
+          }
+        }
+      },
+      "provider_credits_consumed": 0
+    },
+    "holdout_generation": {
+      "generation_id": "HG-TENNIS-0B00A1A487872735DBDE",
+      "generation": 1,
+      "dataset_id": "DS-TENNIS-9E0F198010881E9790CB",
+      "sport": "tennis",
+      "status": "open_collecting",
+      "reason": "insufficient_distinct_dates",
+      "consulted": false
+    },
+    "quarantined_preview": []
+  },
+  "limits": {
+    "provider_credits_consumed": 0,
+    "automatic_promotion": false,
+    "maximum_new_football_challengers": 2,
+    "new_simple_ui_tabs": 0
+  },
+  "next_action": "Import a larger, time-audited, multi-surface tennis archive."
+}
